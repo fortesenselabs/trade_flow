@@ -17,10 +17,18 @@ TradeFlow is an intelligent trading bot designed to streamline your trading expe
 ```bash
 git clone https://github.com/your-username/TradeFlow.git
 ```
+2. Prerequisites: (Specify any required libraries or dependencies here)
+- Python (version X.X.X or higher)
+- (List any other required libraries)
 
+3. Installation:
+```bash
+cd TradeFlow
+pip install -r requirements.txt
+```
 
-Prerequisites: (Specify any required
-
+4. Configuration:
+Edit the `config.py` file to define your API keys, trading strategies, and risk parameters.
 
 
 ## Usage:
