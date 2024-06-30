@@ -1,0 +1,6 @@
+# This is same as created in kubernetes_secret (infrastructure/main.tf)
+imagePullSecret: trade-flow-config
+images:
+  db: postgres:13
+  metatrader: fortesenselabs/metatrader:latest
+  trade-flow: trade-flow
