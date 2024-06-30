@@ -20,3 +20,9 @@ lightgbm>=4.*
 tensorflow>=2.16.*
 
 # seaborn  # if diagrams are turned on
+
+# 
+requests
+websockets
+pydantic
+python-dotenv
