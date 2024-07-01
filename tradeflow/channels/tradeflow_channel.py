@@ -5,7 +5,7 @@ import async_channel.channels as channels
 import async_channel.consumer as consumers
 import async_channel.producer as producers
 
-from tradeflow.commons.logger import Logger
+from tradeflow.commons.logging import Logger
 
 
 class TradeFlowChannelConsumer(consumers.Consumer):
