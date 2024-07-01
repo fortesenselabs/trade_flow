@@ -3,7 +3,7 @@ import click
 from application.config.settings import Settings
 from application.logger import AppLogger
 from application.models.app_model import AppConfig
-from application.app import App
+from application.manager import AppManager
 
 logger = AppLogger(name=__name__)
 
@@ -17,5 +17,5 @@ def main(config_file):
     logger.info(settings.model_dump())
 
     config: AppConfig = settings.get_app_config()
-    asyncio.run(App.start(app_config=config))
+    asyncio.run(AppManager.start(app_config=config))
     return 0
