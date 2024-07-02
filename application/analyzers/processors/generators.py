@@ -6,6 +6,17 @@ import pandas as pd
 # from application.analyzers.classifiers import *
 # from application.database.model_store import *
 # from application.analyzers.processors.gen_features import *
+from application.analyzers.classifiers.classifiers import (
+    compute_scores,
+    train_gb,
+    train_nn,
+    train_lc,
+    train_svc,
+    predict_gb,
+    predict_nn,
+    predict_lc,
+    predict_svc,
+)
 from application.analyzers.processors.gen_labels_highlow import (
     generate_labels_highlow,
     generate_labels_highlow2,
@@ -58,8 +69,8 @@ def generate_feature_set(
     #
     # Resolve and apply feature generator functions from the configuration
     #
-    generator = fs.get("generator")
-    gen_config = fs.get("config", {})
+    generator: str = fs.get("generator")
+    gen_config: dict = fs.get("config", {})
     if generator == "itblib":
         features = generate_features_itblib(f_df, gen_config, last_rows=last_rows)
     elif generator == "depth":
@@ -139,7 +150,7 @@ def generate_feature_set(
     return df, new_features
 
 
-def predict_feature_set(df, fs, config, models: dict):
+def predict_feature_set(df: pd.DataFrame, fs: dict, config: dict, models: dict):
 
     labels = fs.get("config").get("labels")
     if not labels:
@@ -168,6 +179,7 @@ def predict_feature_set(df, fs, config, models: dict):
 
             algo_name = model_config.get("name")
             algo_type = model_config.get("algo")
+            label_algo_separator = "_"
             score_column_name = label + label_algo_separator + algo_name
             algo_train_length = model_config.get("train", {}).get("length")
 
@@ -201,7 +213,7 @@ def predict_feature_set(df, fs, config, models: dict):
     return out_df, features, scores
 
 
-def train_feature_set(df, fs, config):
+def train_feature_set(df: pd.DataFrame, fs: dict, config: dict):
 
     labels = fs.get("config").get("labels")
     if not labels:
@@ -228,6 +240,7 @@ def train_feature_set(df, fs, config):
 
             algo_name = model_config.get("name")
             algo_type = model_config.get("algo")
+            label_algo_separator = "_"
             score_column_name = label + label_algo_separator + algo_name
             algo_train_length = model_config.get("train", {}).get("length")
 
