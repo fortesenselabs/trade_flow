@@ -158,7 +158,7 @@ class ConfigModel(BaseModel):
     signal_models_file_name: str
     data_sources: List[DataSource]
     time_column: str
-    feature_sets: List[FeatureSet] # TODO: fix validation problem
+    feature_sets: List[FeatureSet] 
     label_sets: List[LabelSet]
     label_horizon: int
     train_length: int
@@ -171,6 +171,6 @@ class ConfigModel(BaseModel):
     # signal_sets: List[SignalSet]
     # score_notification_model: ScoreNotificationModel
     # diagram_notification_model: DiagramNotificationModel
-    # trade_model: TradeModel
-    # train_signal_model: TrainSignalModel
+    trade_model: TradeModel
+    train_signal_model: TrainSignalModel
     # rolling_predict: RollingPredict
