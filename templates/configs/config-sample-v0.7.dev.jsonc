@@ -7,6 +7,13 @@
   "telegram_chat_id": "<chat-id-to-publish-messages>",
 
   "data_folder": "C:/DATA_ITB",
+  "models_folder": "models",
+  "merge_file_name": "data.csv",
+  "feature_file_name": "features.csv",
+  "matrix_file_name": "matrix.csv",
+  "predict_file_name": "predictions.csv",
+  "signal_file_name": "signals.csv",
+  "signal_models_file_name": "signal_models",
 
   // === DOWNLOAD AND MERGE ===
 
@@ -56,8 +63,8 @@
       "generator": "common.my_feature_example:my_feature_example",
       "feature_prefix": "",
       "config": {
-        "columns": "close",
-        "function": "add",
+        "columns": ["close"],
+        "functions": ["add"],
         "parameter": 2.0,
         "names": "close_add"
       }

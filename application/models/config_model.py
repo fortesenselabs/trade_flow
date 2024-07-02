@@ -11,7 +11,7 @@ class DataSource(BaseModel):
 class FeatureConfig(BaseModel):
     columns: List[str]
     functions: List[str]
-    windows: List[int]
+    windows: Optional[List[int]] = None
     parameter: Optional[float] = None
     names: Optional[str] = None
 
@@ -146,13 +146,19 @@ class ConfigModel(BaseModel):
     mt_directory_path: Optional[str]
     telegram_bot_token: str
     telegram_chat_id: str
-    data_folder: str
-    models_folder: str
     symbol: str
     freq: str
+    data_folder: str
+    models_folder: str
+    merge_file_name: str
+    feature_file_name: str
+    matrix_file_name: str
+    predict_file_name: str
+    signal_file_name: str
+    signal_models_file_name: str
     data_sources: List[DataSource]
     time_column: str
-    # feature_sets: List[FeatureSet] # TODO: fix validation problem
+    feature_sets: List[FeatureSet] # TODO: fix validation problem
     label_sets: List[LabelSet]
     label_horizon: int
     train_length: int
