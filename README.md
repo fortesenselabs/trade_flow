@@ -35,6 +35,10 @@ pip install -r requirements.txt
 
 Refer to the `usage.py` script for an example of how to use TradeFlow.
 
+## Info:
+
+Extensions would be called flows, similar to Octobot's tentacles
+
 ## Disclaimer:
 
 TradeFlow is for educational purposes only. The developers are not responsible for any financial losses incurred while using this software. Please understand the inherent risks involved in trading before using any automated system.
