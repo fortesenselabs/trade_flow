@@ -24,6 +24,9 @@ tensorflow>=2.16.*
 # logging
 colorlog
 # 
+async-channel
+# git+https://github.com/FortesenseLabs/trading-backend.git
+# 
 requests
 websockets
 pydantic
