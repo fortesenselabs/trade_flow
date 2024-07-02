@@ -20,6 +20,13 @@ from application.analyzers.processors.gen_signals import (
     generate_threshold_rule,
     generate_threshold_rule2,
 )
+from application.analyzers.processors.gen_features import (
+    generate_features_talib,
+    generate_features_itblib,
+    generate_features_depth,
+    generate_features_tsfresh,
+    generate_features_itbstats,
+)
 
 
 def generate_feature_set(
