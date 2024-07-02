@@ -28,7 +28,7 @@ Notes:
   - klines (spot market), its history is quite long
   - futures (also klines but from futures market), its history is relative short
 
-## Merge several historic datasets into one dataset
+## Merge several historic datasets into one dataset (Optional)
 
 Execute: `python -m scripts.merge -c config.json`
 
@@ -68,6 +68,19 @@ Notes:
 - If necessary, uncomment line with storing to parquet (install the packages)
 - Output file will store features and labels as they are implemented in the trade module
 - Same number of lines in output as in input file
+
+## Generate features and labels matrix
+
+Execute: `python -m scripts.labels -c config.json`
+
+Parameters:
+
+- `symbol` pair to load
+- `data_folder` data folder
+- Input: data file with feature values
+- Output: matrix file containing features and labels
+
+Purpose: Compute derived features and derived labels by attaching them as new columns and producing a feature + label matrix
 
 ## Train prediction models
 
