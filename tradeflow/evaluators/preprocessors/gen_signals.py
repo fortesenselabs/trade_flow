@@ -80,7 +80,10 @@ def generate_combine_scores(df, config: dict):
         raise ValueError(
             f"The 'columns' parameter must be a non-empty string. {type(columns)}"
         )
-    elif not isinstance(columns, list) or len(columns) != 2:
+
+    print("columns: ", columns)
+
+    if not isinstance(columns, list) or len(columns) != 2:
         raise ValueError(
             f"'columns' parameter must be a list with buy column name and sell column name. {type(columns)}"
         )
@@ -89,6 +92,10 @@ def generate_combine_scores(df, config: dict):
     down_column = columns[1]
 
     out_column = config.get("names")
+    if isinstance(out_column, list):
+        out_column = out_column[0]
+
+    print("out_column: ", out_column)
 
     if config.get("combine") == "relative":
         combine_scores_relative(df, up_column, down_column, out_column)
@@ -134,8 +141,32 @@ def combine_scores_difference(df, buy_column, sell_column, trade_column_out):
     If they are equal then the output is 0. The output scores have opposite signs.
     """
 
-    # difference
+    # Check if the columns exist in the DataFrame
+    if buy_column not in df.columns:
+        raise ValueError(f"Column '{buy_column}' not found in the DataFrame.")
+    if sell_column not in df.columns:
+        raise ValueError(f"Column '{sell_column}' not found in the DataFrame.")
+
+    # Check the lengths of the columns
+    print("Length of DataFrame: ", len(df))
+    print(f"Length of '{buy_column}': ", len(df[buy_column]))
+    print(f"Length of '{sell_column}': ", len(df[sell_column]))
+
+    # Ensure the indices are aligned
+    if not df[buy_column].index.equals(df[sell_column].index):
+        raise ValueError("Indices of the columns do not match.")
+
+    # Compute the difference
     buy_minus_sell = df[buy_column] - df[sell_column]
+
+    print("buy_minus_sell.shape: ", buy_minus_sell.shape)
+    print("df.shape: ", df.shape)
+
+    # Ensure the resulting Series has the same length as the DataFrame
+    if len(buy_minus_sell) != len(df):
+        raise ValueError(
+            "The length of the result does not match the length of the DataFrame."
+        )
 
     df[trade_column_out] = buy_minus_sell  # High values mean buy signal
     # df[buy_column_out] = df[df[buy_column_out] < 0] = 0  # Set negative values to 0
@@ -185,7 +216,7 @@ def compute_score_slope(df, model, buy_score_columns_in, sell_score_columns_in):
 #
 
 
-def generate_threshold_rule(df, config):
+def generate_threshold_rule(df: pd.DataFrame, config: dict):
     """
     Apply rules based on thresholds and generate trade signal buy, sell or do nothing.
 
@@ -198,7 +229,8 @@ def generate_threshold_rule(df, config):
         raise ValueError(
             f"The 'columns' parameter must be a non-empty string. {type(columns)}"
         )
-    elif isinstance(columns, list):
+
+    if isinstance(columns, str):
         columns = [columns]
 
     buy_signal_column = config.get("names")[0]
