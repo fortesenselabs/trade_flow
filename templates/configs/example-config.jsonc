@@ -1,12 +1,12 @@
 {
-  "api_key": "<binance-key>",
-  "api_secret": "<binance-secret>",
-  "mt_directory_path": "<metatrader-file-directory>",
+  "api_key": "",
+  "api_secret": "",
+  "mt_directory_path": "/Metatrader5[Test]/MQL5/Files",
 
-  "telegram_bot_token": "<token>",
-  "telegram_chat_id": "<chat-id-to-publish-messages>",
+  "telegram_bot_token": "",
+  "telegram_chat_id": "",
 
-  "data_folder": "DATA_ITB",
+  "data_folder": "data",
   "models_folder": "models",
   "merge_file_name": "data.csv",
   "feature_file_name": "features.csv",
@@ -17,13 +17,15 @@
 
   // === DOWNLOAD AND MERGE ===
 
-  "symbol": "BTCUSDT",
+  "symbol": "Step Index",
 
   "freq": "1min", // pandas frequency
 
   "data_sources": [
-    { "folder": "BTCUSDT", "file": "klines", "column_prefix": "" }
+    { "folder": "Step Index", "file": "klines", "column_prefix": "" }
   ],
+
+  "time_column": "timestamp",
 
   // === GENERATE FEATURES ===
 
@@ -60,13 +62,12 @@
     },
     {
       "column_prefix": "",
-      "generator": "common.my_feature_example:my_feature_example",
+      "generator": "talib",
       "feature_prefix": "",
       "config": {
         "columns": ["close"],
-        "functions": ["add"],
-        "parameter": 2.0,
-        "names": "close_add"
+        "functions": ["RSI"],
+        "windows": [5, 10, 14, 15, 30]
       }
     }
   ],
@@ -81,10 +82,10 @@
       "config": {
         "columns": ["close", "high", "low"],
         "function": "high",
-        "thresholds": [2.0],
-        "tolerance": 0.2,
+        "thresholds": [0.01],
+        "tolerance": 0.1,
         "horizon": 120,
-        "names": ["high_20"]
+        "names": ["high_0.1"]
       }
     },
     {
@@ -94,32 +95,10 @@
       "config": {
         "columns": ["close", "high", "low"],
         "function": "low",
-        "thresholds": [2.0],
-        "tolerance": 0.2,
+        "thresholds": [0.01],
+        "tolerance": 0.1,
         "horizon": 120,
-        "names": ["low_20"]
-      }
-    },
-    {
-      "column_prefix": "",
-      "generator": "topbot",
-      "feature_prefix": "",
-      "config": {
-        "columns": ["close"]
-        //   "tolerance": 1.5,
-        //   "horizon": 120,
-        //   "names": ["high_15"]
-      }
-    },
-    {
-      "column_prefix": "",
-      "generator": "topbot2",
-      "feature_prefix": "",
-      "config": {
-        "columns": ["close"]
-        // "tolerance": 1.5,
-        // "horizon": 120,
-        // "names": ["low_15"]
+        "names": ["low_0.1"]
       }
     }
   ],
@@ -151,10 +130,15 @@
     "close_STDDEV_5",
     "close_STDDEV_10",
     "close_STDDEV_15",
-    "close_STDDEV_60"
+    "close_STDDEV_60",
+    "close_RSI_5",
+    "close_RSI_10",
+    "close_RSI_14",
+    "close_RSI_15",
+    "close_RSI_30"
   ],
 
-  "labels": ["high_20", "low_20"],
+  "labels": ["high_0.1", "low_0.1"],
 
   "algorithms": [
     {
@@ -162,8 +146,8 @@
       "algo": "lc", // Algorithm type is used to choose the train/predict function
       "params": {
         "penalty": "l2",
-        "C": 1.0,
-        "class_weight": null,
+        "C": 0.5,
+        "class_weight": "balanced",
         "solver": "sag",
         "max_iter": 100
       },
@@ -175,7 +159,7 @@
       "algo": "gb", // Algorithm type is used to choose the train/predict function
       "params": {
         "objective": "binary", // Specify the objective function (e.g., "binary" for classification, "regression" for regression)
-        "max_depth": 5, // Maximum depth of individual trees in the ensemble (controls model complexity)
+        "max_depth": 15, // Maximum depth of individual trees in the ensemble (controls model complexity)
         "learning_rate": 0.1, // Step size for weight updates during training (smaller = slower training, can prevent overfitting)
         "num_boost_round": 200, // Number of boosting iterations (trees to grow)
         "lambda_l1": 0.0, // L1 regularization parameter (controls feature sparsity)
@@ -196,8 +180,8 @@
       // Combine two unsigned scores into one signed score
       "generator": "combine",
       "config": {
-        "columns": ["high_20_lc", "low_20_lc"], // 2 columns: with grow score and fall score
-        "names": "trade_score", // Output column name: positive values - buy, negative values - sell
+        "columns": ["high_0.1_lc", "low_0.1_lc"], // 2 columns: with grow score and fall score
+        "names": ["trade_score"], // Output column name: positive values - buy, negative values - sell
         "combine": "difference", // "no_combine" (or empty), "relative", "difference"
         "coefficient": 1.0,
         "constant": 0.0 // Normalize
@@ -207,7 +191,7 @@
       // Generate boolean buy-sell column depending on thresholds
       "generator": "threshold_rule",
       "config": {
-        "columns": "trade_score",
+        "columns": ["trade_score"],
         "names": ["buy_signal_column", "sell_signal_column"], // Output boolean columns
         "parameters": {
           "buy_signal_threshold": 0.05,
@@ -303,7 +287,7 @@
     "direction": "long",
     "topn_to_store": 10,
 
-    "signal_generator": "threshold_rule", // generator in the signal_sets section
+    "signal_generator": "threshold_rule", // generator in the signal_sets section -> combine | threshold_rule
     "buy_sell_equal": false,
     "grid": {
       "buy_signal_threshold": [0.02, 0.03, 0.04, 0.05, 0.1, 0.15],
@@ -313,7 +297,7 @@
 
   "rolling_predict": {
     // int, null or string with date which will be resolved using time_column and removed from source data
-    "data_start": "2020-02-01 00:00:00",
+    "data_start": "2024-06-02 19:10:00+00:00",
     "data_end": null,
 
     // One of these 3 parameters can be null and will be computed from the other two

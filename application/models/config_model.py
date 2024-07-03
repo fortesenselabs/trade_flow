@@ -24,31 +24,23 @@ class FeatureSet(BaseModel):
 
 
 class LabelConfig(BaseModel):
-    columns: List[str]
-    function: str
-    thresholds: List[float]
-    tolerance: float
-    horizon: int
-    names: List[str]
+    columns: Optional[List[str]] = None
+    function: Optional[str] = ""
+    thresholds: Optional[List[float]] = None
+    tolerance: Optional[float] = None
+    horizon: Optional[int] = 120
+    names: Optional[List[str]] = None
 
 
 class LabelSet(BaseModel):
-    column_prefix: str
     generator: str
-    feature_prefix: str
-    config: LabelConfig
+    column_prefix: Optional[str] = ""
+    feature_prefix: Optional[str] = ""
+    config: Optional[LabelConfig] = None
 
 
 class TrainFeatureConfig(BaseModel):
     pass  # Add any specific configurations here if needed
-
-
-class AlgorithmParams(BaseModel):
-    penalty: str
-    C: float
-    class_weight: Optional[Any] = None
-    solver: str
-    max_iter: int
 
 
 class TrainConfig(BaseModel):
@@ -64,7 +56,7 @@ class PredictConfig(BaseModel):
 class Algorithm(BaseModel):
     name: str
     algo: str
-    params: AlgorithmParams
+    params: Dict
     train: TrainConfig
     predict: PredictConfig
 
@@ -72,9 +64,10 @@ class Algorithm(BaseModel):
 class SignalConfig(BaseModel):
     columns: List[str]
     names: List[str]
-    combine: str
-    coefficient: float
-    constant: float
+    combine: Optional[str] = None
+    coefficient: Optional[float] = None
+    constant: Optional[float] = None
+    parameters: Optional[Dict] = None
 
 
 class SignalSet(BaseModel):
@@ -168,9 +161,9 @@ class ConfigModel(BaseModel):
     algorithms: List[Algorithm]
     features_horizon: int
     features_last_rows: int
-    # signal_sets: List[SignalSet]
-    # score_notification_model: ScoreNotificationModel
-    # diagram_notification_model: DiagramNotificationModel
+    signal_sets: List[SignalSet]
+    score_notification_model: ScoreNotificationModel
+    diagram_notification_model: DiagramNotificationModel
     trade_model: TradeModel
     train_signal_model: TrainSignalModel
-    # rolling_predict: RollingPredict
+    rolling_predict: RollingPredict
