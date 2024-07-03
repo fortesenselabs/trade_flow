@@ -1,5 +1,7 @@
 from typing import Optional
-from pydantic import BaseModel 
+from pydantic import BaseModel
+from .app_model import *
+from .config_model import *
 
 
 class PingMessage(BaseModel):

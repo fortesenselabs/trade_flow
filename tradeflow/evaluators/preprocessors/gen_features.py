@@ -1,18 +1,16 @@
 import os
 import sys
+import json
 import importlib
 from datetime import datetime, timezone, timedelta
-from typing import Union
-import json
 import itertools
-
 import numpy as np
 import pandas as pd
 
 import scipy.stats as stats
 
-# from application.analyzers.processors.gen_features_rolling_agg import *
-from application.analyzers.processors.gen_features_rolling_agg import (
+# from tradeflow.evaluators.processors.gen_features_rolling_agg import *
+from .gen_features_rolling_agg import (
     _aggregate_last_rows,
 )
 
@@ -147,6 +145,9 @@ def generate_features_talib(df, config: dict, last_rows: int = 0):
     * Post-processing and pre-processing parameters:
         * use_differences: if true then compute differences first
         * In addition to differences, another parameter is using log=2,10 etc.
+
+    TODO: instead of using talib directly, pandas-ta can be used
+    https://github.com/twopirllc/pandas-ta
 
     :param config:
     :return:

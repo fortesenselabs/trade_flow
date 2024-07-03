@@ -1,10 +1,8 @@
-from pathlib import Path
 import queue
 from typing import Dict, List
-
-from application.database.model_store import load_models
-from application.database.transactions import load_last_transaction
-from application.models.config_model import ConfigModel
+from pathlib import Path
+from application.database import load_models, load_last_transaction
+from application.models import ConfigModel
 
 
 class BaseAnalyzer:

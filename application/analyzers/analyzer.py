@@ -1,15 +1,12 @@
-from pathlib import Path
-from typing import Union
 import json
-import pickle
-from datetime import datetime, date, timedelta
 import queue
 import numpy as np
 import pandas as pd
-
+from pathlib import Path
+from datetime import datetime
 from application.logger import AppLogger
-from application.analyzers.base import BaseAnalyzer
-from application.analyzers.processors.generators import generate_feature_set, predict_feature_set
+from .base import BaseAnalyzer
+from tradeflow.evaluators.preprocessors import generate_feature_set, predict_feature_set
 
 logger = AppLogger(name=__name__)
 
@@ -430,4 +427,3 @@ class Analyzer(BaseAnalyzer):
         features_horizon = App.config["features_horizon"]
         if len(App.df) > features_horizon + 15:
             App.df = App.df.tail(features_horizon)
-

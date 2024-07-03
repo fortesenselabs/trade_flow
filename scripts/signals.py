@@ -1,17 +1,22 @@
-from pathlib import Path
 import click
-from tqdm import tqdm
-
 import numpy as np
 import pandas as pd
+from pathlib import Path
+from tqdm import tqdm
+from application.config import Settings
+from application.logger import AppLogger
+from application.models import AppConfig
+from application.database import save_model_pair
+from tradeflow.evaluators.preprocessors import generate_feature_set
 
-from common.generators import generate_feature_set
-from service.App import *
+
+logger = AppLogger(name=__name__)
 
 """
 Generate new derived columns according to the signal definitions.
 The transformations are applied to the results of ML predictions.
 """
+
 
 #
 # Parameters
@@ -24,13 +29,17 @@ class P:
 
 
 @click.command()
-@click.option('--config_file', '-c', type=click.Path(), default='', help='Configuration file name')
+@click.option(
+    "--config_file", "-c", type=click.Path(), default="", help="Configuration file name"
+)
 def main(config_file):
-    """
-    """
-    load_config(config_file)
+    """ """
+    settings: Settings = Settings(config_file)
+    logger.info(settings.model_dump())
 
-    time_column = App.config["time_column"]
+    app_config: AppConfig = settings.get_app_config()
+
+    time_column = app_config.config.time_column
 
     now = datetime.now()
 
@@ -54,17 +63,26 @@ def main(config_file):
     if file_path.suffix == ".parquet":
         df = pd.read_parquet(file_path)
     elif file_path.suffix == ".csv":
-        df = pd.read_csv(file_path, parse_dates=[time_column], date_format="ISO8601", nrows=P.in_nrows)
+        df = pd.read_csv(
+            file_path,
+            parse_dates=[time_column],
+            date_format="ISO8601",
+            nrows=P.in_nrows,
+        )
     else:
-        print(f"ERROR: Unknown extension of the 'predict_file_name' file '{file_path.suffix}'. Only 'csv' and 'parquet' are supported")
+        print(
+            f"ERROR: Unknown extension of the 'predict_file_name' file '{file_path.suffix}'. Only 'csv' and 'parquet' are supported"
+        )
         return
     print(f"Predictions loaded. Length: {len(df)}. Width: {len(df.columns)}")
 
     # Limit size according to parameters start_index end_index
-    df = df.iloc[P.start_index:P.end_index]
+    df = df.iloc[P.start_index : P.end_index]
     df = df.reset_index(drop=True)
 
-    print(f"Input data size {len(df)} records. Range: [{df.iloc[0][time_column]}, {df.iloc[-1][time_column]}]")
+    print(
+        f"Input data size {len(df)} records. Range: [{df.iloc[0][time_column]}, {df.iloc[-1][time_column]}]"
+    )
 
     #
     # Signals
@@ -79,11 +97,15 @@ def main(config_file):
     all_features = []
     for i, fs in enumerate(feature_sets):
         fs_now = datetime.now()
-        print(f"Start feature set {i}/{len(feature_sets)}. Generator {fs.get('generator')}...")
+        print(
+            f"Start feature set {i}/{len(feature_sets)}. Generator {fs.get('generator')}..."
+        )
         df, new_features = generate_feature_set(df, fs, last_rows=0)
         all_features.extend(new_features)
         fs_elapsed = datetime.now() - fs_now
-        print(f"Finished feature set {i}/{len(feature_sets)}. Generator {fs.get('generator')}. Features: {len(new_features)}. Time: {str(fs_elapsed).split('.')[0]}")
+        print(
+            f"Finished feature set {i}/{len(feature_sets)}. Generator {fs.get('generator')}. Features: {len(new_features)}. Time: {str(fs_elapsed).split('.')[0]}"
+        )
 
     print(f"Finished generating features.")
 
@@ -94,7 +116,7 @@ def main(config_file):
     # Choose columns to stored
     #
     out_columns = ["timestamp", "open", "high", "low", "close"]  # Source data
-    out_columns.extend(App.config.get('labels'))  # True labels
+    out_columns.extend(App.config.get("labels"))  # True labels
     out_columns.extend(all_features)
 
     out_df = df[out_columns]
@@ -104,20 +126,26 @@ def main(config_file):
     #
     out_path = data_path / App.config.get("signal_file_name")
 
-    print(f"Storing signals with {len(out_df)} records and {len(out_df.columns)} columns in output file {out_path}...")
+    print(
+        f"Storing signals with {len(out_df)} records and {len(out_df.columns)} columns in output file {out_path}..."
+    )
     if out_path.suffix == ".parquet":
         out_df.to_parquet(out_path, index=False)
     elif out_path.suffix == ".csv":
-        out_df.to_csv(out_path, index=False, float_format='%.6f')
+        out_df.to_csv(out_path, index=False, float_format="%.6f")
     else:
-        print(f"ERROR: Unknown extension of the 'signal_file_name' file '{out_path.suffix}'. Only 'csv' and 'parquet' are supported")
+        print(
+            f"ERROR: Unknown extension of the 'signal_file_name' file '{out_path.suffix}'. Only 'csv' and 'parquet' are supported"
+        )
         return
 
-    print(f"Signals stored in file: {out_path}. Length: {len(out_df)}. Columns: {len(out_df.columns)}")
+    print(
+        f"Signals stored in file: {out_path}. Length: {len(out_df)}. Columns: {len(out_df.columns)}"
+    )
 
     elapsed = datetime.now() - now
     print(f"Finished signal generation in {str(elapsed).split('.')[0]}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

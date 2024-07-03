@@ -3,10 +3,10 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-# from application.analyzers.classifiers import *
-# from application.database.model_store import *
-# from application.analyzers.processors.gen_features import *
-from application.analyzers.classifiers.classifiers import (
+# from tradeflow.evaluators.classifiers import *
+# from application.database import *
+# from tradeflow.evaluators.processors.gen_features import *
+from tradeflow.evaluators.classifiers import (
     compute_scores,
     train_gb,
     train_nn,
@@ -17,21 +17,21 @@ from application.analyzers.classifiers.classifiers import (
     predict_lc,
     predict_svc,
 )
-from application.analyzers.processors.gen_labels_highlow import (
+from .gen_labels_highlow import (
     generate_labels_highlow,
     generate_labels_highlow2,
 )
-from application.analyzers.processors.gen_labels_topbot import (
+from .gen_labels_topbot import (
     generate_labels_topbot,
     generate_labels_topbot2,
 )
-from application.analyzers.processors.gen_signals import (
+from .gen_signals import (
     generate_smoothen_scores,
     generate_combine_scores,
     generate_threshold_rule,
     generate_threshold_rule2,
 )
-from application.analyzers.processors.gen_features import (
+from .gen_features import (
     generate_features_talib,
     generate_features_itblib,
     generate_features_depth,

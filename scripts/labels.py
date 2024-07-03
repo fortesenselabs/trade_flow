@@ -1,13 +1,11 @@
+import click
+import pandas as pd
 from pathlib import Path
 from datetime import datetime
-
-import pandas as pd
-import click
-
-from application.config.settings import Settings
+from application.config import Settings
 from application.logger import AppLogger
-from application.models.app_model import AppConfig
-from application.analyzers.processors.generators import generate_feature_set
+from application.models import AppConfig
+from tradeflow.evaluators.preprocessors import generate_feature_set
 
 """
 This script will load a feature file (or any file with close price), and add

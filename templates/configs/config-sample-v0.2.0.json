@@ -9,6 +9,6 @@
   "base_asset": "BTC",
   "quote_asset": "USDT",
 
-  "data_folder": "C:/DATA2/BITCOIN/GENERATED/BTCUSDT",
-  "model_folder": "C:/DATA2/BITCOIN/MODELS/BTCUSDT"
+  "data_folder": "DATA2/BITCOIN/GENERATED/BTCUSDT",
+  "model_folder": "DATA2/BITCOIN/MODELS/BTCUSDT"
 }

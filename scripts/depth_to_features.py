@@ -1,18 +1,18 @@
-import pandas as pd
-import math
-#import os.path
-from pathlib import Path
 import json
 import time
-from datetime import timedelta, datetime
-from dateutil import parser
-from tqdm import tqdm_notebook #(Optional, used for progress-bars)
-
+import math
 import numpy as np
+import pandas as pd
 
-from common.utils import *
-from common.gen_features import *
-from common.depth_processing import *
+# import os.path
+from pathlib import Path
+from datetime import datetime
+from dateutil import parser
+from tqdm import tqdm_notebook  # (Optional, used for progress-bars)
+
+# from tradeflow.evaluators.preprocessors.utils import *
+from tradeflow.evaluators.preprocessors.gen_features import *
+from tradeflow.evaluators.preprocessors.depth_processing import *
 
 """
 Produce features from market depth (json) data for a set of files by writing the result in several output (csv) files.
@@ -107,13 +107,14 @@ Meaningful windows: for 1 size: 1, 2, 5, 10, for 2 size: 1, 2, 5
 
 symbol = "BTCUSDT"  # BTCUSDT ETHBTC IOTAUSDT
 
-in_path_name = r"C:\DATA2\BITCOIN\COLLECTED\DEPTH\batch6-partial-till-0307"
-#in_path_name = r"C:\DATA2\BITCOIN\COLLECTED\DEPTH\_test_"
+in_path_name = r"DATA2\BITCOIN\COLLECTED\DEPTH\batch6-partial-till-0307"
+# in_path_name = r"DATA2\BITCOIN\COLLECTED\DEPTH\_test_"
 
 
 #
 # Historic data
 #
+
 
 def get_symbol_files(symbol):
     """
@@ -138,7 +139,7 @@ def find_depth_statistics():
     ask_vols = []
     for path in paths:
 
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             for line in f:
                 try:
                     entry = json.loads(line)
@@ -159,12 +160,24 @@ def find_depth_statistics():
                 bid_vols.append(np.sum([float(x[1]) for x in entry.get("bids")]))
                 ask_vols.append(np.sum([float(x[1]) for x in entry.get("asks")]))
 
-    print(f"Bid spans: min={np.min(bid_spans):.2f}, max={np.max(bid_spans):.2f}, mean={np.mean(bid_spans):.2f}")
-    print(f"Ask spans: min={np.min(ask_spans):.2f}, max={np.max(ask_spans):.2f}, mean={np.mean(ask_spans):.2f}")
-    print(f"Bid lens: min={np.min(bid_lens):.2f}, max={np.max(bid_lens):.2f}, mean={np.mean(bid_lens):.2f}")
-    print(f"Ask lens: min={np.min(ask_lens):.2f}, max={np.max(ask_lens):.2f}, mean={np.mean(ask_lens):.2f}")
-    print(f"Bid vols: min={np.min(bid_vols):.2f}, max={np.max(bid_vols):.2f}, mean={np.mean(bid_vols):.2f}")
-    print(f"Ask vols: min={np.min(ask_vols):.2f}, max={np.max(ask_vols):.2f}, mean={np.mean(ask_vols):.2f}")
+    print(
+        f"Bid spans: min={np.min(bid_spans):.2f}, max={np.max(bid_spans):.2f}, mean={np.mean(bid_spans):.2f}"
+    )
+    print(
+        f"Ask spans: min={np.min(ask_spans):.2f}, max={np.max(ask_spans):.2f}, mean={np.mean(ask_spans):.2f}"
+    )
+    print(
+        f"Bid lens: min={np.min(bid_lens):.2f}, max={np.max(bid_lens):.2f}, mean={np.mean(bid_lens):.2f}"
+    )
+    print(
+        f"Ask lens: min={np.min(ask_lens):.2f}, max={np.max(ask_lens):.2f}, mean={np.mean(ask_lens):.2f}"
+    )
+    print(
+        f"Bid vols: min={np.min(bid_vols):.2f}, max={np.max(bid_vols):.2f}, mean={np.mean(bid_vols):.2f}"
+    )
+    print(
+        f"Ask vols: min={np.min(ask_vols):.2f}, max={np.max(ask_vols):.2f}, mean={np.mean(ask_vols):.2f}"
+    )
     print(f"Bad lines: {bad_lines}")
 
 
@@ -179,7 +192,7 @@ def main(args=None):
         # Load file as a list of dict records
         bad_lines = 0
         table = []
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             for line in f:
                 try:
                     entry = json.loads(line)
@@ -208,10 +221,12 @@ def main(args=None):
         df = df.reset_index().rename(columns={"index": "timestamp"})
 
         # Make timestamp conform to klines: it has to be start of 1m interval (and not end as it is in collected depth data)
-        df["timestamp"] = df["timestamp"].shift(periods=1)  # Move forward (down) - use previous timestamp
+        df["timestamp"] = df["timestamp"].shift(
+            periods=1
+        )  # Move forward (down) - use previous timestamp
 
         # Store file with features
-        df.to_csv(path.with_suffix('.csv').name, index=False, float_format="%.4f")
+        df.to_csv(path.with_suffix(".csv").name, index=False, float_format="%.4f")
 
         print(f"Finished processing file: {path}")
 
@@ -223,12 +238,12 @@ def main(args=None):
     print(f"Finished processing in {int(elapsed.total_seconds())} seconds.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    #start = pd.to_datetime(1576324740000, unit='ms')
-    #datetime.fromtimestamp(float(1576324740000) / 1e3, tz=pytz.UTC)
+    # start = pd.to_datetime(1576324740000, unit='ms')
+    # datetime.fromtimestamp(float(1576324740000) / 1e3, tz=pytz.UTC)
 
-    #find_depth_statistics()
+    # find_depth_statistics()
 
     main()
 

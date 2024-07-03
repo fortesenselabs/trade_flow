@@ -4,10 +4,10 @@ import json
 import inspect
 from pathlib import Path
 from dotenv import load_dotenv
-from application.config import PACKAGE_ROOT
 from application.logger import AppLogger
 from application.models.app_model import AppConfig
 from application.models.config_model import ConfigModel
+from .path import PACKAGE_ROOT
 
 # Load environment variables env vars AND from .env file
 load_dotenv()
@@ -38,7 +38,7 @@ DEFAULT_SETTINGS = {
     "model_folder": "MODELS",
     "time_column": "timestamp",
     # File locations
-    "data_folder": "C:/DATA_ITB",  # Location for all source and generated data/models
+    "data_folder": "DATA",  # Location for all source and generated data/models
     # ==============================================
     # === DOWNLOADER, MERGER and (online) READER ===
     # Symbol determines sub-folder and used in other identifiers

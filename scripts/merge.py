@@ -1,12 +1,13 @@
-from datetime import timedelta, datetime, time
-from pathlib import Path
-
+import click
 import pandas as pd
 import numpy as np
+from datetime import datetime
+from pathlib import Path
+from application.config import Settings
+from application.logger import AppLogger
+from application.models import AppConfig
 
-import click
-
-from service.App import *
+logger = AppLogger(name=__name__)
 
 """
 This script is intended for creating one output file from multiple input data files. 
@@ -19,11 +20,11 @@ This script solves the following problems:
 
 
 depth_file_names = [  # Leave empty to skip
-    #r"C:\DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch1.csv",
-    #r"C:\DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch2.csv",
-    #r"C:\DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch3.csv",
-    #r"C:\DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch4.csv",
-    #r"C:\DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch5.csv",
+    # r"DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch1.csv",
+    # r"DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch2.csv",
+    # r"DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch3.csv",
+    # r"DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch4.csv",
+    # r"DATA2\BITCOIN\GENERATED\depth-BTCUSDT-batch5.csv",
 ]
 
 
@@ -31,16 +32,19 @@ depth_file_names = [  # Leave empty to skip
 # Readers from inputs files (DEPRECATED)
 #
 
+
 def load_futur_files(futur_file_path):
     """Return a data frame with future features."""
 
-    df = pd.read_csv(futur_file_path, parse_dates=['timestamp'], date_format="ISO8601")
+    df = pd.read_csv(futur_file_path, parse_dates=["timestamp"], date_format="ISO8601")
     start = df["timestamp"].iloc[0]
     end = df["timestamp"].iloc[-1]
 
     df = df.set_index("timestamp")
 
-    print(f"Loaded futur file with {len(df)} records in total. Range: ({start}, {end})")
+    logger.info(
+        f"Loaded futur file with {len(df)} records in total. Range: ({start}, {end})"
+    )
 
     return df, start, end
 
@@ -48,13 +52,15 @@ def load_futur_files(futur_file_path):
 def load_kline_files(kline_file_path):
     """Return a data frame with kline features."""
 
-    df = pd.read_csv(kline_file_path, parse_dates=['timestamp'], date_format="ISO8601")
+    df = pd.read_csv(kline_file_path, parse_dates=["timestamp"], date_format="ISO8601")
     start = df["timestamp"].iloc[0]
     end = df["timestamp"].iloc[-1]
 
     df = df.set_index("timestamp")
 
-    print(f"Loaded kline file with {len(df)} records in total. Range: ({start}, {end})")
+    logger.info(
+        f"Loaded kline file with {len(df)} records in total. Range: ({start}, {end})"
+    )
 
     return df, start, end
 
@@ -66,7 +72,9 @@ def load_depth_files():
     start = None
     end = None
     for depth_file_name in depth_file_names:
-        df = pd.read_csv(depth_file_name, parse_dates=['timestamp'], date_format="ISO8601")
+        df = pd.read_csv(
+            depth_file_name, parse_dates=["timestamp"], date_format="ISO8601"
+        )
         # Start
         if start is None:
             start = df["timestamp"].iloc[0]
@@ -83,9 +91,12 @@ def load_depth_files():
         dfs.append(df)
 
     length = np.sum([len(df) for df in dfs])
-    print(f"Loaded {len(depth_file_names)} depth files with {length} records in total. Range: ({start}, {end})")
+    logger.info(
+        f"Loaded {len(depth_file_names)} depth files with {length} records in total. Range: ({start}, {end})"
+    )
 
     return dfs, start, end
+
 
 #
 # Merger
@@ -93,42 +104,47 @@ def load_depth_files():
 
 
 @click.command()
-@click.option('--config_file', '-c', type=click.Path(), default='', help='Configuration file name')
+@click.option(
+    "--config_file", "-c", type=click.Path(), default="", help="Configuration file name"
+)
 def main(config_file):
-    load_config(config_file)
+    settings: Settings = Settings(config_file)
+    logger.info(settings.model_dump())
 
-    time_column = App.config["time_column"]
+    app_config: AppConfig = settings.get_app_config()
 
-    data_sources = App.config.get("data_sources", [])
+    time_column = app_config.config.time_column
+
+    data_sources = app_config.config.data_sources
     if not data_sources:
-        print(f"ERROR: Data sources are not defined. Nothing to merge.")
-        #data_sources = [{"folder": symbol, "file": "klines", "column_prefix": ""}]
+        logger.error(f"ERROR: Data sources are not defined. Nothing to merge.")
+        # data_sources = [{"folder": symbol, "file": "klines", "column_prefix": ""}]
 
     now = datetime.now()
 
     # Read data from input files
-    data_path = Path(App.config["data_folder"])
+    data_path = Path(app_config.config.data_folder)
     for ds in data_sources:
         # What is want is for each source, load file into df, determine its properties (columns, start, end etc.), and then merge all these dfs
 
-        quote = ds.get("folder")
+        quote = ds.folder
         if not quote:
-            print(f"ERROR. Folder is not specified.")
+            logger.error(f"ERROR. Folder is not specified.")
             continue
 
         # If file name is not specified then use symbol name as file name
-        file = ds.get("file", quote)
+        file = ds.file if ds.file else quote
         if not file:
             file = quote
 
         file_path = (data_path / quote / file).with_suffix(".csv")
         if not file_path.is_file():
-            print(f"Data file does not exist: {file_path}")
+            logger.info(f"Data file does not exist: {file_path}")
             return
 
-        print(f"Reading data file: {file_path}")
+        logger.info(f"Reading data file: {file_path}")
         df = pd.read_csv(file_path, parse_dates=[time_column], date_format="ISO8601")
-        print(f"Loaded file with {len(df)} records.")
+        logger.info(f"Loaded file with {len(df)} records.")
 
         ds["df"] = df
 
@@ -138,30 +154,34 @@ def main(config_file):
     #
     # Store file with features
     #
-    out_path = data_path / App.config["symbol"] / App.config.get("merge_file_name")
+    out_path = data_path / app_config.config.symbol / app_config.config.merge_file_name
 
-    print(f"Storing output file...")
+    logger.info(f"Storing output file...")
     df_out = df_out.reset_index()
     if out_path.suffix == ".parquet":
         df_out.to_parquet(out_path, index=False)
     elif out_path.suffix == ".csv":
         df_out.to_csv(out_path, index=False)  # float_format="%.6f"
     else:
-        print(f"ERROR: Unknown extension of the 'merge_file_name' file '{out_path.suffix}'. Only 'csv' and 'parquet' are supported")
+        logger.error(
+            f"ERROR: Unknown extension of the 'merge_file_name' file '{out_path.suffix}'. Only 'csv' and 'parquet' are supported"
+        )
         return
 
     range_start = df_out.index[0]
     range_end = df_out.index[-1]
-    print(f"Stored output file {out_path} with {len(df_out)} records. Range: ({range_start}, {range_end})")
+    logger.info(
+        f"Stored output file {out_path} with {len(df_out)} records. Range: ({range_start}, {range_end})"
+    )
 
     elapsed = datetime.now() - now
-    print(f"Finished merging data in {str(elapsed).split('.')[0]}")
+    logger.info(f"Finished merging data in {str(elapsed).split('.')[0]}")
 
 
 def merge_data_sources(data_sources: list):
 
-    time_column = App.config["time_column"]
-    freq = App.config["freq"]
+    time_column = app_config.config.time_column
+    freq = app_config.config.freq
 
     for ds in data_sources:
         df = ds.get("df")
@@ -171,14 +191,18 @@ def merge_data_sources(data_sources: list):
         elif df.index.name == time_column:
             pass
         else:
-            print(f"ERROR: Timestamp column is absent.")
+            logger.error(f"ERROR: Timestamp column is absent.")
             return
 
         # Add prefix if not already there
-        if ds['column_prefix']:
-            #df = df.add_prefix(ds['column_prefix']+"_")
+        if ds["column_prefix"]:
+            # df = df.add_prefix(ds['column_prefix']+"_")
             df.columns = [
-                ds['column_prefix']+"_"+col if not col.startswith(ds['column_prefix']+"_") else col
+                (
+                    ds["column_prefix"] + "_" + col
+                    if not col.startswith(ds["column_prefix"] + "_")
+                    else col
+                )
                 for col in df.columns
             ]
 
@@ -207,5 +231,5 @@ def merge_data_sources(data_sources: list):
     return df_out
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

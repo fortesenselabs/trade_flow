@@ -1,2 +1,3 @@
-from .binance_collector import BinanceDataCollector
-from .metatrader_collector import MetaTraderDataCollector
+from .base import *
+from .binance_collector import *
+from .metatrader_collector import *

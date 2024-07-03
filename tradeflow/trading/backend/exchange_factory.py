@@ -1,4 +1,4 @@
-import tradeflow.trading_backend.exchanges as exchanges
+import tradeflow.trading.backend.exchanges as exchanges
 
 
 def create_exchange_backend(exchange) -> exchanges.Exchange:

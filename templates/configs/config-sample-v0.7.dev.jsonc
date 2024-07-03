@@ -6,7 +6,7 @@
   "telegram_bot_token": "<token>",
   "telegram_chat_id": "<chat-id-to-publish-messages>",
 
-  "data_folder": "C:/DATA_ITB",
+  "data_folder": "DATA_ITB",
   "models_folder": "models",
   "merge_file_name": "data.csv",
   "feature_file_name": "features.csv",

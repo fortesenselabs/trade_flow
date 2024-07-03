@@ -31,3 +31,4 @@ requests
 websockets
 pydantic
 python-dotenv
+pyyaml

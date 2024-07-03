@@ -30,14 +30,16 @@ def generate_smoothen_scores(df, config: dict):
         - Input point-wise scores in buy and sell columns are always positive
     """
 
-    columns = config.get('columns')
+    columns = config.get("columns")
     if not columns:
-        raise ValueError(f"The 'columns' parameter must be a non-empty string. {type(columns)}")
+        raise ValueError(
+            f"The 'columns' parameter must be a non-empty string. {type(columns)}"
+        )
     elif isinstance(columns, str):
         columns = [columns]
 
     # TODO: check that all columns exist
-    #if columns not in df.columns:
+    # if columns not in df.columns:
     #    raise ValueError(f"{columns} do not exist  in the input data. Existing columns: {df.columns.to_list()}")
 
     # Average all buy and sell columns
@@ -53,9 +55,11 @@ def generate_smoothen_scores(df, config: dict):
     if isinstance(window, int):
         out_column = out_column.rolling(window, min_periods=window // 2).mean()
     elif isinstance(window, float):
-        out_column = out_column.ewm(span=window, min_periods=window // 2, adjust=False).mean()
+        out_column = out_column.ewm(
+            span=window, min_periods=window // 2, adjust=False
+        ).mean()
 
-    names = config.get('names')
+    names = config.get("names")
     if not isinstance(names, str):
         raise ValueError(f"'names' parameter must be a non-empty string. {type(names)}")
 
@@ -71,16 +75,20 @@ def generate_combine_scores(df, config: dict):
     of such scores and produce one score within [-1,+1]. Positive values mean growth
     and negative values mean fall of price.
     """
-    columns = config.get('columns')
+    columns = config.get("columns")
     if not columns:
-        raise ValueError(f"The 'columns' parameter must be a non-empty string. {type(columns)}")
+        raise ValueError(
+            f"The 'columns' parameter must be a non-empty string. {type(columns)}"
+        )
     elif not isinstance(columns, list) or len(columns) != 2:
-        raise ValueError(f"'columns' parameter must be a list with buy column name and sell column name. {type(columns)}")
+        raise ValueError(
+            f"'columns' parameter must be a list with buy column name and sell column name. {type(columns)}"
+        )
 
     up_column = columns[0]
     down_column = columns[1]
 
-    out_column = config.get('names')
+    out_column = config.get("names")
 
     if config.get("combine") == "relative":
         combine_scores_relative(df, up_column, down_column, out_column)
@@ -88,7 +96,9 @@ def generate_combine_scores(df, config: dict):
         combine_scores_difference(df, up_column, down_column, out_column)
     else:
         # If buy score is greater than sell score then positive buy, otherwise negative sell
-        df[out_column] = df[[up_column, down_column]].apply(lambda x: x[0] if x[0] >= x[1] else -x[1], raw=True, axis=1)
+        df[out_column] = df[[up_column, down_column]].apply(
+            lambda x: x[0] if x[0] >= x[1] else -x[1], raw=True, axis=1
+        )
 
     # Scale the score distribution to make it symmetric or normalize
     # Always apply the transformation to buy score. It might be in [0,1] or [-1,+1] depending on combine parameter
@@ -113,7 +123,7 @@ def combine_scores_relative(df, buy_column, sell_column, trade_column_out):
     buy_sell_score = ((df[buy_column] / buy_plus_sell) * 2) - 1.0  # in [-1, +1]
 
     df[trade_column_out] = buy_sell_score  # High values mean buy signal
-    #df[buy_column_out] = df[df[buy_column_out] < 0] = 0  # Set negative values to 0
+    # df[buy_column_out] = df[df[buy_column_out] < 0] = 0  # Set negative values to 0
 
     return buy_sell_score
 
@@ -128,7 +138,7 @@ def combine_scores_difference(df, buy_column, sell_column, trade_column_out):
     buy_minus_sell = df[buy_column] - df[sell_column]
 
     df[trade_column_out] = buy_minus_sell  # High values mean buy signal
-    #df[buy_column_out] = df[df[buy_column_out] < 0] = 0  # Set negative values to 0
+    # df[buy_column_out] = df[df[buy_column_out] < 0] = 0  # Set negative values to 0
 
     return buy_minus_sell
 
@@ -141,6 +151,7 @@ def compute_score_slope(df, model, buy_score_columns_in, sell_score_columns_in):
 
     from scipy import stats
     from sklearn import linear_model
+
     def linear_regr_fn(X):
         """
         Given a Series, fit a linear regression model and return its slope interpreted as a trend.
@@ -168,9 +179,11 @@ def compute_score_slope(df, model, buy_score_columns_in, sell_score_columns_in):
     #    w = 10  #model.get("sell_window")
     #    df['sell_score_slope'] = df['sell_score_column'].rolling(window=w, min_periods=max(1, w // 2)).apply(linear_regr_fn, raw=True)
 
+
 #
 # Signal rules
 #
+
 
 def generate_threshold_rule(df, config):
     """
@@ -182,17 +195,17 @@ def generate_threshold_rule(df, config):
 
     columns = config.get("columns")
     if not columns:
-        raise ValueError(f"The 'columns' parameter must be a non-empty string. {type(columns)}")
+        raise ValueError(
+            f"The 'columns' parameter must be a non-empty string. {type(columns)}"
+        )
     elif isinstance(columns, list):
         columns = [columns]
 
     buy_signal_column = config.get("names")[0]
     sell_signal_column = config.get("names")[1]
 
-    df[buy_signal_column] = \
-        (df[columns] >= parameters.get("buy_signal_threshold"))
-    df[sell_signal_column] = \
-        (df[columns] <= parameters.get("sell_signal_threshold"))
+    df[buy_signal_column] = df[columns] >= parameters.get("buy_signal_threshold")
+    df[sell_signal_column] = df[columns] <= parameters.get("sell_signal_threshold")
 
     return df, [buy_signal_column, sell_signal_column]
 
@@ -211,10 +224,8 @@ def apply_rule_with_score_thresholds(df, score_column_names, model):
 
     score_column = score_column_names[0]
 
-    df[signal_column] = \
-        (df[score_column] >= parameters.get("buy_signal_threshold"))
-    df[signal_column_2] = \
-        (df[score_column] <= parameters.get("sell_signal_threshold"))
+    df[signal_column] = df[score_column] >= parameters.get("buy_signal_threshold")
+    df[signal_column_2] = df[score_column] <= parameters.get("sell_signal_threshold")
 
 
 def generate_threshold_rule2(df, config):
@@ -225,9 +236,13 @@ def generate_threshold_rule2(df, config):
 
     columns = config.get("columns")
     if not columns:
-        raise ValueError(f"The 'columns' parameter must be a non-empty string. {type(columns)}")
+        raise ValueError(
+            f"The 'columns' parameter must be a non-empty string. {type(columns)}"
+        )
     elif not isinstance(columns, list) or len(columns) != 2:
-        raise ValueError(f"'columns' parameter must be a list with two column names. {type(columns)}")
+        raise ValueError(
+            f"'columns' parameter must be a list with two column names. {type(columns)}"
+        )
 
     score_column = columns[0]
     score_column_2 = columns[1]
@@ -236,14 +251,14 @@ def generate_threshold_rule2(df, config):
     sell_signal_column = config.get("names")[1]
 
     # Both buy scores are greater than the corresponding thresholds
-    df[buy_signal_column] = \
-        (df[score_column] >= parameters.get("buy_signal_threshold")) & \
-        (df[score_column_2] >= parameters.get("buy_signal_threshold_2"))
+    df[buy_signal_column] = (
+        df[score_column] >= parameters.get("buy_signal_threshold")
+    ) & (df[score_column_2] >= parameters.get("buy_signal_threshold_2"))
 
     # Both sell scores are smaller than the corresponding thresholds
-    df[sell_signal_column] = \
-        (df[score_column] <= parameters.get("sell_signal_threshold")) & \
-        (df[score_column_2] <= parameters.get("sell_signal_threshold_2"))
+    df[sell_signal_column] = (
+        df[score_column] <= parameters.get("sell_signal_threshold")
+    ) & (df[score_column_2] <= parameters.get("sell_signal_threshold_2"))
 
     return df, [buy_signal_column, sell_signal_column]
 
@@ -253,9 +268,9 @@ def apply_rule_with_score_thresholds_2(df, score_column_names, model):
     """
     Assume using difference combination with negative sell scores
     """
-    #two_dim_distance_threshold = model.get("two_dim_distance_threshold")
-    #distance = ((df[buy_score_column]*df[buy_score_column]) + (df[buy_score_column_2]*df[buy_score_column_2]))**0.5
-    #distance_signal = (distance >= two_dim_distance_threshold)  # Far enough from the center
+    # two_dim_distance_threshold = model.get("two_dim_distance_threshold")
+    # distance = ((df[buy_score_column]*df[buy_score_column]) + (df[buy_score_column_2]*df[buy_score_column_2]))**0.5
+    # distance_signal = (distance >= two_dim_distance_threshold)  # Far enough from the center
 
     parameters = model.get("parameters", {})
 
@@ -266,20 +281,20 @@ def apply_rule_with_score_thresholds_2(df, score_column_names, model):
     signal_column_2 = model.get("signal_columns")[1]
 
     # Both buy scores are greater than the corresponding thresholds
-    df[signal_column] = \
-        (df[score_column] >= parameters.get("buy_signal_threshold")) & \
-        (df[score_column_2] >= parameters.get("buy_signal_threshold_2"))
+    df[signal_column] = (df[score_column] >= parameters.get("buy_signal_threshold")) & (
+        df[score_column_2] >= parameters.get("buy_signal_threshold_2")
+    )
 
-    #if model.get("buy_signal_diff_threshold") is not None:
+    # if model.get("buy_signal_diff_threshold") is not None:
     #    small_increase = df[score_column].diff() <= parameters.get("buy_signal_diff_threshold")
     #    df[signal_column] = df[signal_column] & small_increase
 
     # Both sell scores are smaller than the corresponding thresholds
-    df[signal_column_2] = \
-        (df[score_column] <= parameters.get("sell_signal_threshold")) & \
-        (df[score_column_2] <= parameters.get("sell_signal_threshold_2"))
+    df[signal_column_2] = (
+        df[score_column] <= parameters.get("sell_signal_threshold")
+    ) & (df[score_column_2] <= parameters.get("sell_signal_threshold_2"))
 
-    #if model.get("sell_signal_diff_threshold") is not None:
+    # if model.get("sell_signal_diff_threshold") is not None:
     #    small_increase = df[score_column_2].diff() >= model.get("sell_signal_diff_threshold")
     #    df[signal_column] = df[signal_column] & small_increase
 
@@ -296,10 +311,8 @@ def apply_rule_with_score_thresholds_one_row(row, score_column_names, model):
 
     buy_score = row[score_column]
 
-    buy_signal = \
-        (buy_score >= parameters.get("buy_signal_threshold"))
-    sell_signal = \
-        (buy_score <= parameters.get("sell_signal_threshold"))
+    buy_signal = buy_score >= parameters.get("buy_signal_threshold")
+    sell_signal = buy_score <= parameters.get("sell_signal_threshold")
 
     return buy_signal, sell_signal
 
@@ -317,7 +330,10 @@ def apply_rule_with_slope_thresholds(df, model, buy_score_column, sell_score_col
 # Trade performance calculation
 #
 
-def simulated_trade_performance(df, buy_signal_column, sell_signal_column, price_column):
+
+def simulated_trade_performance(
+    df, buy_signal_column, sell_signal_column, price_column
+):
     """
     The function simulates trades over the time by buying and selling the asset
     according to the specified buy/sell signals and price. Essentially, it assumes
@@ -344,7 +360,7 @@ def simulated_trade_performance(df, buy_signal_column, sell_signal_column, price
 
     # The order of columns is important for itertuples
     df = df[[sell_signal_column, buy_signal_column, price_column]]
-    for (index, sell_signal, buy_signal, price) in df.itertuples(name=None):
+    for index, sell_signal, buy_signal, price in df.itertuples(name=None):
         if not price or pd.isnull(price):
             continue
         if is_buy_mode:
@@ -352,26 +368,34 @@ def simulated_trade_performance(df, buy_signal_column, sell_signal_column, price
             if buy_signal:
                 previous_price = shorts[-1][2] if len(shorts) > 0 else 0.0
                 profit = (previous_price - price) if previous_price > 0 else 0.0
-                profit_percent = 100.0 * profit / previous_price if previous_price > 0 else 0.0
+                profit_percent = (
+                    100.0 * profit / previous_price if previous_price > 0 else 0.0
+                )
                 short_profit += profit
                 short_profit_percent += profit_percent
                 short_transactions += 1
                 if profit > 0:
                     short_profitable += 1
-                shorts.append((index, previous_price, price, profit, profit_percent))  # Bought
+                shorts.append(
+                    (index, previous_price, price, profit, profit_percent)
+                )  # Bought
                 is_buy_mode = False
         else:
             # Check if maximum price
             if sell_signal:
                 previous_price = longs[-1][2] if len(longs) > 0 else 0.0
                 profit = (price - previous_price) if previous_price > 0 else 0.0
-                profit_percent = 100.0 * profit / previous_price if previous_price > 0 else 0.0
+                profit_percent = (
+                    100.0 * profit / previous_price if previous_price > 0 else 0.0
+                )
                 long_profit += profit
                 long_profit_percent += profit_percent
                 long_transactions += 1
                 if profit > 0:
                     long_profitable += 1
-                longs.append((index, previous_price, price, profit, profit_percent))  # Sold
+                longs.append(
+                    (index, previous_price, price, profit, profit_percent)
+                )  # Sold
                 is_buy_mode = True
 
     long_performance = dict(  # Performance of buy at low price and sell at high price
@@ -392,20 +416,23 @@ def simulated_trade_performance(df, buy_signal_column, sell_signal_column, price
     profit = long_profit + short_profit
     profit_percent = long_profit_percent + short_profit_percent
     transaction_no = long_transactions + short_transactions
-    profitable = (long_profitable + short_profitable) / transaction_no if transaction_no else 0.0
-    #minutes_in_month = 1440 * 30.5
+    profitable = (
+        (long_profitable + short_profitable) / transaction_no if transaction_no else 0.0
+    )
+    # minutes_in_month = 1440 * 30.5
     performance = dict(
         profit=profit,
         profit_percent=profit_percent,
         transaction_no=transaction_no,
         profitable=profitable,
-
         profit_per_transaction=profit / transaction_no if transaction_no else 0.0,
-        profitable_percent=100.0 * profitable / transaction_no if transaction_no else 0.0,
-        #transactions=transactions,
-        #profit=profit,
-        #profit_per_month=profit / (len(df) / minutes_in_month),
-        #transactions_per_month=transaction_no / (len(df) / minutes_in_month),
+        profitable_percent=(
+            100.0 * profitable / transaction_no if transaction_no else 0.0
+        ),
+        # transactions=transactions,
+        # profit=profit,
+        # profit_per_month=profit / (len(df) / minutes_in_month),
+        # transactions_per_month=transaction_no / (len(df) / minutes_in_month),
     )
 
     return performance, long_performance, short_performance
@@ -415,7 +442,10 @@ def simulated_trade_performance(df, buy_signal_column, sell_signal_column, price
 # Helper and exploration functions
 #
 
-def find_interval_precision(df: pd.DataFrame, label_column: str, score_column: str, threshold: float):
+
+def find_interval_precision(
+    df: pd.DataFrame, label_column: str, score_column: str, threshold: float
+):
     """
     Convert point-wise score/label pairs to interval-wise score/label.
 
@@ -457,7 +487,7 @@ def find_interval_precision(df: pd.DataFrame, label_column: str, score_column: s
     out = out.astype(int)
 
     # Find groups (intervals, starts-stops) and assign true-false label to them
-    interval_no_column = 'interval_no'
+    interval_no_column = "interval_no"
     df[interval_no_column] = out.cumsum()
 
     #
@@ -465,7 +495,7 @@ def find_interval_precision(df: pd.DataFrame, label_column: str, score_column: s
     #
 
     # First, compute "score lower" (it will be used during interval-based aggregation)
-    df[score_column + '_greater_than_threshold'] = (df[score_column] >= threshold)
+    df[score_column + "_greater_than_threshold"] = df[score_column] >= threshold
 
     # Interval objects
     by_interval = df.groupby(interval_no_column)
@@ -476,7 +506,7 @@ def find_interval_precision(df: pd.DataFrame, label_column: str, score_column: s
 
     # Apply "all lower" function to each interval scores.
     # Either 0 (all lower) or 1 (at least one higher)
-    interval_score = by_interval[score_column + '_greater_than_threshold'].max()
+    interval_score = by_interval[score_column + "_greater_than_threshold"].max()
     interval_score.name = score_column
 
     # Compute into output
@@ -500,65 +530,98 @@ def generate_score_high_low(df, feature_sets):
 
     if "kline" in feature_sets:
         # high kline: 3 algorithms for all 3 levels
-        df["high_k"] = \
-            df["high_10_k_gb"] + df["high_10_k_nn"] + df["high_10_k_lc"] + \
-            df["high_15_k_gb"] + df["high_15_k_nn"] + df["high_15_k_lc"] + \
-            df["high_20_k_gb"] + df["high_20_k_nn"] + df["high_20_k_lc"]
+        df["high_k"] = (
+            df["high_10_k_gb"]
+            + df["high_10_k_nn"]
+            + df["high_10_k_lc"]
+            + df["high_15_k_gb"]
+            + df["high_15_k_nn"]
+            + df["high_15_k_lc"]
+            + df["high_20_k_gb"]
+            + df["high_20_k_nn"]
+            + df["high_20_k_lc"]
+        )
         df["high_k"] /= 9
 
         # low kline: 3 algorithms for all 3 levels
-        df["low_k"] = \
-            df["low_10_k_gb"] + df["low_10_k_nn"] + df["low_10_k_lc"] + \
-            df["low_15_k_gb"] + df["low_15_k_nn"] + df["low_15_k_lc"] + \
-            df["low_20_k_gb"] + df["low_20_k_nn"] + df["low_20_k_lc"]
+        df["low_k"] = (
+            df["low_10_k_gb"]
+            + df["low_10_k_nn"]
+            + df["low_10_k_lc"]
+            + df["low_15_k_gb"]
+            + df["low_15_k_nn"]
+            + df["low_15_k_lc"]
+            + df["low_20_k_gb"]
+            + df["low_20_k_nn"]
+            + df["low_20_k_lc"]
+        )
         df["low_k"] /= 9
 
         # By algorithm type
-        df["high_k_nn"] = (df["high_10_k_nn"] + df["high_15_k_nn"] + df["high_20_k_nn"]) / 3
+        df["high_k_nn"] = (
+            df["high_10_k_nn"] + df["high_15_k_nn"] + df["high_20_k_nn"]
+        ) / 3
         df["low_k_nn"] = (df["low_10_k_nn"] + df["low_15_k_nn"] + df["low_20_k_nn"]) / 3
 
     if "futur" in feature_sets:
         # high futur: 3 algorithms for all 3 levels
-        df["high_f"] = \
-            df["high_10_f_gb"] + df["high_10_f_nn"] + df["high_10_f_lc"] + \
-            df["high_15_f_gb"] + df["high_15_f_nn"] + df["high_15_f_lc"] + \
-            df["high_20_f_gb"] + df["high_20_f_nn"] + df["high_20_f_lc"]
+        df["high_f"] = (
+            df["high_10_f_gb"]
+            + df["high_10_f_nn"]
+            + df["high_10_f_lc"]
+            + df["high_15_f_gb"]
+            + df["high_15_f_nn"]
+            + df["high_15_f_lc"]
+            + df["high_20_f_gb"]
+            + df["high_20_f_nn"]
+            + df["high_20_f_lc"]
+        )
         df["high_f"] /= 9
 
         # low kline: 3 algorithms for all 3 levels
-        df["low_f"] = \
-            df["low_10_f_gb"] + df["low_10_f_nn"] + df["low_10_f_lc"] + \
-            df["low_15_f_gb"] + df["low_15_f_nn"] + df["low_15_f_lc"] + \
-            df["low_20_f_gb"] + df["low_20_f_nn"] + df["low_20_f_lc"]
+        df["low_f"] = (
+            df["low_10_f_gb"]
+            + df["low_10_f_nn"]
+            + df["low_10_f_lc"]
+            + df["low_15_f_gb"]
+            + df["low_15_f_nn"]
+            + df["low_15_f_lc"]
+            + df["low_20_f_gb"]
+            + df["low_20_f_nn"]
+            + df["low_20_f_lc"]
+        )
         df["low_f"] /= 9
 
         # By algorithm type
-        df["high_f_nn"] = (df["high_10_f_nn"] + df["high_15_f_nn"] + df["high_20_f_nn"]) / 3
+        df["high_f_nn"] = (
+            df["high_10_f_nn"] + df["high_15_f_nn"] + df["high_20_f_nn"]
+        ) / 3
         df["low_f_nn"] = (df["low_10_f_nn"] + df["low_15_f_nn"] + df["low_20_f_nn"]) / 3
 
     # High and low
     # Both k and f
-    #in_df["high"] = (in_df["high_k"] + in_df["high_f"]) / 2
-    #in_df["low"] = (in_df["low_k"] + in_df["low_f"]) / 2
+    # in_df["high"] = (in_df["high_k"] + in_df["high_f"]) / 2
+    # in_df["low"] = (in_df["low_k"] + in_df["low_f"]) / 2
 
     # Only k and all algorithms
-    df["high"] = (df["high_k"])
-    df["low"] = (df["low_k"])
+    df["high"] = df["high_k"]
+    df["low"] = df["low_k"]
 
     # Using one NN algorithm only
-    #in_df["high"] = (in_df["high_k_nn"])
-    #in_df["low"] = (in_df["low_k_nn"])
+    # in_df["high"] = (in_df["high_k_nn"])
+    # in_df["low"] = (in_df["low_k_nn"])
 
     # Final score: proportion to the sum
     high_and_low = df["high"] + df["low"]
     df["score"] = ((df["high"] / high_and_low) * 2) - 1.0  # in [-1, +1]
 
     # Final score: abs difference betwee high and low (scaled to [-1,+1] maybe)
-    #in_df["score"] = in_df["high"] - in_df["low"]
+    # in_df["score"] = in_df["high"] - in_df["low"]
     from sklearn.preprocessing import StandardScaler
-    #in_df["score"] = StandardScaler().fit_transform(in_df["score"])
 
-    #in_df["score"] = in_df["score"].rolling(window=10, min_periods=1).apply(np.nanmean)
+    # in_df["score"] = StandardScaler().fit_transform(in_df["score"])
+
+    # in_df["score"] = in_df["score"].rolling(window=10, min_periods=1).apply(np.nanmean)
 
     return df
 
@@ -615,16 +678,19 @@ def generate_signals(df, models: dict):
     return models.keys()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from pathlib import Path
     import numpy as np
     import pandas as pd
 
-    df = pd.read_csv(r"C:\DATA_ITB\BTCUSDT\signals.csv", parse_dates=["timestamp"], nrows=100_000_000)
+    df = pd.read_csv(
+        r"DATA_ITB\BTCUSDT\signals.csv", parse_dates=["timestamp"], nrows=100_000_000
+    )
 
     df = df.dropna(subset=["close"])
 
-    performance, long_performance, short_performance = \
-        simulated_trade_performance(df, 'sell_signal_column', 'buy_signal_column', 'close')
+    performance, long_performance, short_performance = simulated_trade_performance(
+        df, "sell_signal_column", "buy_signal_column", "close"
+    )
 
     pass

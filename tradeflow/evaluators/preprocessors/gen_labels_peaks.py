@@ -7,8 +7,10 @@ import numpy as np
 import pandas as pd
 
 # from application.utils import *
-from application.analyzers.processors.gen_features import *
-from application.analyzers.processors.gen_features_rolling_agg import *
+# from .gen_features import *
+# from .gen_features_rolling_agg import *
+
+# https://github.com/FortesenseLabs/trading-analytics/blob/main/src/Financial_presentation(synthetics).ipynb
 
 """
 Label generation. Labels are features which are used for training.
@@ -17,7 +19,7 @@ opposed to normal features computed from past values.
 """
 
 
-def generate_labels_highlow(df, horizon):
+def generate_labels_peaks(df, horizon):
     """
     Generate (compute) a number of labels similar to other derived features but using future data.
     This function is used before training to generate true labels.
@@ -108,120 +110,6 @@ def generate_labels_highlow(df, horizon):
     ratio_column_name = "high_to_low_" + str(horizon)
     ratio_column = df[high_column_name] / column_sum  # in [0,1]
     df[ratio_column_name] = (ratio_column * 2) - 1
-
-    return labels
-
-
-def generate_labels_highlow2(df, config: dict):
-    """
-    Generate multiple increase/decrease labels which are typically used for training.
-
-    :param df:
-    :param horizon:
-    :return:
-    """
-    column_names = config.get("columns")
-    close_column = column_names[0]
-    high_column = column_names[1]
-    low_column = column_names[2]
-
-    function = config.get("function")
-    if not isinstance(function, str):
-        raise ValueError(f"Wrong type of the 'function' parameter: {type(function)}")
-    if function not in ["high", "low"]:
-        raise ValueError(
-            f"Unknown function name {function}. Only 'high' or 'low' are possible"
-        )
-
-    tolerance = config.get("tolerance")  # Fraction of the level/threshold
-
-    thresholds = config.get(
-        "thresholds"
-    )  # List of thresholds which are growth/drop in percent
-    if not isinstance(thresholds, list):
-        thresholds = [thresholds]
-
-    if function == "high":
-        thresholds = [abs(t) for t in thresholds]
-        price_columns = [high_column, low_column]
-    elif function == "low":
-        thresholds = [-abs(t) for t in thresholds]
-        price_columns = [low_column, high_column]
-
-    tolerances = [
-        round(-t * tolerance, 6) for t in thresholds
-    ]  # Tolerance have opposite sign
-
-    horizon = config.get("horizon")  # Length of history to be analyzed
-
-    names = config.get(
-        "names"
-    )  # For example, ['first_high_10', 'first_high_15'] for two tolerances
-    if len(names) != len(thresholds):
-        raise ValueError(
-            f"'highlow2' Label generator: for each threshold value one name has to be provided."
-        )
-
-    labels = []
-    for i, threshold in enumerate(thresholds):
-        first_cross_labels(
-            df,
-            horizon,
-            [threshold, tolerances[i]],
-            close_column,
-            price_columns,
-            names[i],
-        )
-        labels.append(names[i])
-
-    print(f"Highlow2 labels computed: {labels}")
-
-    return df, labels
-
-
-def generate_labels_sim(df, horizon):
-    """Currently not used."""
-    labels = []
-
-    # Max high
-    add_future_aggregations(
-        df,
-        "high",
-        np.max,
-        horizon,
-        suffix="_max",
-        rel_column_name="close",
-        rel_factor=100.0,
-    )
-
-    # Max high crosses (is over) the threshold
-    labels += add_threshold_feature(
-        df, "high_max_180", thresholds=[2.0], out_names=["high_20"]
-    )
-    # Max high does not cross (is under) the threshold
-    labels += add_threshold_feature(
-        df, "high_max_180", thresholds=[0.2], out_names=["high_02"]
-    )
-
-    # Min low
-    add_future_aggregations(
-        df,
-        "low",
-        np.min,
-        horizon,
-        suffix="_min",
-        rel_column_name="close",
-        rel_factor=100.0,
-    )
-
-    # Min low does not cross (is over) the negative threshold
-    labels += add_threshold_feature(
-        df, "low_min_180", thresholds=[-0.2], out_names=["low_02"]
-    )
-    # Min low crosses (is under) the negative threshold
-    labels += add_threshold_feature(
-        df, "low_min_180", thresholds=[-2.0], out_names=["low_20"]
-    )
 
     return labels
 
@@ -376,7 +264,3 @@ def first_cross_labels(
     df.drop(columns=["first_idx_column", "second_idx_column"], inplace=True)
 
     return out_column
-
-
-if __name__ == "__main__":
-    pass

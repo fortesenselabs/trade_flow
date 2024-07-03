@@ -1,7 +1,6 @@
 from asyncio import AbstractEventLoop
-from typing import Any, Dict, Optional
-from application.models.config_model import ConfigModel
-from application.analyzers.base import BaseAnalyzer
+from typing import Any, Dict, Optional, Callable
+from .config_model import ConfigModel
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
@@ -13,7 +12,7 @@ class AppConfig:
         config: ConfigModel,
         loop: Optional[AbstractEventLoop] = None,
         sched: Optional[AsyncIOScheduler] = None,
-        analyzer: Optional[BaseAnalyzer] = None,
+        analyzer: Optional[Callable] = None,
         client: Optional[Any] = None,
         bm: Optional[Any] = None,
         conn_key: Optional[Any] = None,

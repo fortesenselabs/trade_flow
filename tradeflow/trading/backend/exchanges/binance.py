@@ -1,17 +1,23 @@
 import ccxt
 import aiohttp.streams
-import tradeflow.trading_backend.exchanges as exchanges
-from tradeflow.trading_backend import enums
+
+import tradeflow.trading.backend.exchanges as exchanges
+from tradeflow.trading.backend import enums
 
 
-class MetaTraderCFDProvider(exchanges.Exchange):
+class Binance(exchanges.Exchange):
+    LEGACY_SPOT_ID = "T9698EB7"
+    SPOT_ID = "HR452G85"
     MARGIN_ID = None
-    CFD_ID = "dwx-ea"
-    IS_SPONSORING = False
+    LEGACY_FUTURE_ID = "uquVg2pc"
+    FUTURE_ID = "uquVg2pc"
+    LEGACY_REF_ID = "135007948"
+    REF_ID = "528112221"
+    IS_SPONSORING = True
 
     @classmethod
     def get_name(cls):
-        return "metatrader"
+        return "binance"
 
     def _get_order_custom_id(self):
         return f"x-{self._get_id()}{self._exchange.connector.client.uuid22()}"

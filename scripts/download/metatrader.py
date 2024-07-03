@@ -1,24 +1,23 @@
 # IMPORTS
-from pathlib import Path
+import click
 import pandas as pd
 import os.path
 import json
 import time
+from pathlib import Path
 from datetime import timedelta, datetime
 from dateutil import parser
 from tqdm import tqdm_notebook  # (Optional, used for progress-bars)
-import click
 
 # import aiohttp
-
 from metatrader.enums import TimeFrame
 from metatrader.dwx import MetaTraderDataProcessor
-
-from application.config.settings import Settings
+from application.config import Settings
 from application.logger import AppLogger
-from application.models.app_model import AppConfig
+from application.models import AppConfig
 from application.utils import mt_klines_to_df
 from metatrader.services import KlinesService
+
 
 logger = AppLogger(name=__name__)
 DOWNLOADER_NAME = "MetaTrader"
@@ -106,7 +105,7 @@ def main(config_file):
 
         logger.info(latest_klines[-1])
 
-        latest_ts = pd.to_datetime(latest_klines[-1].time, unit='s', utc=True)
+        latest_ts = pd.to_datetime(latest_klines[-1].time, unit="s", utc=True)
 
         if file_name.is_file():
             # Load the existing data in order to append newly downloaded data

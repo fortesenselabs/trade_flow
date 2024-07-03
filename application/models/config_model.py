@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
 
 
@@ -158,7 +158,7 @@ class ConfigModel(BaseModel):
     signal_models_file_name: str
     data_sources: List[DataSource]
     time_column: str
-    feature_sets: List[FeatureSet] 
+    feature_sets: List[FeatureSet]
     label_sets: List[LabelSet]
     label_horizon: int
     train_length: int
