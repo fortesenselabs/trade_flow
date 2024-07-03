@@ -17,21 +17,22 @@ from tradeflow.evaluators.classifiers import (
     predict_lc,
     predict_svc,
 )
-from .gen_labels_highlow import (
+from .preprocessors.gen_labels_highlow import (
     generate_labels_highlow,
     generate_labels_highlow2,
 )
-from .gen_labels_topbot import (
+from .preprocessors.gen_labels_topbot import (
     generate_labels_topbot,
     generate_labels_topbot2,
 )
-from .gen_signals import (
+from .preprocessors.gen_labels_peaks import generate_labels_peaks
+from .preprocessors.gen_signals import (
     generate_smoothen_scores,
     generate_combine_scores,
     generate_threshold_rule,
     generate_threshold_rule2,
 )
-from .gen_features import (
+from .preprocessors.gen_features import (
     generate_features_talib,
     generate_features_itblib,
     generate_features_depth,
@@ -110,6 +111,10 @@ def generate_feature_set(
         )
     elif generator == "topbot2":
         f_df, features = generate_labels_topbot2(f_df, gen_config)
+
+    elif generator == "peaks":
+        f_df, features = generate_labels_peaks(f_df, gen_config)
+        print(f"Finished generating 'peaks' labels. {len(features)} labels generated.")
 
     # Signals
     elif generator == "smoothen":
