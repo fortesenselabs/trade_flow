@@ -3,3 +3,8 @@
 """
 This module for everything related to evaluators and strategies.
 """
+from .agents import *
+from .classifiers import *
+from .regressors import *
+from .strategies import *
+from .generators import *
