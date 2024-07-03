@@ -7,7 +7,7 @@ from application.config import Settings
 from application.logger import AppLogger
 from application.models import AppConfig
 from application.database import save_model_pair
-from tradeflow.evaluators.preprocessors import generate_feature_set
+from tradeflow.evaluators import generate_feature_set
 
 
 logger = AppLogger(name=__name__)

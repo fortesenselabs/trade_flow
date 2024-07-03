@@ -7,7 +7,7 @@ from tqdm import tqdm
 from application.config import Settings
 from application.logger import AppLogger
 from application.models import AppConfig
-from tradeflow.evaluators.preprocessors import predict_feature_set
+from tradeflow.evaluators import predict_feature_set
 from application.database import save_model_pair
 
 logger = AppLogger(name=__name__)

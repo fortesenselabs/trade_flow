@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import click
 import numpy as np
 import pandas as pd
@@ -9,16 +10,14 @@ from sklearn.metrics import (
     RocCurveDisplay,
 )
 from sklearn.model_selection import ParameterGrid
-
-# from common.utils import *
-# from common.gen_signals import *
-# from common.classifiers import *
-
+from tradeflow.evaluators import generate_feature_set
+from tradeflow.evaluators.preprocessors import simulated_trade_performance
 from application.config.settings import Settings
 from application.logger import AppLogger
 from application.models.app_model import AppConfig
 from application.database import save_model_pair
-from tradeflow.evaluators.preprocessors import generate_feature_set
+from application.utils import find_index
+
 
 logger = AppLogger(name=__name__)
 
@@ -58,23 +57,24 @@ def main(config_file):
 
     now = datetime.now()
 
-    symbol = App.config["symbol"]
-    data_path = Path(App.config["data_folder"]) / symbol
+    symbol = app_config.config.symbol
+    data_path = Path(app_config.config.data_folder) / symbol
     if not data_path.is_dir():
-        print(f"Data folder does not exist: {data_path}")
+        logger.error(f"Data folder does not exist: {data_path}")
         return
-    out_path = Path(App.config["data_folder"]) / symbol
+
+    out_path = Path(app_config.config.data_folder) / symbol
     out_path.mkdir(parents=True, exist_ok=True)  # Ensure that folder exists
 
     #
     # Load data with (rolling) label point-wise predictions and signals generated
     #
-    file_path = data_path / App.config.get("signal_file_name")
+    file_path = data_path / app_config.config.signal_file_name
     if not file_path.exists():
-        print(f"ERROR: Input file does not exist: {file_path}")
+        logger.error(f"ERROR: Input file does not exist: {file_path}")
         return
 
-    print(f"Loading signals from input file: {file_path}")
+    logger.info(f"Loading signals from input file: {file_path}")
     if file_path.suffix == ".parquet":
         df = pd.read_parquet(file_path)
     elif file_path.suffix == ".csv":
@@ -85,29 +85,29 @@ def main(config_file):
             nrows=P.in_nrows,
         )
     else:
-        print(
+        logger.error(
             f"ERROR: Unknown extension of the 'signal_file_name' file '{file_path.suffix}'. Only 'csv' and 'parquet' are supported"
         )
         return
 
-    print(f"Signals loaded. Length: {len(df)}. Width: {len(df.columns)}")
+    logger.info(f"Signals loaded. Length: {len(df)}. Width: {len(df.columns)}")
 
     #
     # Limit the source data
     #
-    train_signal_config = App.config["train_signal_model"]
+    train_signal_config = app_config.config.train_signal_model
 
-    data_start = train_signal_config.get("data_start", 0)
+    data_start = train_signal_config.data_start
     if isinstance(data_start, str):
         data_start = find_index(df, data_start)
-    data_end = train_signal_config.get("data_end", None)
+    data_end = train_signal_config.data_end
     if isinstance(data_end, str):
         data_end = find_index(df, data_end)
 
     df = df.iloc[data_start:data_end]
     df = df.reset_index(drop=True)
 
-    print(
+    logger.info(
         f"Input data size {len(df)} records. Range: [{df.iloc[0][time_column]}, {df.iloc[-1][time_column]}]"
     )
 
@@ -118,13 +118,13 @@ def main(config_file):
     #
     # Load signal train parameters
     #
-    parameter_grid = train_signal_config.get("grid")
-    direction = train_signal_config.get("direction", "")
+    parameter_grid = train_signal_config.grid
+    direction = train_signal_config.direction
     if direction not in ["long", "short", "both", ""]:
         raise ValueError(
             f"Unknown value of {direction} in signal train model. Only 'long', 'short' and 'both' are possible."
         )
-    topn_to_store = train_signal_config.get("topn_to_store", 10)
+    topn_to_store = train_signal_config.topn_to_store
 
     # Evaluate strings to produce lists with ranges of parameters
     if isinstance(parameter_grid.get("buy_signal_threshold"), str):
@@ -145,20 +145,30 @@ def main(config_file):
         )
 
     # If necessary, disable sell parameters in grid search - they will be set from the buy parameters
-    if train_signal_config.get("buy_sell_equal"):
+    if train_signal_config.buy_sell_equal:
         parameter_grid["sell_signal_threshold"] = [None]
         parameter_grid["sell_signal_threshold_2"] = [None]
 
     #
-    # Find the generator, the parameters of which will be varied
+    # Find the generators, the parameters of which will be varied
     #
-    generator_name = train_signal_config.get("signal_generator")
-    signal_generator = next(
+    combine_generator_name = "combine"
+    combine_signal_generator = next(
         (
             ss
-            for ss in App.config.get("signal_sets", [])
-            if ss.get("generator") == generator_name
+            for ss in app_config.config.signal_sets
+            if ss.generator == combine_generator_name
         ),
+        None,
+    )
+    if not combine_signal_generator:
+        raise ValueError(
+            f"Signal generator '{generator_name}' not found among all 'signal_sets'"
+        )
+
+    generator_name = train_signal_config.signal_generator
+    signal_generator = next(
+        (ss for ss in app_config.config.signal_sets if ss.generator == generator_name),
         None,
     )
     if not signal_generator:
@@ -172,7 +182,7 @@ def main(config_file):
         #
         # If equal parameters, then derive the sell parameter from the buy parameter
         #
-        if train_signal_config.get("buy_sell_equal"):
+        if train_signal_config.buy_sell_equal:
             parameters["sell_signal_threshold"] = -parameters["buy_signal_threshold"]
             # signal_model["sell_slope_threshold"] = -signal_model["buy_slope_threshold"]
             if parameters.get("buy_signal_threshold_2") is not None:
@@ -183,12 +193,19 @@ def main(config_file):
         #
         # Set new parameters of the signal generator
         #
-        signal_generator["config"]["parameters"].update(parameters)
+        signal_generator.config.parameters.update(parameters)
 
         #
         # Execute the signal generator with new parameters by producing new signal columns
         #
-        df, new_features = generate_feature_set(df, signal_generator, last_rows=0)
+        # perform combine before threshold
+        df, _ = generate_feature_set(
+            df, combine_signal_generator.model_dump(), last_rows=0
+        )
+
+        df, new_features = generate_feature_set(
+            df, signal_generator.model_dump(), last_rows=0
+        )
 
         #
         # Simulate trade and compute performance using close price and two boolean signals
@@ -196,8 +213,8 @@ def main(config_file):
         #
 
         # These boolean columns are used for performance measurement. Alternatively, they are in trade_signal_model
-        buy_signal_column = signal_generator["config"]["names"][0]
-        sell_signal_column = signal_generator["config"]["names"][1]
+        buy_signal_column = signal_generator.config.names[0]
+        sell_signal_column = signal_generator.config.names[1]
 
         # Perform backtesting
         performance, long_performance, short_performance = simulated_trade_performance(
@@ -279,7 +296,7 @@ def main(config_file):
     # Store simulation parameters and performance
     #
     out_path = (
-        (out_path / App.config.get("signal_models_file_name"))
+        (out_path / app_config.config.signal_models_file_name)
         .with_suffix(".txt")
         .resolve()
     )
@@ -294,10 +311,10 @@ def main(config_file):
         # f.writelines(lines)
         f.write("\n".join(lines) + "\n\n")
 
-    print(f"Simulation results stored in: {out_path}. Lines: {len(lines)}.")
+    logger.info(f"Simulation results stored in: {out_path}. Lines: {len(lines)}.")
 
     elapsed = datetime.now() - now
-    print(f"Finished simulation in {str(elapsed).split('.')[0]}")
+    logger.info(f"Finished simulation in {str(elapsed).split('.')[0]}")
 
 
 if __name__ == "__main__":
