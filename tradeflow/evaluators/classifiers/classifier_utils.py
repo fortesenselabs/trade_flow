@@ -3,13 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 
-# from sklearn.model_selection import train_test_split
-# from sklearn import metrics
 # from sklearn.model_selection import ParameterGrid
-# from sklearn.preprocessing import StandardScaler
-# from sklearn.metrics import precision_score
-# from sklearn.metrics import recall_score
-# from sklearn.metrics import f1_score
 
 #
 # Utils
