@@ -10,13 +10,13 @@ from dateutil import parser
 from tqdm import tqdm_notebook  # (Optional, used for progress-bars)
 
 # import aiohttp
-from metatrader.enums import TimeFrame
-from metatrader.dwx import MetaTraderDataProcessor
+from tradeflow.metatrader.enums import TimeFrame
+from tradeflow.metatrader.dwx import MetaTraderDataProcessor
 from application.config import Settings
 from application.logger import AppLogger
 from application.models import AppConfig
 from application.utils import mt_klines_to_df
-from metatrader.services import KlinesService
+from tradeflow.metatrader.services import KlinesService
 
 
 logger = AppLogger(name=__name__)
