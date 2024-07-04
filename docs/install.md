@@ -1,8 +1,12 @@
-# Install 
+# Install TradeFlow
 
-Purpose 
+```bash
+git clone https://github.com/FortesenseLabs/trade-flow
 
-## Optional: use a virtual Python environment such as `venv`
+cd trade-flow
+```
+
+### Optional: use a virtual Python environment such as `venv`
 
 ```bash
 python3 -m venv .venv # Use alternative venv manager if desired
