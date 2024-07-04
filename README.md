@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 
 4. Configuration:
-   Edit the `config.py` file to define your API keys, trading strategies, and risk parameters.
+   Edit the `config.json` OR `config.yaml` OR `config.jsonc` file to define your API keys, trading strategies, and risk parameters.
 
 ## Disclaimer:
 
