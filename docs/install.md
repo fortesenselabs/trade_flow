@@ -17,3 +17,11 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -e .
 ```
+
+## Usage:
+
+Refer to the `usage.py` script for an example of how to use TradeFlow.
+
+## Info:
+
+Extensions would be called flows, similar to Octobot's tentacles
