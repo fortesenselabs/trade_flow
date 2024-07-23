@@ -4,21 +4,22 @@ from decimal import *
 import pandas as pd
 import asyncio
 
-from metatrader.dwx import MetaTraderDataProcessor
-from metatrader.enums import TimeFrame
-from metatrader.v0.helpers import date_to_milliseconds, interval_to_milliseconds
-
-from application.collectors.base import BaseDataCollector
-from application.utils.utils import now_timestamp
+from metatrader import TimeFrame
+from application.api import MetaTraderAPIManager
+from application.utils import (
+    now_timestamp,
+    pandas_get_interval,
+    pandas_interval_length_ms,
+)
 from application.logger import AppLogger
-from application.models.app_model import AppConfig
-
+from application.config import AppConfig
+from .base import BaseDataCollector
 
 logger = AppLogger(name=__name__)
 
 
 class MetaTraderDataCollector(BaseDataCollector):
-    def __init__(self, app_config: AppConfig, client: MetaTraderDataProcessor):
+    def __init__(self, app_config: AppConfig, client: MetaTraderAPIManager):
         super().__init__(app_config)
         self.client = client
 
@@ -60,34 +61,38 @@ class MetaTraderDataCollector(BaseDataCollector):
         )
         symbols = [x.folder for x in data_sources]
         freq = self.app_config.config.freq
-        binance_freq = binance_freq_from_pandas(freq)
+        metatrader_freq = TimeFrame.freq_from_pandas(freq)
 
         if not symbols:
             symbols = [self.app_config.config.symbol]
 
-        print("symbols: ", symbols)
+        logger.info(f"symbols: {symbols}")
 
         # How many records are missing (and to be requested) for each symbol
         missing_klines_counts = [
             self.app_config.analyzer.get_missing_klines_count(sym) for sym in symbols
         ]
+        logger.info(f"missing_klines_counts: {missing_klines_counts}")
 
         # Create a list of tasks for retrieving data
         # coros = [request_klines(sym, "1m", 5) for sym in symbols]
         tasks = [
-            asyncio.create_task(self.request_klines(s, freq, c))
+            asyncio.create_task(self.request_klines(s, metatrader_freq, c))
             for c, s in zip(missing_klines_counts, symbols)
         ]
+        logger.info(f"tasks: {tasks}")
 
         results = {}
-        timeout = 10  # Seconds to wait for the result
+        timeout = 60  # Seconds to wait for the result
 
         # Process responses in the order of arrival
         for fut in asyncio.as_completed(tasks, timeout=timeout):
+            logger.info(f"Future: {fut}")
             # Get the results
             res = None
             try:
                 res = await fut
+                logger.info(f"Future Result: {res}")
             except TimeoutError as te:
                 logger.warning(f"Timeout {timeout} seconds when requesting kline data.")
                 return 1
@@ -131,7 +136,7 @@ class MetaTraderDataCollector(BaseDataCollector):
         # Implement logic to get missing klines count
         pass
 
-    async def request_klines(self, symbol, freq, limit):
+    async def request_klines(self, symbol, freq: TimeFrame, limit):
         """
         Request klines data from the service for one symbol.
         Maximum the specified number of klines will be returned.
@@ -142,65 +147,64 @@ class MetaTraderDataCollector(BaseDataCollector):
         :return: Dict with the symbol as a key and a list of klines as a value. One kline is also a list.
         """
         klines_per_request = 400  # Limitation of API
-
+        metatrader_freq = TimeFrame.value
         now_ts = now_timestamp()
-        start_ts, end_ts = self.pandas_get_interval(freq)
+        start_ts, end_ts = pandas_get_interval(freq)
+        logger.info(f"start_ts: {start_ts}")
 
-        binance_freq = TimeFrame.freq_from_pandas(freq)
-        interval_length_ms = self.pandas_interval_length_ms(freq)
+        interval_length_ms = pandas_interval_length_ms(freq)
 
-        try:
-            if (
-                limit <= klines_per_request
-            ):  # Server will return these number of klines in one request
-                # INFO:
-                # - startTime: include all intervals (ids) with same or greater id: if within interval then excluding this interval; if is equal to open time then include this interval
-                # - endTime: include all intervals (ids) with same or smaller id: if equal to left border then return this interval, if within interval then return this interval
-                # - It will return also incomplete current interval (in particular, we could collect approximate klines for higher frequencies by requesting incomplete intervals)
-                klines = self.app_config.client.get_klines(
-                    symbol=symbol, interval=binance_freq, limit=limit, endTime=now_ts
-                )
-                # Return: list of lists, that is, one kline is a list (not dict) with items ordered: timestamp, open, high, low, close etc.
-            else:
-                # https://sammchardy.github.io/binance/2018/01/08/historical-data-download-binance.html
-                # get_historical_klines(symbol, interval, start_str, end_str=None, limit=500)
-                # Find start from the number of records and frequency (interval length in milliseconds)
-                request_start_ts = now_ts - interval_length_ms * (limit + 1)
-                klines = self.app_config.client.get_historical_klines(
-                    symbol=symbol,
-                    interval=binance_freq,
-                    start_str=request_start_ts,
-                    end_str=now_ts,
-                )
-        except BinanceRequestException as bre:
-            # {"code": 1103, "msg": "An unknown parameter was sent"}
-            logger.error(f"BinanceRequestException while requesting klines: {bre}")
-            return {}
-        except BinanceAPIException as bae:
-            # {"code": 1002, "msg": "Invalid API call"}
-            logger.error(f"BinanceAPIException while requesting klines: {bae}")
-            return {}
-        except Exception as e:
-            logger.error(f"Exception while requesting klines: {e}")
-            return {}
+        # try:
+        #     if (
+        #         limit <= klines_per_request
+        #     ):  # Server will return these number of klines in one request
+        #         # INFO:
+        #         # - startTime: include all intervals (ids) with same or greater id: if within interval then excluding this interval; if is equal to open time then include this interval
+        #         # - endTime: include all intervals (ids) with same or smaller id: if equal to left border then return this interval, if within interval then return this interval
+        #         # - It will return also incomplete current interval (in particular, we could collect approximate klines for higher frequencies by requesting incomplete intervals)
+        #         klines = self.app_config.client.get_historical_klines(
+        #             symbol=symbol,
+        #             time_frame=metatrader_freq,
+        #             limit=limit,
+        #             endTime=now_ts,
+        #         )
+        #         logger.info(klines)
+        #         # Return: list of lists, that is, one kline is a list (not dict) with items ordered: timestamp, open, high, low, close etc.
+        #     else:
+        #         # https://sammchardy.github.io/binance/2018/01/08/historical-data-download-binance.html
+        #         # get_historical_klines(symbol, interval, start_str, end_str=None, limit=500)
+        #         # Find start from the number of records and frequency (interval length in milliseconds)
+        #         request_start_ts = now_ts - interval_length_ms * (limit + 1)
+        #         logger.info(f"request_start_ts: {request_start_ts}")
+
+        #         klines = self.app_config.client.get_historical_klines(
+        #             symbol=symbol,
+        #             interval=metatrader_freq,
+        #             start_str=request_start_ts,
+        #             end_str=now_ts,
+        #         )
+        # except Exception as e:
+        #     logger.error(f"Exception while requesting klines: {e}")
+
+        return {}
 
         #
         # Post-process
         #
 
-        # Find last complete interval in the result list
-        # The problem is that the result also contains the current (still running) interval which we want to exclude
-        # Exclude last kline if it corresponds to the current interval
-        klines_full = [kl for kl in klines if kl[0] < start_ts]
-        last_full_kline_ts = klines_full[-1][0]
+        # # Find last complete interval in the result list
+        # # The problem is that the result also contains the current (still running) interval which we want to exclude
+        # # Exclude last kline if it corresponds to the current interval
+        # klines_full = [kl for kl in klines if kl[0] < start_ts]
+        # last_full_kline_ts = klines_full[-1][0]
 
-        if last_full_kline_ts != start_ts - interval_length_ms:
-            logger.error(
-                f"UNEXPECTED RESULT: Last full kline timestamp {last_full_kline_ts} is not equal to previous full interval start {start_ts - interval_length_ms}. Maybe some results are missing and there are gaps."
-            )
+        # if last_full_kline_ts != start_ts - interval_length_ms:
+        #     logger.error(
+        #         f"UNEXPECTED RESULT: Last full kline timestamp {last_full_kline_ts} is not equal to previous full interval start {start_ts - interval_length_ms}. Maybe some results are missing and there are gaps."
+        #     )
 
-        # Return all received klines with the symbol as a key
-        return {symbol: klines_full}
+        # # Return all received klines with the symbol as a key
+        # return {symbol: klines_full}
 
     async def data_provider_health_check(self):
         """
@@ -210,12 +214,8 @@ class MetaTraderDataCollector(BaseDataCollector):
         logger.info(f"symbol: {symbol}")
 
         # Get server state (ping) and trade status (e.g., trade can be suspended on some symbol)
-        system_status = self.client.get_system_status()
+        system_status = await self.client.get_system_status()
         logger.info(f"system_status: {system_status}")
-        # {
-        #    "status": 0,  # 0: normal，1：system maintenance
-        #    "msg": "normal"  # normal or System maintenance.
-        # }
         if not system_status or system_status.get("status") != 0:
             self.app_config.server_status = 1
             return 1
@@ -230,13 +230,13 @@ class MetaTraderDataCollector(BaseDataCollector):
 
         return 0
 
-    async def main_collector_task(self):
+    async def main_task(self):
         """
         It is a highest level task which is added to the event loop and executed normally every 1 minute and then it calls other tasks.
         """
         symbol = self.app_config.config.symbol
         freq = self.app_config.config.freq
-        start_ts, end_ts = self.pandas_get_interval(freq)
+        start_ts, end_ts = pandas_get_interval(freq)
         now_ts = now_timestamp()
 
         logger.info(
@@ -267,10 +267,3 @@ class MetaTraderDataCollector(BaseDataCollector):
 
         logger.info(f"<=== End collector task.")
         return 0
-
-
-# Usage
-# config = {"symbol": "BTCUSDT", "freq": "1m", "data_sources": []}
-# client = YourBinanceClient()
-# collector = BinanceCollector(config, client)
-# asyncio.run(collector.main_collector_task())
