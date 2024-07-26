@@ -1,3 +1,4 @@
+nautilus_trader
 numpy>=1.26.*  # version might be limited by numba and tensorflow
 pandas>=2.*  # version might be important for parsing timestamps
 numba  # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,
@@ -13,12 +14,14 @@ python-binance>=1.0.*  # pip install python-binance
 # Features/label generation
 # tsfresh  # if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
 ta-lib  # Python wrapper for TA-lib (native) library
+pandas_ta
 
 # Algorithms
 scikit-learn==1.5.*
 lightgbm>=4.*
 tensorflow>=2.16.*
-
+keras
+keras-tcn
 # seaborn  # if diagrams are turned on
 
 # logging
@@ -32,3 +35,8 @@ websockets
 pydantic
 python-dotenv
 pyyaml
+
+# application
+metatrader-sockets-client
+cachetools==4.2.2
+sqlalchemy==2.0.31
