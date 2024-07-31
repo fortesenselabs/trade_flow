@@ -68,19 +68,26 @@ echo "Installing MetaTrader5 package.."
 wine "$python_executable" -m pip install MetaTrader5
 echo "Done"
 
-# Install rpyc package
-echo "Installing rpyc package.."
-wine "$python_executable" -m pip install rpyc==5.2.3
-echo "Done"
+# Installing wine python packages
+echo "installing python packages" \
+&& wine python -m pip install poetry \
+&& wine poetry config virtualenvs.create false \
+&& wine poetry config virtualenvs.in-project false \
+&& wine poetry install --only mt5
 
-# Install mt5linux package
-echo "Installing mt5linux package.."
-wine "$python_executable" -m pip install -e packages/mt5linux
-echo "Done"
+# # Install rpyc package
+# echo "Installing rpyc package.."
+# wine "$python_executable" -m pip install rpyc==5.2.3
+# echo "Done"
 
-# Start server
-echo "Start mt5linux server"
-wine "$python_executable" -m mt5linux $python_executable
+# # Install mt5linux package
+# echo "Installing mt5linux package.."
+# wine "$python_executable" -m pip install -e packages/mt5linux
+# echo "Done"
+
+# # Start server
+# echo "Start mt5linux server"
+# wine "$python_executable" -m mt5linux $python_executable
 
 
 # References:
