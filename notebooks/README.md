@@ -3,7 +3,7 @@
 Idea clarification: https://www.epochfin.com/
 
 Tradeflow: Use reinforcement learning to adapt to the markets. DQN Agents.
-AutoML + RL 
+AutoML + RL
 
 Infracstructure: TradeFlow
 -- DataClients: Based on Nautilus Trader's DataClients (only needed for now).
@@ -16,4 +16,10 @@ Infracstructure: TradeFlow
 Trade Node: Nautilus Trader
 Cloud Platform: Orchestrate the bot, we an make this better since the trading node just needs separates execution processes not runtimes or machines to work.
 
+## Resources
 
+- https://github.com/releat215/releat/tree/dev
+- https://github.com/q-learning-trader/tensorflow-rl/
+- https://github.com/VVasanth/RL_StockTrader-TFAgents
+- https://github.com/CloseToAlgoTrading/CodeFromVideo/
+- https://github.com/stefan-jansen/machine-learning-for-trading/blob/main/22_deep_reinforcement_learning/README.md

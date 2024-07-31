@@ -1,7 +1,7 @@
 import pytest
 
-from tradeflow.services.api.services import stop_services, get_available_services
-from tradeflow.services.api.service_feeds import create_service_feed_factory
+from trade_flow.services.api.services import stop_services, get_available_services
+from trade_flow.services.api.service_feeds import create_service_feed_factory
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,4 @@
+numpy
+rpyc==5.2.3
+pyparsing==2.4.7
+

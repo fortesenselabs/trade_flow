@@ -1,6 +1,6 @@
 # TradeFlow: Automated Trading Bot
 
-TradeFlow is an intelligent trading bot designed to streamline your trading experience. It utilizes machine learning algorithms to analyze markets and execute trades based on your defined strategies.
+TradeFlow is an intelligent trading bot designed to streamline your trading experience. It utilizes state-of-the-art deep learning algorithms to analyze markets and execute trades based on your defined strategies.
 
 ## Features:
 
@@ -34,3 +34,13 @@ pip install -r requirements.txt
 ## Disclaimer:
 
 TradeFlow is for educational purposes only. The developers are not responsible for any financial losses incurred while using this software. Please understand the inherent risks involved in trading before using any automated system.
+
+## Milestones
+
+Ansible: For provisioning MetaTrader platforms automatically. (Optional for now)
+
+Nautilus Trader Adapter: For connecting Nautilus to MetaTrader. (1)
+
+TradeFlow: Infrastructure for running multiple trading nodes(based on nautilus) and agents (This is the platform we want to build and to be honest we can do it along with the adapter for now, then later we would push it out as a standalone package)
+
+Trading Agent: The trained agent that makes decisions. (To be built on after of the Nautilus Adapter and simulated training environment) (3)

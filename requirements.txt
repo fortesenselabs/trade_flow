@@ -1,12 +1,13 @@
+# environment: python >=3.11
 nautilus_trader
 numpy>=1.26.*  # version might be limited by numba and tensorflow
 pandas>=2.*  # version might be important for parsing timestamps
 numba  # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,
-pyarrow  # If parquet is used. Alternatively fastparquet
+# pyarrow  # If parquet is used. Alternatively fastparquet
 
 apscheduler==3.10.*
-click
-tqdm
+# click
+# tqdm
 
 # Downloaders
 python-binance>=1.0.*  # pip install python-binance
@@ -19,10 +20,13 @@ pandas_ta
 # Algorithms
 scikit-learn==1.5.*
 lightgbm>=4.*
-tensorflow>=2.16.*
-keras
+tensorflow==2.14.1 # tensorflow>=2.16.*
+# gymnasium # gymnasium[all] | gymnasium==0.26.1
+tf-agents[reverb]
+tf-keras==2.14.1
+# keras
 keras-tcn
-# seaborn  # if diagrams are turned on
+seaborn  # if diagrams are turned on
 
 # logging
 colorlog
@@ -40,3 +44,25 @@ pyyaml
 metatrader-sockets-client
 cachetools==4.2.2
 sqlalchemy==2.0.31
+
+
+# others
+gymnasium>=0.28.1
+pyyaml>=5.1.2
+stochastic>=0.6.0
+ipython>=7.12.0
+matplotlib>=3.1.1
+plotly>=4.5.0
+ipywidgets>=7.0.0  # Required for rendering
+deprecated>=1.2.13
+
+# install pygame with conda
+# https://stackoverflow.com/questions/17823923/pygame-font-module-not-available
+# tf-agents:
+# !sudo apt-get update
+# !sudo apt-get install -y xvfb ffmpeg freeglut3-dev
+# !pip install 'imageio==2.4.0'
+# !pip install pyvirtualdisplay
+# !pip install tf-agents[reverb]
+# !pip install pyglet
+# !pip install tf-keras # pip install tf-keras==2.14.1 (due to tensorflow's version)
