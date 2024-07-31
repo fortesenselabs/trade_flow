@@ -1,6 +1,6 @@
 # TradeFlow: Automated Trading Bot
 
-TradeFlow is an intelligent trading bot designed to streamline your trading experience. It utilizes state-of-the-art deep learning algorithms to analyze markets and execute trades based on your defined strategies.
+TradeFlow is an intelligent trading bot designed to streamline your trading experience. It utilizes state-of-the-art deep learning algorithms to analyze markets and execute trades based on your defined `strategies` and `trading style`.
 
 ## Features:
 
@@ -13,15 +13,15 @@ TradeFlow is an intelligent trading bot designed to streamline your trading expe
 1. Clone the Repository:
 
 ```bash
-git clone https://github.com/FortesenseLabs/trade-flow.git
+git clone https://github.com/FortesenseLabs/trade_flow.git
 ```
 
 2. Prerequisites: (Specify any required libraries or dependencies here)
 
-- Python (version 3.9 or higher)
+- Python (version 3.11)
 - (List any other required libraries)
 
-3. Installation:
+1. Installation:
 
 ```bash
 cd trade-flow
