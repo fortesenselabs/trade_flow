@@ -1,7 +1,9 @@
-#  This folder was adapted from trading-backend (https://github.com/Drakkar-Software/trading-backend)
 
 """
-This module for common tools and constants used across each above repository.
+This module for common tools and constants used across repository.
 """
 
-from trade_flow.commons.enviroment import *
+from commons.logging import *
+from commons.types import *
+
+TRADE_FLOW_SERVER_PORT = 9165

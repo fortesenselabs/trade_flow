@@ -6,8 +6,8 @@ The following are organized by system environment context:
 - **Sandbox:** Real-time data with simulated venues
 - **Live:** Real-time data with live venues (paper trading or real accounts)
 """
-
-from trade_flow.environments.live import *
-from trade_flow.environments.sandbox import *
-from trade_flow.environments.backtest import *
-from trade_flow.environments.train import *
+from environments.environment import *
+from environments.live import *
+from environments.sandbox import *
+from environments.backtest import *
+from environments.train import *
