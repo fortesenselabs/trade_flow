@@ -22,6 +22,7 @@ tf-agents[reverb]
 tf-keras==2.14.1
 # keras
 keras-tcn
+gym-anytrading
 seaborn  # if diagrams are turned on
 
 # logging
@@ -43,6 +44,9 @@ stochastic>=0.6.0
 matplotlib>=3.1.1
 plotly>=4.5.0
 deprecated>=1.2.13
+
+flask==3.0.0 # via flask-jsonrpc
+flask-jsonrpc==1.1.0
 
 jsonrpcclient==4.0.3
 jsonrpcserver==5.0.9

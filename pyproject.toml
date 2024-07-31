@@ -14,7 +14,7 @@ classifiers = [
 dynamic = ["version", "dependencies"]
 
 [project.scripts]
-trade_flow = "trade_flow.flow.server:run_server"
+flow = "flow.server:run_server"
 flowcli = "cli.main:cli"
 
 [tool.setuptools.dynamic]
