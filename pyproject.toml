@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trade_flow"
+description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["algo", "trading", "trade_flow"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dynamic = ["version", "dependencies"]
+
+[project.scripts]
+trade_flow = "trade_flow.flow.server:run_server"
+flowcli = "cli.main:cli"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["trade_flow"]
+
+[tool.ruff]
+extend-exclude = []
+line-length = 100
+indent-width = 4
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+ignore = ["E501"] # Line too long
