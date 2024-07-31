@@ -1,3 +1,4 @@
+import os
 from keras.layers import Input, Dense, Dropout, Bidirectional, Reshape
 from keras.callbacks import EarlyStopping
 from keras.metrics import F1Score, FBetaScore, Precision, Recall
@@ -124,4 +125,7 @@ def import_all_models(directory=".", file_name="all", _format="h5"):
     return models
 
 
-import_all_models(directory="../models", file_name="Step Index")
+# import_all_models(directory="../models", file_name="Step Index")
+
+class ModelStore:
+    pass
