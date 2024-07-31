@@ -26,8 +26,41 @@ def available():
     # Create the table
     table = Table(show_header=True, header_style="bold")
     table.add_column("Name")
+    # add environment type 
     table.add_column("Description")
 
     for scenario in result:
         table.add_row(scenario[0], scenario[1])
     console.print(table)
+
+
+@environments.command()
+def active():
+    """
+    List running environments "name": "pid" pairs
+    """
+    console = Console()
+    result = rpc_call("nodes_list_running", {})
+    if not result:
+        print("No nodes running")
+        return
+    assert isinstance(result, list)  # Make mypy happy
+
+    table = Table(show_header=True, header_style="bold")
+    for key in result[0].keys():  # noqa: SIM118
+        table.add_column(key.capitalize())
+
+    for scenario in result:
+        table.add_row(*[str(scenario[key]) for key in scenario])
+
+    console.print(table)
+
+
+@environments.command()
+@click.argument("pid", type=int)
+def stop(pid: int):
+    """
+    Stop environment with PID <pid> from running
+    """
+    params = {"pid": pid}
+    print(rpc_call("nodes_stop", params))

@@ -1,7 +1,6 @@
 import click
 from rich import print as richprint
 from cli.rpc import rpc_call
-from cli.nodes import nodes
 from cli.exchanges import exchanges
 from cli.environments import environments
 from cli.agents import agents
@@ -15,7 +14,6 @@ def cli():
 cli.add_command(exchanges)
 cli.add_command(environments)
 cli.add_command(agents)
-cli.add_command(nodes)
 cli.add_command(generate)
 
 @cli.command(name="help")
