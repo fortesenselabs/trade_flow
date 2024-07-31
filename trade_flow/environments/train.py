@@ -1,26 +1,35 @@
-import gymnasium as gym
-from trade_flow.flow import DataManager
+import gym
+from flow import ExchangeManager
+from commons import EnvironmentMode
+from environments import BaseEnvironment
 
+def cli_help():
+    return "Training Environment"
 
-class TrainingEnvironment(gym.Env):
-    def __init__(self, mode: str, config_path: str, data_manager: DataManager) -> None:
-        super().__init__()
-        self.mode = mode
-        self.config_path = config_path
-        self.engine = None
-        self.data_manager = data_manager
+class TrainingEnvironment(BaseEnvironment):
+    def __init__(self, mode: EnvironmentMode, exchange_manager: ExchangeManager, env_id: str = "Trading-v0") -> None:
+        super().__init__(mode, exchange_manager=exchange_manager)
 
-        if env_type == "gym":
-            self.gym_env = gym.make(
-                "Trading-v0"
-            )  # Replace with your custom Gym environment
+        if mode == EnvironmentMode.TRAIN:
+            self.env_type = "gym"
+            if self.env_type == "gym":
+                self.engine = gym.make(env_id)  # Replace with your custom Gym environment
+            else:
+                self._action_spec = self._get_action_spec()
+                self._observation_spec = self._get_observation_spec()
+                # self.engine = 
 
+    
+    def add_data(self):
+        # self.exchange_manager.data_manager
+        return 
+    
     def reset(self):
         """
         Reset the environment.
         """
         if self.env_type == "gym":
-            self.gym_env.reset()
+            return self.engine.reset()
 
     def step(self, action):
         """
@@ -30,7 +39,7 @@ class TrainingEnvironment(gym.Env):
         - action: Action to take
         """
         if self.env_type == "gym":
-            return self.gym_env.step(action)
+            return self.engine.step(action)
 
     def render(self, mode="human"):
         """
@@ -40,55 +49,11 @@ class TrainingEnvironment(gym.Env):
         - mode (str): Rendering mode
         """
         if self.env_type == "gym":
-            self.gym_env.render(mode)
+            return self.engine.render(mode)
 
     def close(self):
         """
         Close the environment.
         """
         if self.env_type == "gym":
-            self.gym_env.close()
-
-    # def step(self, action):
-    #     # Implement the logic to take a step in the environment
-    #     observation, reward, done, info = self.engine.step(action)
-    #     return observation, reward, done, info
-
-    # def reset(self):
-    #     # Implement the logic to reset the environment
-    #     return self.engine.reset()
-
-    # def render(self, mode="human"):
-    #     # Implement the logic to render the environment
-    #     pass
-
-    # def close(self):
-    #     # Implement the logic to close the environment
-    #     self.engine.shutdown()
-
-
-
-# class TestingEnvironment(BacktestEngine):
-#     def __init__(self, mode: str, config_path: str) -> None:
-#         super().__init__()
-#         self.mode = mode
-#         self.config_path = config_path
-#         self.engine = None
-#         self.data_manager = DataManager()
-
-#     def step(self, action):
-#         # Implement the logic to take a step in the environment
-#         observation, reward, done, info = self.engine.step(action)
-#         return observation, reward, done, info
-
-#     def reset(self):
-#         # Implement the logic to reset the environment
-#         return self.engine.reset()
-
-#     def render(self, mode="human"):
-#         # Implement the logic to render the environment
-#         pass
-
-#     def close(self):
-#         # Implement the logic to close the environment
-#         self.engine.shutdown()
+            return self.engine.close()

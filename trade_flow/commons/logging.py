@@ -69,7 +69,7 @@ class Logger(logging.Logger):
 # # Example usage:
 # if __name__ == "__main__":
 #     # Example usage
-#     logger = AppLogger(name="my_app", log_level=logging.DEBUG, filename="app.log")
+#     logger = Logger(name="my_app", log_level=logging.DEBUG, filename="app.log")
 #     logger.debug("Debug message")
 #     logger.info("Info message")
 #     logger.warning("Warning message")

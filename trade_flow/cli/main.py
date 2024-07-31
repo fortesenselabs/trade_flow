@@ -1,11 +1,22 @@
 import click
 from rich import print as richprint
+from cli.rpc import rpc_call
+from cli.nodes import nodes
+from cli.exchanges import exchanges
+from cli.environments import environments
+from cli.agents import agents
+from cli.generate import generate
 
 
 @click.group()
 def cli():
     pass
 
+cli.add_command(exchanges)
+cli.add_command(environments)
+cli.add_command(agents)
+cli.add_command(nodes)
+cli.add_command(generate)
 
 @cli.command(name="help")
 @click.argument("commands", required=False, nargs=-1)
@@ -37,7 +48,7 @@ def help_command(ctx, commands):
     help_info = cmd_obj.get_help(ctx).strip()
     # Get rid of the duplication
     help_info = help_info.replace(
-        "Usage: tradeflow help [COMMANDS]...", "Usage: warcli", 1
+        "Usage: flowcli help [COMMANDS]...", "Usage: flowcli", 1
     )
     richprint(help_info)
 
@@ -48,13 +59,12 @@ cli.add_command(help_command)
 @cli.command()
 def stop():
     """
-    Stop warnet.
+    Stop trade flow.
     """
     try:
         rpc_call("server_stop", None)
     except ConnectionError:
-        # This is a successful stop in this context, as they disconnected us
-        richprint("Stopped warnet")
+        richprint("Stopped trade flow")
     except Exception as e:
         print(e)
 

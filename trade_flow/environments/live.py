@@ -1,9 +1,9 @@
 from nautilus_trader.live.node import TradingNode
 from nautilus_trader.config import TradingNodeConfig
-from trade_flow.flow import DataManager
+from flow import ExchangeManager
 
-# live
-
+def cli_help():
+    return "Live Environment"
 class LiveEnvironment:
-    def __init__(self, data_manager: DataManager) -> None:
+    def __init__(self, exchange_manager: ExchangeManager) -> None:
         pass
