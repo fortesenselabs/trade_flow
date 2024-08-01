@@ -1,9 +1,9 @@
 # Install TradeFlow
 
 ```bash
-git clone https://github.com/FortesenseLabs/trade-flow
+git clone https://github.com/FortesenseLabs/trade_flow
 
-cd trade-flow
+cd trade_flow
 ```
 
 ### Optional: use a virtual Python environment such as `venv`
@@ -24,4 +24,4 @@ Refer to the `usage.py` script for an example of how to use TradeFlow.
 
 ## Info:
 
-Extensions would be called flows, similar to Octobot's tentacles
+Extensions would be called flows.

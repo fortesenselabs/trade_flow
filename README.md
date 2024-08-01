@@ -24,8 +24,8 @@ git clone https://github.com/FortesenseLabs/trade_flow.git
 1. Installation:
 
 ```bash
-cd trade-flow
-pip install -r requirements.txt
+cd trade_flow
+pip install -e .
 ```
 
 4. Configuration:
