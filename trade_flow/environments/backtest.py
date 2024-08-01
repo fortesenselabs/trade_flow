@@ -1,15 +1,18 @@
+from typing import Optional
 from environments import BaseEnvironment
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.engine import BacktestEngineConfig
-from flow import ExchangeManager
+from nautilus_trader.backtest.results import BacktestResult
+from venues import VenueManager
 
 def cli_help():
     return "Backtest Environment"
 
 class BacktestEnvironment(BaseEnvironment):
-    def __init__(self, mode: str, exchange_manager: ExchangeManager, config: BacktestEngineConfig) -> None:
-        super().__init__(self, mode, exchange_manager)
-        self.engine = BacktestEngine(config=config)  # Initialize with actual BacktestEngine configuration or setup
+    def __init__(self, venue_manager: VenueManager, config: Optional[BacktestEngineConfig] = None) -> None:
+        super().__init__(self, venue_manager)
+        self.engine = BacktestEngine(config=config) if config is not None else None # Initialize with actual BacktestEngine configuration or setup
+        self.results = None
 
     def reset(self):
         """
@@ -41,7 +44,9 @@ class BacktestEnvironment(BaseEnvironment):
         - mode (str): Rendering mode
         """
         if self.engine:
-            return self.engine.run()
+            # Runs one or many configs synchronously
+            self.results: list[BacktestResult] = self.engine.run()
+            return self.results
         else:
             raise RuntimeError("Engine not initialized.")
 
@@ -53,3 +58,5 @@ class BacktestEnvironment(BaseEnvironment):
             self.engine.dispose()
         else:
             raise RuntimeError("Engine not initialized.")
+        
+    

@@ -1,8 +1,8 @@
-from flow import ExchangeManager
+from venues import VenueManager
 
 def cli_help():
     return "Sandbox Environment"
 
 class SandboxEnvironment:
-    def __init__(self, exchange_manager: ExchangeManager) -> None:
+    def __init__(self, venue_manager: VenueManager) -> None:
         pass

@@ -1,27 +1,25 @@
 import gym
-from flow import ExchangeManager
-from commons import EnvironmentMode
+from venues import VenueManager
 from environments import BaseEnvironment
 
 def cli_help():
     return "Training Environment"
 
 class TrainingEnvironment(BaseEnvironment):
-    def __init__(self, mode: EnvironmentMode, exchange_manager: ExchangeManager, env_id: str = "Trading-v0") -> None:
-        super().__init__(mode, exchange_manager=exchange_manager)
+    def __init__(self, venue_manager: VenueManager, env_id: str = "Trading-v0") -> None:
+        super().__init__(venue_manager)
+        self.env_type = "gym"
 
-        if mode == EnvironmentMode.TRAIN:
-            self.env_type = "gym"
-            if self.env_type == "gym":
-                self.engine = gym.make(env_id)  # Replace with your custom Gym environment
-            else:
-                self._action_spec = self._get_action_spec()
-                self._observation_spec = self._get_observation_spec()
-                # self.engine = 
+        if self.env_type == "gym":
+            self.engine = gym.make(env_id)  # Replace with your custom Gym environment
+        else:
+            self._action_spec = self._get_action_spec()
+            self._observation_spec = self._get_observation_spec()
+            # self.engine = 
 
     
     def add_data(self):
-        # self.exchange_manager.data_manager
+        # self.venue_manager.data_manager
         return 
     
     def reset(self):
