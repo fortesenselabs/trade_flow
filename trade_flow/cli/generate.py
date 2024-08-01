@@ -13,3 +13,4 @@ def generate():
 # features
 # signals
 # list currently selected features 
+# environments
