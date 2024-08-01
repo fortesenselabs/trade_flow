@@ -1,47 +1,46 @@
-import gym
+import gymnasium as gym
 from venues import VenueManager
 from environments import BaseEnvironment
 
 def cli_help():
-    return "Training Environment"
+    return "Generic Training Environment"
 
 class TrainingEnvironment(BaseEnvironment):
     def __init__(self, venue_manager: VenueManager, env_id: str = "Trading-v0") -> None:
         super().__init__(venue_manager)
         self.env_type = "gym"
+        print(f"TrainingEnvironment: {env_id}")
+        self.engine = gym.make(env_id)  # Initialize with Gym environment
 
-        if self.env_type == "gym":
-            self.engine = gym.make(env_id)  # Replace with your custom Gym environment
-        else:
-            self._action_spec = self._get_action_spec()
-            self._observation_spec = self._get_observation_spec()
-            # self.engine = 
+        # Define action and observation spaces
+        self.action_space = self.engine.action_space
+        self.observation_space = self.engine.observation_space
 
-    
     def add_data(self):
-        # self.venue_manager.data_manager
-        return 
-    
+        # If Gym environment requires data, handle here
+        pass
+
     def reset(self):
         """
-        Reset the environment.
+        Reset the Gym environment.
         """
         if self.env_type == "gym":
             return self.engine.reset()
 
     def step(self, action):
         """
-        Take a step in the environment.
+        Take a step in the Gym environment.
 
         Args:
         - action: Action to take
         """
         if self.env_type == "gym":
-            return self.engine.step(action)
+            next_state, reward, done, info = self.engine.step(action)
+            return next_state, reward, done, info
 
     def render(self, mode="human"):
         """
-        Render the environment.
+        Render the Gym environment.
 
         Args:
         - mode (str): Rendering mode
@@ -51,7 +50,7 @@ class TrainingEnvironment(BaseEnvironment):
 
     def close(self):
         """
-        Close the environment.
+        Close the Gym environment.
         """
         if self.env_type == "gym":
             return self.engine.close()

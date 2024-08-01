@@ -11,3 +11,4 @@ from environments.live import *
 from environments.sandbox import *
 from environments.backtest import *
 from environments.train import *
+from environments.environment_manager import *

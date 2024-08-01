@@ -6,6 +6,8 @@ from venues import VenueManager
 
 def cli_help():
     return "Live Environment"
+
+
 class LiveEnvironment(BaseEnvironment):
     def __init__(self, venue_manager: VenueManager) -> None:
         super().__init__(venue_manager)
