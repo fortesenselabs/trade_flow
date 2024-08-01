@@ -5,26 +5,23 @@ from tf_agents.specs import array_spec
 import gymnasium as gym
 import gym_anytrading.datasets as DS
 
-from commons import EnvironmentMode, TradingState
-from flow.exchange_manager import ExchangeManager
+from commons import TradingState
+from venues import VenueManager
 
 
 class BaseEnvironment:
     def __init__(
         self,
-        mode: EnvironmentMode,
-        exchange_manager: ExchangeManager,
+        venue_manager: VenueManager,
     ) -> None:
         """
         Initialize the base environment.
 
         Args:
-        - mode (EnvironmentMode): Type of environment (live, backtest, sandbox, train)
         - trading_state (TradingState): Initial trading state
         """
-        self.mode = mode
         self.trading_state: TradingState = TradingState.IDLE
-        self.exchange_manager = exchange_manager
+        self.venue_manager = venue_manager
         self.engine = None  # Initialize or replace with actual trading engine
 
     def add_data(self):
@@ -68,6 +65,13 @@ class BaseEnvironment:
         - EnvironmentMode: Trader environment
         """
         return self.mode
+    
+    def get_trading_state(self):
+        return self.trading_state
+    
+    def set_trading_state(self, state: TradingState = TradingState.IDLE):
+        self.trading_state = state
+        return self.trading_state
 
 
 
