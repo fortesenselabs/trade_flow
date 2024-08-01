@@ -23,6 +23,7 @@ tf-keras==2.14.1
 # keras
 keras-tcn
 gym-anytrading
+ray[all]    # ==2.5.1
 seaborn  # if diagrams are turned on
 
 # logging
@@ -38,16 +39,16 @@ sqlalchemy==2.0.31
 
 
 # others
-gymnasium>=0.28.1
+# gymnasium>=0.28.1
 pyyaml>=5.1.2
 stochastic>=0.6.0
 matplotlib>=3.1.1
 plotly>=4.5.0
 deprecated>=1.2.13
 
+# server
 flask==3.0.0 # via flask-jsonrpc
 flask-jsonrpc==1.1.0
-
 jsonrpcclient==4.0.3
 jsonrpcserver==5.0.9
 jsonschema==4.20.0 # via jsonrpcserver

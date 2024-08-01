@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "trade_flow"
 description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = "==3.11"
 keywords = ["algo", "trading", "trade_flow"]
 classifiers = [
     "Programming Language :: Python :: 3",
