@@ -2,10 +2,10 @@ from enum import Enum
 
 
 class EnvironmentMode(Enum):
-    LIVE = "LIVE"
-    SANDBOX = "SANDBOX"
-    BACKTEST = "BACKTEST"
-    TRAIN = "TRAIN"
+    LIVE = "live"
+    SANDBOX = "sandbox"
+    BACKTEST = "backtest"
+    TRAIN = "train"
 
 class TradingState(Enum):
     IDLE = "IDLE"
