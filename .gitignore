@@ -169,5 +169,6 @@ trading-analytics/
 
 notebooks
 dump
+.vscode
 
 *environment_ids.json
