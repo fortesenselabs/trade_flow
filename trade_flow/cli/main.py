@@ -1,7 +1,7 @@
 import click
 from rich import print as richprint
 from cli.rpc import rpc_call
-from cli.exchanges import exchanges
+from cli.venues import venues
 from cli.environments import environments
 from cli.agents import agents
 from cli.generate import generate
@@ -11,7 +11,7 @@ from cli.generate import generate
 def cli():
     pass
 
-cli.add_command(exchanges)
+cli.add_command(venues)
 cli.add_command(environments)
 cli.add_command(agents)
 cli.add_command(generate)
