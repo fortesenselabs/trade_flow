@@ -21,14 +21,34 @@ git clone https://github.com/FortesenseLabs/trade_flow.git
 - Python (version 3.11)
 - (List any other required libraries)
 
-1. Installation:
+3. Installation:
 
 ```bash
 cd trade_flow
 pip install -e .
 ```
 
-4. Configuration:
+4. Start server/daemon:
+
+```bash
+flow
+```
+
+4. Get list of available environments:
+
+```bash
+flowcli environments available
+```
+
+## Extras
+
+1. Run tests:
+
+```bash
+python -m pytest tests/
+```
+
+2. Configuration:
    Edit the `config.json` OR `config.yaml` OR `config.jsonc` file to define your API keys, trading strategies, and risk parameters.
 
 ## Disclaimer:
