@@ -17,7 +17,7 @@
 - Agents can be built, listed, and deployed through the CLI.
 - Training and backtesting of agents occur on the "Train Agents" server.
 
-## Architecture Documentation
+## Documentation
 
 The TradeFlow system employs a client-server architecture, utilizing JSON-RPC for communication between the CLI and backend services. The system is comprised of several key components, each with distinct responsibilities.
 
