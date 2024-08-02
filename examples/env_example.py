@@ -27,6 +27,3 @@ env_manager.reset()
 
 # Dispose of all environments
 env_manager.dispose()
-
-# [tool.setuptools.packages.find]
-# where = ["trade_flow"]
