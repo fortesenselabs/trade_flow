@@ -1,27 +1,36 @@
+[project]
+name = "trade_flow"
+version = "0.0.1"
+description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
+readme = "README.md"
+requires-python = "==3.11"
+keywords = ["algo", "trading", "trade_flow", "deep learning", "machine learning", "ai"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
+]
+dynamic = ["dependencies"]
+
+[project.scripts]
+flow = "trade_flow.flow.server:run_server"
+flowcli = "trade_flow.cli.main:cli"
+
 [build-system]
 requires = ["setuptools>=64", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "trade_flow"
-description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
-readme = "README.md"
-requires-python = "==3.11"
-keywords = ["algo", "trading", "trade_flow"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-]
-dynamic = ["version", "dependencies"]
-
-[project.scripts]
-flow = "flow.server:run_server"
-flowcli = "cli.main:cli"
+[tool.setuptools]
+packages = ["trade_flow"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
-
-[tool.setuptools.packages.find]
-where = ["trade_flow"]
 
 [tool.ruff]
 extend-exclude = []
