@@ -1,5 +1,4 @@
 import sys
-
 import click
 from cli.rpc import rpc_call
 from rich import print
