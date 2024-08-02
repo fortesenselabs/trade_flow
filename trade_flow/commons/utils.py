@@ -19,12 +19,12 @@ def get_architecture():
         raise Exception("Failed to detect architecture.")
     return arch
 
-def gen_config_dir(network: str) -> Path:
+def gen_config_dir(flow_name: str) -> Path:
     """
-    Determine a config dir based on network name
+    Determine a config dir based on flow name
     """
     config_dir = os.getenv("XDG_CONFIG_HOME", os.path.expanduser("~/.trade_flow"))
-    config_dir = Path(config_dir) / "trade_flow" / network
+    config_dir = Path(config_dir) / "trade_flow" / flow_name
     return config_dir
 
 
