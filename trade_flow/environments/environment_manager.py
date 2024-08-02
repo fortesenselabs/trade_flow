@@ -2,7 +2,6 @@ from typing import Optional
 import uuid
 import json
 import os
-import gymnasium as gym
 import ray
 import ray.rllib
 import ray.rllib.utils
@@ -25,8 +24,7 @@ class EnvironmentManager:
         if not is_new:
             self._load_env_ids()  # Load saved environment IDs
 
-        ray.init(ignore_reinit_error=True)  # Initialize Ray
-
+        
     # Fixed the Error: _pickle.PicklingError: logger cannot be pickled | source(s): https://stackoverflow.com/questions/2999638/how-to-stop-attributes-from-being-pickled-in-python/2999833#2999833
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -41,6 +39,8 @@ class EnvironmentManager:
     
     def _init_environment(self) -> None:
         self.logger.info(f"Initializing environment for mode: {self.mode}")
+
+        ray.init(ignore_reinit_error=True)  # Initialize Ray
 
         if self.mode == EnvironmentMode.LIVE:
             self.selected_environment = LiveEnvironment(self.venue_manager)
