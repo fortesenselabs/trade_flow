@@ -43,4 +43,16 @@ select = [
     # isort
     "I",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [
+  ".", "trade_flow"
+]
+asyncio_mode = "strict"
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
 ignore = ["E501"] # Line too long
