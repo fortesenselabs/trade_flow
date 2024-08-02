@@ -22,7 +22,7 @@ tensorflow==2.14.1 # tensorflow>=2.16.*
 tf-keras==2.14.1
 # keras
 keras-tcn
-gym-anytrading
+# gym-anytrading
 ray[all]    # ==2.5.1
 seaborn  # if diagrams are turned on
 
