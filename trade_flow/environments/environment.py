@@ -13,12 +13,6 @@ class BaseEnvironment:
         self.trading_state: TradingState = TradingState.IDLE
         self.venue_manager = venue_manager
         self.engine = None  # Initialize or replace with actual trading engine
-
-    def add_data(self):
-        """
-        Method to add data to the environment, if necessary.
-        """
-        pass
     
     def reset(self):
         """

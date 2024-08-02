@@ -16,10 +16,6 @@ class TrainingEnvironment(BaseEnvironment):
         self.action_space = self.engine.action_space
         self.observation_space = self.engine.observation_space
 
-    def add_data(self):
-        # If Gym environment requires data, handle here
-        pass
-
     def reset(self):
         """
         Reset the Gym environment.
