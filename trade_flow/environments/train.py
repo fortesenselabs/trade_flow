@@ -6,15 +6,16 @@ def cli_help():
     return "Generic Training Environment"
 
 class TrainingEnvironment(BaseEnvironment):
-    def __init__(self, venue_manager: VenueManager, env_id: str = "Trading-v0") -> None:
+    def __init__(self, venue_manager: VenueManager, env_id: str = "Trading-v0", new_engine: bool = False) -> None:
         super().__init__(venue_manager)
         self.env_type = "gym"
-        print(f"TrainingEnvironment: {env_id}")
-        self.engine = gym.make(env_id)  # Initialize with Gym environment
+        self.engine = None
+        if new_engine:
+            self.engine = gym.make(env_id)  # Initialize with Gym environment
 
-        # Define action and observation spaces
-        self.action_space = self.engine.action_space
-        self.observation_space = self.engine.observation_space
+            # Define action and observation spaces
+            self.action_space = self.engine.action_space
+            self.observation_space = self.engine.observation_space
 
     def reset(self):
         """
