@@ -18,7 +18,7 @@ scikit-learn==1.5
 lightgbm>=4
 tensorflow==2.14.1 # tensorflow>=2.16.*
 # gymnasium # gymnasium[all] | gymnasium==0.26.1
-tf-agents[reverb]
+# tf-agents[reverb]
 tf-keras==2.14.1
 # keras
 keras-tcn
