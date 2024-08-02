@@ -1,18 +1,22 @@
-from pathlib import Path
-from flow.kubernetes_backend import KubernetesBackend
-from commons.logging import Logger
-from commons.utils import gen_config_dir
+from typing import Optional
+from trade_flow.environments import EnvironmentManager
+from trade_flow.commons import Logger, EnvironmentMode, gen_config_dir
+from trade_flow.venues import VenueManager
+from trade_flow.flow.kubernetes_backend import KubernetesBackend
 
 
 class Flow:
 
-    def __init__(self, config_dir, network_name: str) -> None:
+    def __init__(self, name: str) -> None:
         self.logger = Logger(name=__class__.__name__)
-        
-        self.config_dir: Path = config_dir
-        self.config_dir.mkdir(parents=True, exist_ok=True)
-        self.container_interface = KubernetesBackend(config_dir, network_name)
+        self.container_interface = KubernetesBackend()
         self.namespace = "trade_flow"
+
+        # Initialize VenueManager
+        self.venue_manager: Optional[VenueManager] = None
+
+        # Initialize EnvironmentManager for training mode
+        self.env_manager: Optional[EnvironmentManager] = None
 
     @classmethod
     def from_file(cls, flow_name):
@@ -20,8 +24,13 @@ class Flow:
         self = cls(config_dir, flow_name)
         return self
     
-    def start_process(self):
-        return
+    def run(self):
+        # Initialize VenueManager
+        self.venue_manager = VenueManager()
+
+        # Initialize EnvironmentManager for training mode
+        self.env_manager = EnvironmentManager(EnvironmentMode.TRAIN, self.venue_manager)
+        self.logger.info("EnvironmentManager initialized and process started.")
     
     def parse_objective_function(self):
         """
@@ -35,7 +44,6 @@ class Flow:
 
     def run(self):
         return
-
 
 
 """

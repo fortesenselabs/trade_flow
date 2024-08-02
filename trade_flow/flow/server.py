@@ -4,13 +4,14 @@ import pkgutil
 import platform
 import traceback
 
-import environments
+import trade_flow.environments
+import trade_flow
+from trade_flow.commons import Logger, TRADE_FLOW_SERVER_PORT
+from trade_flow.flow import Flow, TaskManager
 from flask import Flask, json, jsonify, request
 from flask_jsonrpc.app import JSONRPC
 from flask_jsonrpc.exceptions import ServerError
 
-from commons import Logger, TRADE_FLOW_SERVER_PORT
-from flow.flow import Flow
 
 
 class Server:
@@ -42,11 +43,13 @@ class Server:
         self.flows: dict = dict()
         self.logger.info("Started server")
 
+        # Initialize TaskManager
+        self.task_manager = TaskManager()
+
     def setup_global_exception_handler(self):
         """
         Use flask to log traceback of unhandled exceptions
         """
-
         @self.app.errorhandler(Exception)
         def handle_exception(e):
             trace = traceback.format_exc()
@@ -81,8 +84,14 @@ class Server:
     def setup_rpc(self):
         # Environments
         self.jsonrpc.register(self.environments_available)
-        # Logs
-        self.jsonrpc.register(self.logs_grep)
+        # Venues
+        self.jsonrpc.register(self.venues_available)
+        # Agents
+        self.jsonrpc.register(self.agents_available)
+        # Task Management
+        # self.jsonrpc.register(self.start_task)
+        # self.jsonrpc.register(self.stop_task)
+        # self.jsonrpc.register(self.list_tasks)
 
     def healthy(self):
         return "trade_flow is healthy"
@@ -107,8 +116,8 @@ class Server:
         """
         try:
             environment_list = []
-            for s in pkgutil.iter_modules(environments.__path__):
-                m = pkgutil.resolve_name(f"environments.{s.name}")
+            for s in pkgutil.iter_modules(trade_flow.environments.__path__):
+                m = pkgutil.resolve_name(f"trade_flow.environments.{s.name}")
                 if hasattr(m, "cli_help"):
                     environment_list.append((s.name, m.cli_help()))
             return environment_list
@@ -117,21 +126,82 @@ class Server:
             self.logger.error(msg)
             raise ServerError(message=msg) from e
         
-    
-    def logs_grep(self, pattern: str, flow: str = "trade_flow") -> str:
+    def venues_available(self) -> list[tuple]:
         """
-        Grep the logs from the fluentd container for a regex pattern
+        List available venues in Trade Flow
         """
         try:
-            wn = self.get_flow(flow)
-            return wn.container_interface.logs_grep(pattern, flow)
+            venue_list = []
+            for s in pkgutil.iter_modules(trade_flow.venues.__path__):
+                m = pkgutil.resolve_name(f"trade_flow.venues.{s.name}")
+                if hasattr(m, "cli_help"):
+                    venue_list.append((s.name, m.cli_help()))
+            return venue_list
         except Exception as e:
-            msg = f"Error grepping logs using pattern {pattern}: {e}"
+            msg = f"Error listing venues: {e}"
+            self.logger.error(msg)
+            raise ServerError(message=msg) from e
+        
+    def agents_available(self) -> list[tuple]:
+        """
+        List available agents in Trade Flow
+        """
+        try:
+            agent_list = []
+            for s in pkgutil.iter_modules(trade_flow.agents.__path__):
+                m = pkgutil.resolve_name(f"trade_flow.agents.{s.name}")
+                if hasattr(m, "cli_help"):
+                    agent_list.append((s.name, m.cli_help()))
+            return agent_list
+        except Exception as e:
+            msg = f"Error listing agents: {e}"
             self.logger.error(msg)
             raise ServerError(message=msg) from e
 
+    def start_task(self, task_name: str, target_function_name: str, *args: str) -> str:
+        """
+        Start a task in a separate thread.
 
+        Args:
+        - task_name (str): Unique name for the task.
+        - target_function_name (str): The name of the function to run in the thread.
+        - *args: Arguments to pass to the target_function.
+        
+        Returns:
+        - str: Success or failure message.
+        """
+        target_function = getattr(self, target_function_name, None)
+        if target_function is None:
+            return f"Function '{target_function_name}' not found."
+        
+        thread = self.task_manager.start_process_in_thread(task_name, target_function, *args)
+        if thread:
+            return f"Task '{task_name}' started successfully."
+        return f"Failed to start task '{task_name}'."
 
+    def stop_task(self, task_name: str) -> str:
+        """
+        Stop a running task.
+
+        Args:
+        - task_name (str): The name of the task to stop.
+
+        Returns:
+        - str: Success or failure message.
+        """
+        success = self.task_manager.stop_process(task_name)
+        if success:
+            return f"Task '{task_name}' stopped successfully."
+        return f"Failed to stop task '{task_name}'."
+    
+    def list_tasks(self) -> dict:
+        """
+        List all running tasks.
+
+        Returns:
+        - dict: Dictionary with task names and their statuses.
+        """
+        return self.task_manager.list_tasks()
 
 
 def run_server():

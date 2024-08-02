@@ -6,9 +6,12 @@ import ray
 import ray.rllib
 import ray.rllib.utils
 from ray.tune.registry import register_env
-from commons import Logger, EnvironmentMode, AssetClass 
-from environments import LiveEnvironment, SandboxEnvironment, BacktestEnvironment, TrainingEnvironment
-from venues import VenueManager
+from trade_flow.commons import Logger, EnvironmentMode, AssetClass 
+from trade_flow.venues import VenueManager
+from trade_flow.environments.live import LiveEnvironment
+from trade_flow.environments.sandbox import SandboxEnvironment
+from trade_flow.environments.backtest import BacktestEnvironment
+from trade_flow.environments.train import TrainingEnvironment
 
 class EnvironmentManager:
     def __init__(self, mode: EnvironmentMode, venue_manager: VenueManager, asset_class: AssetClass = AssetClass.FOREX, is_new: bool = True) -> None:
@@ -18,8 +21,9 @@ class EnvironmentManager:
         self.venue_manager = venue_manager
 
         self.environments = {}
-        self.env_ids_file = "training_environment_ids.json"
-        self._init_environment()
+
+        # Set the path to the JSON file relative to the current working directory
+        self.env_ids_file = os.path.join(os.getcwd(), "training_environment_ids.json")
 
         if not is_new:
             self._load_env_ids()  # Load saved environment IDs
@@ -37,7 +41,7 @@ class EnvironmentManager:
             d['logger'] = Logger(name=d['logger'])
         self.__dict__.update(d)
     
-    def _init_environment(self) -> None:
+    def init(self) -> None:
         self.logger.info(f"Initializing environment for mode: {self.mode}")
 
         ray.init(ignore_reinit_error=True)  # Initialize Ray
@@ -57,13 +61,17 @@ class EnvironmentManager:
 
     def _register_training_environment(self, env_id: str):
         """Generates a unique environment ID, registers it with Ray, and saves it."""
+
+        selected_environment = None
         def create_env(env_config):
             """Environment creator function that creates a TrainingEnvironment."""
-            return TrainingEnvironment(self.venue_manager, env_id)
+            selected_environment = TrainingEnvironment(self.venue_manager, env_id)
+            return selected_environment
 
         try:
             # Register the environment with Ray
             register_env(env_id, create_env)
+            self.selected_environment = selected_environment
 
             # Check if environment was registered correctly
             # ray.rllib.utils.check_env(TrainingEnvironment(self.venue_manager, env_id)) 
@@ -105,7 +113,7 @@ class EnvironmentManager:
                     self.logger.error(f"Failed to load environment with ID {env_id}: {e}")
 
     def create_environment(self, env_id: Optional[str] = None):
-        """Creates and registers a new environment with a unique ID."""
+        """Creates and registers a new training environment with a unique ID."""
         if self.mode == EnvironmentMode.TRAIN:
             # Use provided env_id or generate a new one
             env_id = env_id if env_id else f"TradingEnv-{EnvironmentMode.TRAIN.value}-{uuid.uuid4()}"

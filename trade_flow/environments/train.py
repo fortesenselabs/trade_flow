@@ -1,6 +1,6 @@
 import gymnasium as gym
-from venues import VenueManager
-from environments import BaseEnvironment
+from trade_flow.venues import VenueManager
+from trade_flow.environments.environment import BaseEnvironment
 
 def cli_help():
     return "Generic Training Environment"

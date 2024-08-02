@@ -1,4 +1,4 @@
-from venues import VenueManager
+from trade_flow.venues import VenueManager
 
 def cli_help():
     return "Sandbox Environment"

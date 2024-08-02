@@ -1,5 +1,5 @@
 import yaml
-from commons import EnvironmentMode
+from trade_flow.commons import EnvironmentMode
 
 
 class FlowConfig:

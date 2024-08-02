@@ -2,7 +2,7 @@ import os
 import stat
 from pathlib import Path
 import subprocess
-from commons.logging import Logger
+from trade_flow.commons.logging import Logger
 
 logger = Logger(name="utils")
 

@@ -1,7 +1,7 @@
 from ray.rllib.agents.dqn import DQNTrainer
 from ray.rllib.utils import try_import_tf
 from typing import Optional, Dict, Any
-from trade_flow.agents import BaseAgent
+from trade_flow.agents.agent import BaseAgent
 
 # Import TensorFlow
 tf = try_import_tf()

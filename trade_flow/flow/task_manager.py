@@ -1,6 +1,6 @@
 import threading
 from typing import Callable, Dict, Optional, Any
-from commons import Logger  
+from trade_flow.commons import Logger  
 
 class TaskManager:
     def __init__(self):

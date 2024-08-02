@@ -1,18 +1,24 @@
 from typing import Optional
-from environments import BaseEnvironment
 from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.engine import BacktestEngineConfig
 from nautilus_trader.backtest.results import BacktestResult
-from venues import VenueManager
+from trade_flow.environments import BaseEnvironment
+from trade_flow.venues import VenueManager
 
 def cli_help():
     return "Backtest Environment"
 
 class BacktestEnvironment(BaseEnvironment):
-    def __init__(self, venue_manager: VenueManager, config: Optional[BacktestEngineConfig] = None) -> None:
-        super().__init__(self, venue_manager)
-        self.engine = BacktestEngine(config=config) if config is not None else None # Initialize with actual BacktestEngine configuration or setup
+    def __init__(self, venue_manager: VenueManager) -> None:
+        super().__init__(venue_manager)
+        self.config: Optional[BacktestEngineConfig] = None
+        self.engine = BacktestEngine(config=self.config) if self.config is not None else None # Initialize with actual BacktestEngine configuration or setup
         self.results = None
+
+    def set_engine_config(self, config: BacktestEngineConfig):
+        self.config = config
+        self.engine = BacktestEngine(config=self.config)
+        return self.config 
 
     def reset(self):
         """

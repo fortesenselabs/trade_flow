@@ -8,6 +8,7 @@ venue_manager = VenueManager()
 
 # Initialize EnvironmentManager for training mode
 env_manager = EnvironmentManager(EnvironmentMode.TRAIN, venue_manager)
+env_manager.init()
 
 # Create and register a new gym environment
 env_manager.create_environment()
@@ -26,3 +27,6 @@ env_manager.reset()
 
 # Dispose of all environments
 env_manager.dispose()
+
+# [tool.setuptools.packages.find]
+# where = ["trade_flow"]
