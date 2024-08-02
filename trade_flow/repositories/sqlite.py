@@ -1,6 +1,6 @@
 import sqlite3
 from typing import List, Any, Optional
-from store.store import Store
+from repositories.store import Store
 
 
 class SqliteStore(Store):
