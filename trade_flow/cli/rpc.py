@@ -1,10 +1,9 @@
 import sys
-from typing import Any
-
 import requests
+from typing import Any
 from jsonrpcclient.requests import request
 from jsonrpcclient.responses import Error, Ok, parse
-from commons import Logger, TRADE_FLOW_SERVER_PORT
+from trade_flow.commons import Logger, TRADE_FLOW_SERVER_PORT
 
 BASE_URL = "http://127.0.0.1"
 

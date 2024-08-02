@@ -1,10 +1,10 @@
 import click
 from rich import print as richprint
-from cli.rpc import rpc_call
-from cli.venues import venues
-from cli.environments import environments
-from cli.agents import agents
-from cli.generate import generate
+from trade_flow.cli.rpc import rpc_call
+from trade_flow.cli.venues import venues
+from trade_flow.cli.environments import environments
+from trade_flow.cli.agents import agents
+from trade_flow.cli.generate import generate
 
 
 @click.group()

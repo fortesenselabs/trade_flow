@@ -1,6 +1,6 @@
 import sys
 import click
-from cli.rpc import rpc_call
+from trade_flow.cli.rpc import rpc_call
 from rich import print
 from rich.console import Console
 from rich.table import Table
