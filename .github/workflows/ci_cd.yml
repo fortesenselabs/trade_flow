@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build-linux:
+  build-test:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
@@ -24,10 +24,10 @@ jobs:
     - name: Add conda to system path
       run: |
         echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install Miniconda
-      run: |
-        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        bash Miniconda3-latest-Linux-x86_64.sh -b -p $CONDA
+    # - name: Install Miniconda
+    #   run: |
+    #     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    #     bash Miniconda3-latest-Linux-x86_64.sh -b -p $CONDA
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name base
