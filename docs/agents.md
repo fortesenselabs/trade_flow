@@ -31,6 +31,8 @@ In the context of TradeFlow, an **agent** is an autonomous decision-making entit
    - Learns optimal trading strategies through interaction with the environment.
    - Requires extensive training but can achieve high performance in dynamic markets.
 
+**PS:** We will focus on number 4 for now.
+
 ## Agent Architecture (Optional)
 
 A typical TradeFlow agent can be structured as follows:
