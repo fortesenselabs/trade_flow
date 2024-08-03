@@ -8,5 +8,4 @@ run:
 
 shell: 
 	docker exec -it trade_flow sh
-
 	
