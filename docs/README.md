@@ -25,5 +25,6 @@ Here's a quick overview of the available documentation:
 **Additional Resources:**
 
 - **[Resources](resources.md):** Additional resources or references for users.
+- In this guide, "tradeflow extensions" are referred to as "flows".
 
 The documentation serves as a comprehensive guide for developers, users, and contributors to understand the TradeFlow project. It provides clear explanations, examples, and instructions for various aspects of the system.
