@@ -8,6 +8,7 @@ RUN apt-get update && \
     clang \
     wget \
     curl \
+    git \
     libbz2-dev \
     && rm -rf /var/lib/apt/lists/*
 
