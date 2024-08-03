@@ -10,3 +10,5 @@
 - https://github.com/CloseToAlgoTrading/CodeFromVideo/
 - https://github.com/stefan-jansen/machine-learning-for-trading/blob/main/22_deep_reinforcement_learning/README.md
 - https://www.epochfin.com/
+- https://pytorch.org/ecosystem/
+- libtorch: https://pytorch.org/cppdocs/
