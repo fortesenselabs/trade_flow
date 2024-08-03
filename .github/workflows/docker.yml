@@ -1,4 +1,4 @@
-name: Docker CI Pipeline
+name: Docker Pipeline
 
 on:
   workflow_dispatch:
