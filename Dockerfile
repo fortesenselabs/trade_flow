@@ -10,6 +10,7 @@ RUN apt-get update && \
     sudo \
     wget \
     build-essential \
+    clang \
     libssl-dev \
     libffi-dev \
     python3-dev \
