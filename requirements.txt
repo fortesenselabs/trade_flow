@@ -10,7 +10,7 @@ ta-lib  # Python wrapper for TA-lib (native) library
 pandas_ta
 
 # Algorithms
-scikit-learn==1.5
+scikit-learn # ==1.5
 lightgbm>=4
 # tensorflow==2.14.1 # tensorflow>=2.16.*
 # gymnasium # gymnasium[all] | gymnasium==0.26.1
@@ -19,7 +19,7 @@ lightgbm>=4
 # keras
 # keras-tcn
 # gym-anytrading
-stable-baselines3[extra]
+stable-baselines3 # stable-baselines3[extra]
 ray[all]    # ==2.5.1
 seaborn  # if diagrams are turned on
 

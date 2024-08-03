@@ -12,9 +12,9 @@ TradeFlow is an intelligent trading bot designed to streamline your trading expe
 
 1. **Prerequisites:**
 
-- Python (<= 3.11.9)
+- Python (>=3.10)
 - ta-lib, nautilus_trader
-- pandas, tensorflow, ray
+- pandas, pytorch, ray
 - flask, metatrader-sockets-client
 
 1. **Clone the Repository:**

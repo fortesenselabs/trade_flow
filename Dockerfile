@@ -1,7 +1,4 @@
-FROM rust:slim-buster
-
-ENV USER=root
-ENV PYTHON_VERSION=3.11.3
+FROM ghcr.io/nautechsystems/nautilus_trader:latest
 
 # Install system dependencies 
 RUN apt-get update && \
@@ -9,29 +6,10 @@ RUN apt-get update && \
     sudo \
     build-essential \ 
     clang \
-    zlib1g-dev \
-    libncurses5-dev \
-    libgdbm-dev \
-    libnss3-dev \
-    libssl-dev \
-    libreadline-dev \ 
-    libffi-dev \
-    libsqlite3-dev \
     wget \
     curl \
     libbz2-dev \
     && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /tmp
-RUN wget https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz \
-    && tar -xzf Python-$PYTHON_VERSION.tgz \
-    && cd Python-$PYTHON_VERSION \
-    && ./configure --enable-optimizations \ 
-    && make -j $(nproc) \
-    && make altinstall
-
-# ENV PATH="/usr/local/bin:$PATH"
-RUN ln -s /usr/local/bin/python3.11 /usr/local/bin/python
 
 # Set the working directory
 WORKDIR /app
@@ -42,6 +20,7 @@ COPY . .
 # Install application system dependencies (e.g., TA-Lib)
 RUN bash scripts/install-talib.sh
 # RUN bash scripts/install-pygame.sh
+RUN curl -sSL https://install.python-poetry.org | python - 
 
 # Install package
 RUN python -m pip install -e .
