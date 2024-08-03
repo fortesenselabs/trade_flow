@@ -36,7 +36,7 @@ pip install -e .
 flow
 ```
 
-5. **Get list of available environments:**
+5. **Get a list of available environments:**
 
 ```bash
 flowcli environments available
@@ -55,13 +55,13 @@ python -m pytest tests/
 
 ## Milestones
 
-1. Nautilus Trader Adapter: For connecting Nautilus to MetaTrader.
+1. Nautilus Trader Adapter: This connects Nautilus Trader to MetaTrader.
 
-2. TradeFlow: Infrastructure for running multiple trading nodes(based on nautilus) and agents (This is the platform we want to build and to be honest we can do it along with the adapter for now, then later we would push it out as a standalone package)
+2. TradeFlow: Infrastructure for building and deploying multiple agents with trading nodes (This is the platform we want to build and to be honest, we can do it along with the adapter for now, then later we would push it out as a standalone package)
 
 3. Trading Agent: The trained agent that makes decisions. (To be built on after of the Nautilus Adapter and simulated training environment) (3)
 
-4. Ansible: For provisioning MetaTrader platforms automatically. (Optional for now)
+4. Ansible: This is for provisioning MetaTrader platforms automatically. (Optional for now)
 
 ## Disclaimer
 
