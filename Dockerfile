@@ -16,6 +16,9 @@ RUN apt-get update && \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Rust compiler (required for nautilus-trader)
+RUN curl -sSL https://sh.rustup.rs | sh -s -- -y
+
 # RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
 
 # USER docker
