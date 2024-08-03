@@ -1,5 +1,8 @@
 FROM ghcr.io/nautechsystems/nautilus_trader:latest
 
+LABEL org.opencontainers.image.source=https://github.com/fortesenselabs/trade_flow
+LABEL org.opencontainers.image.description="Tradeflow Development Environment(TDE)"
+
 # Install system dependencies 
 RUN apt-get update && \
     apt-get install -y \
