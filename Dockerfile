@@ -9,6 +9,7 @@ RUN apt-get update && \
     apt-get install -y \
     sudo \
     wget \
+    curl \
     build-essential \
     clang \
     libssl-dev \
