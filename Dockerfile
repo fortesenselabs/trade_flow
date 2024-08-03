@@ -19,7 +19,7 @@ COPY . .
 
 # Install application system dependencies (e.g., TA-Lib)
 RUN bash scripts/install-talib.sh
-# RUN bash scripts/install-pygame.sh
+RUN bash scripts/install-pygame.sh
 RUN curl -sSL https://install.python-poetry.org | python - 
 
 # Install package

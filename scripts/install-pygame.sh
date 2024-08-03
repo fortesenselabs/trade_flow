@@ -14,7 +14,7 @@ sudo apt-get install git python3-dev python3-setuptools python3-numpy python3-op
 
 sudo apt-get install python3-pygame
 
-python3 -m pip install -U pygame --user
+python -m pip install -U pygame --user
 
 # https://www.pygame.org/wiki/CompileUbuntu?parent=
 # https://www.pygame.org/wiki/GettingStarted
