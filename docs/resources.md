@@ -2,6 +2,12 @@
 
 This section provides a curated list of resources for building a trading platform leveraging machine learning and quantitative analysis techniques.
 
+**Algorithmic Trading**
+
+- https://youtu.be/BRUlSm4gdQ4?si=gI9e4PcNiPkDbtcJ
+- https://youtu.be/pRurbL9-Lus?si=f4LPI17CbRLuQENO
+- [Books](./books/): Contains books about algorithmic trading.
+
 **Open-Source Frameworks and Libraries**
 
 - **Trading Strategies:**
