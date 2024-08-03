@@ -26,7 +26,7 @@ This section provides a curated list of resources for building a trading platfor
 - **PyTorch:** A powerful open-source framework for deep learning research and development (Pytorch Ecosystem: [https://pytorch.org/ecosystem/](https://pytorch.org/ecosystem/)).
 - **libtorch:** The C++ API for PyTorch, enabling interoperability with C++ code for potential performance benefits (Pytorch C++ API docs: [https://pytorch.org/cppdocs/](https://pytorch.org/cppdocs/)).
 
-## Recommendations (not verified yet)
+## Recommendations
 
 - **Prioritize Low-Level Languages:** While Python serves as a good starting point, consider exploring lower-level languages like C++ or Rust for performance-critical components where necessary.
 - **Favor PyTorch:** While TensorFlow remains a prominent option, PyTorch might offer a more streamlined and efficient approach for deep learning tasks in this context.
