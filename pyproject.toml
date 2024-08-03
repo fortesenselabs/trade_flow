@@ -3,7 +3,7 @@ name = "trade_flow"
 version = "0.0.1"
 description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
 readme = "README.md"
-requires-python = "==3.11"
+requires-python = "<=3.11.9"
 keywords = ["algo", "trading", "trade_flow", "deep learning", "machine learning", "ai"]
 classifiers = [
     "Programming Language :: Python :: 3",
