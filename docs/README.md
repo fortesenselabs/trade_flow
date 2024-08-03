@@ -14,15 +14,16 @@ Here's a quick overview of the available documentation:
 - **[Flow](flow.md):** Core logic and workflow of the TradeFlow system.
 - **[Folder Structure](folder_structure.md):** Describes the project's folder structure and organization.
 
-**Additional Documentation:**
-
 - **[Interfaces](interfaces.md):** Information about the interfaces used within the project.
 - **[Data Repositories](repositories.md):** Documentation for the data repositories used in TradeFlow.
-- **[Resources](resources.md):** Additional resources or references for users.
 - **[Venues](venues.md):** Details about the integration with different trading venues.
 
 **Images:**
 
 - **[Images folder](./images/)**: Contains any images or diagrams used within the documentation.
+
+**Additional Resources:**
+
+- **[Resources](resources.md):** Additional resources or references for users.
 
 The documentation serves as a comprehensive guide for developers, users, and contributors to understand the TradeFlow project. It provides clear explanations, examples, and instructions for various aspects of the system.
