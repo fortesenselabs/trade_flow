@@ -18,9 +18,31 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-## Usage:
+## Setup a docker environment
 
-Refer to the `usage.py` script for an example of how to use TradeFlow.
+1. **Build the Docker Image Again:**
+
+```sh
+    docker build -t trade_flow .
+```
+
+2. **Run the Docker Container:**
+
+```sh
+    docker run -it trade_flow trade_flow-environment
+```
+
+3. **Run a shell (optional):**
+
+```sh
+    docker exec -it trade_flow sh
+```
+
+### Extra(s)
+
+_This medium article can show you how to setup docker desktop for windows:_
+
+- https://medium.com/@meghasharmaa704/install-docker-desktop-on-windows-ce0f2f987bfc
 
 ## Info:
 
