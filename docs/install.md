@@ -1,49 +1,82 @@
-# Install TradeFlow
+## TradeFlow Installation Guide
 
-```bash
-git clone https://github.com/FortesenseLabs/trade_flow
+This guide outlines two methods for installing and running TradeFlow:
 
-cd trade_flow
-```
+**1. Local Installation**
 
-### Optional: use a virtual Python environment such as `venv`
+This method installs TradeFlow directly on your machine.
 
-```bash
-python3 -m venv .venv # Use alternative venv manager if desired
-source .venv/bin/activate
-```
+**Prerequisites:**
 
-```bash
-pip install --upgrade pip
-pip install -e .
-```
+* Git
+* Python 3
 
-## Setup a docker environment
+**Steps:**
 
-1. **Build the Docker Image Again:**
+1. **Clone the TradeFlow Repository:**
 
-```sh
-    docker build -t trade_flow .
-```
+   ```bash
+   git clone https://github.com/FortesenseLabs/trade_flow
+   ```
 
-2. **Run the Docker Container:**
+2. **Navigate to the Project Directory:**
 
-```sh
-    docker run -it trade_flow trade_flow-environment
-```
+   ```bash
+   cd trade_flow
+   ```
 
-3. **Run a shell (optional):**
+3. **(Optional) Create a Virtual Environment:**
 
-```sh
-    docker exec -it trade_flow sh
-```
+   A virtual environment helps isolate project dependencies. Here's an example using `venv`:
 
-### Extra(s)
+   ```bash
+   python3 -m venv .venv  # Use a different venv manager if preferred
+   source .venv/bin/activate
+   ```
 
-_This medium article can show you how to setup docker desktop for windows:_
+4. **Install Dependencies:**
 
-- https://medium.com/@meghasharmaa704/install-docker-desktop-on-windows-ce0f2f987bfc
+   ```bash
+   pip install --upgrade pip
+   pip install -e .
+   ```
 
-## Info:
+**2. Docker Installation**
 
-Extensions would be called flows.
+This method uses Docker containers to run TradeFlow.
+
+**Prerequisites:**
+
+* Docker installed and running
+
+**Option A: Pull Pre-built Image**
+
+1. **Pull the TradeFlow Image from GHCR:**
+
+   ```bash
+   docker pull ghcr.io/fortesenselabs/trade_flow:latest
+   ```
+
+**Option B: Build the Docker Image**
+
+1. **Build the Image:**
+
+   ```bash
+   docker build -t trade_flow .
+   ```
+
+2. **Run the Container:**
+
+   ```bash
+   docker run -it trade_flow trade_flow-environment  # Runs TradeFlow environment
+   ```
+
+3. **(Optional) Enter the Container Shell:**
+
+   ```bash
+   docker exec -it trade_flow sh
+   ```
+
+**Additional Notes:**
+
+* For Docker Desktop installation on Windows, refer to: [https://medium.com/@meghasharmaa704/install-docker-desktop-on-windows-ce0f2f987bfc](https://medium.com/@meghasharmaa704/install-docker-desktop-on-windows-ce0f2f987bfc) (**Note:** This is an external link)
