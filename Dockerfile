@@ -8,6 +8,7 @@ RUN apt-get update && \
     apt-get install -y \
     sudo \
     build-essential \ 
+    clang \
     zlib1g-dev \
     libncurses5-dev \
     libgdbm-dev \
