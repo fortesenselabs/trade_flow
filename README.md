@@ -20,7 +20,7 @@ TradeFlow is an intelligent trading bot designed to streamline your trading expe
 1. **Clone the Repository:**
 
 ```bash
-git clone https://github.com/FortesenseLabs/trade_flow.git
+git clone https://github.com/fortesenselabs/trade_flow.git
 ```
 
 3. **Installation:**
