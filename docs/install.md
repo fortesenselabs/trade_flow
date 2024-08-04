@@ -16,7 +16,7 @@ This method installs TradeFlow directly on your machine.
 1. **Clone the TradeFlow Repository:**
 
    ```bash
-   git clone https://github.com/FortesenseLabs/trade_flow
+   git clone https://github.com/fortesenselabs/trade_flow.git
    ```
 
 2. **Navigate to the Project Directory:**
