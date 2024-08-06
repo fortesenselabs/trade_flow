@@ -17,15 +17,12 @@ mt5.login(
 
 print("version: ", mt5.version())
 print("terminal_info: ", mt5.terminal_info())
-
-data = mt5.copy_rates_from_pos('Step Index',mt5.TIMEFRAME_M1,0,10000)
-data = pd.DataFrame(data)
-print(data)
-
 print("account_info: ", mt5.account_info())
 
-# # ...
-# # don't forget to shutdown
-# mt5.shutdown()
+rates = mt5.copy_rates_from_pos('Step Index',mt5.TIMEFRAME_M1,0,10000)
+rates_df = pd.DataFrame(rates)
+print(rates_df)
+
+mt5.shutdown()
 
 
