@@ -57,7 +57,8 @@ jobs:
         id: mt5_build_latest
         uses: docker/build-push-action@v3
         with:
-          context: .
+          file: "infrastructure/MetaTrader5/Dockerfile"
+          context: "infrastructure/MetaTrader5/"
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/metatrader5-terminal:latest
           cache-from: type=gha
