@@ -1,37 +1,65 @@
-FROM alpine:3.15 AS st-builder
+FROM golang:1.14-buster AS novnc-build
 
-RUN apk add --no-cache make gcc git freetype-dev \
-    fontconfig-dev musl-dev xproto libx11-dev \
-    libxft-dev libxext-dev
-RUN git clone https://github.com/DenisKramer/st.git /work
-WORKDIR /work
-RUN make
+WORKDIR /src
 
-# ----------------------------------------------------------------------------
+RUN go mod init build && \
+    go get github.com/geek1011/easy-novnc@v1.1.0 && \
+    go build -o /bin/easy-novnc github.com/geek1011/easy-novnc
 
-FROM alpine:3.15 AS xdummy-builder
-
-RUN apk add --no-cache make gcc freetype-dev \
-    fontconfig-dev musl-dev xproto libx11-dev \
-    libxft-dev libxext-dev avahi-libs libcrypto3 libssl3 libvncserver libx11 libxdamage libxext libxfixes libxi libxinerama libxrandr libxtst musl samba-winbind 
-RUN apk add --no-cache linux-headers
-RUN apk add x11vnc 
-RUN Xdummy -install
+FROM tobix/pywine:3.9
 
 # ----------------------------------------------------------------------------
-
 LABEL org.opencontainers.image.source=https://github.com/FortesenseLabs/metatrader-terminal
-LABEL org.opencontainers.image.description="Metatrader 5 Terminal API"
-LABEL org.opencontainers.image.licenses=MIT
-
+LABEL org.opencontainers.image.description="Metatrader 5 Terminal RPYC API"
 # ----------------------------------------------------------------------------
-FROM alpine:3.15 AS base
 
-
-USER root
-ENV WINEPREFIX=/root/.wine
-ENV WINEARCH=win64
+# USER root
 ENV DISPLAY :0
-ENV USER=root
-ENV PASSWORD=root
+# ENV USER=root
+# ENV PASSWORD=root
 ENV HOME=/root
+ENV SERVER_HOST='0.0.0.0'
+ENV SERVER_PORT=18812
+ENV DRIVE_C=${WINEPREFIX}/drive_c
+STOPSIGNAL SIGRTMIN+3
+
+# Install required packages
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends openbox tigervnc-standalone-server supervisor gosu && \
+    rm -rf /var/lib/apt/lists && \
+    mkdir -p /usr/share/desktop-directories
+
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends lxterminal nano openssh-client \ 
+    rsync xdg-utils htop \
+    tar xzip gzip bzip2 zip unzip wget && \
+    apt-get clean && \ 
+    rm -rf /var/lib/apt/lists
+
+COPY --from=novnc-build /bin/easy-novnc /usr/local/bin/
+COPY assets/menu.xml /etc/xdg/openbox/
+COPY assets/supervisord.conf /etc/
+
+
+WORKDIR /$HOME/
+COPY assets .
+
+RUN tar -xzf Metatrader-5.tar.gz -C "$DRIVE_C/" \
+    && mv metatrader.desktop /usr/share/applications/ \
+    && rm menu.xml supervisord.conf Metatrader-5.tar.gz 
+
+RUN wine pip install -r requirements.txt \
+    && chmod +x run_server.sh
+
+EXPOSE 18812 8000 
+# 9876 5900 | if tigervnc needs to be accessed use a proxy such as Caddy
+
+CMD ["supervisord"]
+
+# https://www.digitalocean.com/community/tutorials/how-to-remotely-access-gui-applications-using-docker-and-caddy-on-debian-9
+# https://github.com/oposs/tl-docker/
+# 
+# add option to automatically connect to an instance
+# /usr/local/bin/easy-novnc --addr :8080 --host localhost --port 5900 --no-url-password --novnc-params "resize=remote"
+# Hide connection options from the main screen: --basic-ui
+# https://github.com/pgaskin/easy-novnc

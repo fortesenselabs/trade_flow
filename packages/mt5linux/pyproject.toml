@@ -1,0 +1,21 @@
+[project]
+name = "mt5linux"
+version = "0.2.0"
+description = "MetaTrader5 for linux users"
+readme = "README.md"
+requires-python = ">=3.7"
+authors = [{ name = "Lucas Prett Campagna" }]
+urls = { "GitHub"="https://github.com/lucas-campagna/mt5linux" }
+
+[dependencies]
+numpy = "1.21.4"
+rpyc = "^5.2.3"
+pyparsing = "2.4.7"
+MetaTrader5 = { version = "*", extras = ["with_mt5"], condition = "platform_system == 'Windows'" }
+
+[dev-dependencies]
+pytest = "^7.1.2" 
+
+[build-system]
+requires = ["setuptools"]  
+build-backend = "setuptools.build_meta"
