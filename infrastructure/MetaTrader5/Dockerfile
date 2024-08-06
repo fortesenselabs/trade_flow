@@ -51,7 +51,7 @@ RUN tar -xzf Metatrader-5.tar.gz -C "$DRIVE_C/" \
 RUN wine pip install -r requirements.txt \
     && chmod +x run_server.sh
 
-EXPOSE 18812 8080 
+EXPOSE 18812 8000 
 # 9876 5900 | if tigervnc needs to be accessed use a proxy such as Caddy
 
 CMD ["supervisord"]
