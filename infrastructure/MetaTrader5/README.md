@@ -25,6 +25,7 @@ docker build -t metatrader5-terminal .
 ```
 docker run -d --name metatrader5-terminal \
              -p 18812:18812 \
+             -p 8000:8000 \
              metatrader5-terminal
 ```
 
