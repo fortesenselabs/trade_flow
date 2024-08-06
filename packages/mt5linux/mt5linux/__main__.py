@@ -139,37 +139,45 @@ if __name__ == "__main__":
         fp.write(code)
 
 def main():
-    from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
     import os
-    from subprocess import Popen
     import argparse
+    from subprocess import Popen
+    from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
+
     parser = argparse.ArgumentParser(description='Create Server.')
-    parser.add_argument('python', type=str, help='Python that will run the server (have to be a Windows version!)')
-    parser.add_argument('--host', type=str, default='localhost', help='The host to connect to. The default is localhost')
-    parser.add_argument('-p','--port', type=int, default=DEFAULT_SERVER_PORT, help=f'The TCP listener port (default = {DEFAULT_SERVER_PORT!r}, default for SSL = {DEFAULT_SERVER_SSL_PORT!r})')
-    parser.add_argument('-w','--wine', type=str, default='wine', help='Command line to call wine program (default = wine)')
-    parser.add_argument('-s','--server', type=str, default='/tmp/mt5linux', help='Path where the server will be build and run (defaul = /tmp/mt5linux)')
+    parser.add_argument('python', type=str, default='python', help='Python that will run the server (have to be a Windows version!)')
+    parser.add_argument('--host', type=str, default='0.0.0.0', help='The host to connect to. The default is 0.0.0.0')
+    parser.add_argument('-p', '--port', type=int, default=DEFAULT_SERVER_PORT, help=f'The TCP listener port (default = {DEFAULT_SERVER_PORT!r}, default for SSL = {DEFAULT_SERVER_SSL_PORT!r})')
+    parser.add_argument('-w', '--wine', type=str, default='wine', help='Command line to call wine program (default = wine)')
+    parser.add_argument('-s', '--server', type=str, default='/tmp/mt5linux', help='Path where the server will be built and run (default = /tmp/mt5linux)')
     args = parser.parse_args()
-    #
-    wine_cmd=args.wine
-    win_python_path=args.python
-    server_dir=args.server
-    server_code='server.py'
-    port=args.port
-    host=args.host
-    #
-    Popen(['mkdir','-p',server_dir],shell=True).wait()
-    __generate_server_classic(os.path.join(server_dir,server_code))
+
+    wine_cmd = args.wine
+    win_python_path = args.python
+    server_dir = args.server
+    server_code = 'server.py'
+    port = args.port
+    host = args.host
+
+    try:
+        os.makedirs(server_dir, exist_ok=True) 
+    except OSError as e:
+        print(f"Error creating server directory: {e}")
+        exit(1)
+
+    server_file_path = os.path.join(server_dir, server_code)
+    server_file_path = server_file_path.replace(f"\\{server_code}", f"/{server_code}") # dirty fix for => C:\Python\python.exe: can't open file 'Z:\\tmp\\mt5linuxserver.py': [Errno 2] No such file or directory
+
+    __generate_server_classic(server_file_path)
+
+    # Execute the command 
     Popen([
-            wine_cmd,
-            os.path.join(win_python_path),
-            os.path.join(server_dir,server_code),
-            '--host',
-            host,
-            '-p',
-            str(port),
-        ],shell=True,
-    ).wait()
+        wine_cmd,
+        os.path.join(win_python_path),
+        server_file_path,
+        '--host', str(host),
+        '--port', str(port),
+    ], shell=True).wait()
 
 
 if __name__ == '__main__':
