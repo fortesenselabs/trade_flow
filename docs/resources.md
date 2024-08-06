@@ -21,7 +21,9 @@ This section provides a curated list of resources for building a trading platfor
   - **RL_StockTrader-TFAgents:** An example project using TensorFlow Agents for building a stock trading bot (GitHub: [https://github.com/tensorflow/agents](https://github.com/tensorflow/agents)).
 - **Additional Resources:**
   - **CodeFromVideo:** A collection of code examples from algorithmic trading video tutorials (GitHub: [https://github.com/chrisconlan/algorithmic-trading-with-python](https://github.com/chrisconlan/algorithmic-trading-with-python)).
-  - **machine-learning-for-trading:** A comprehensive GitHub repository exploring various machine learning techniques for trading (GitHub: [https://github.com/stefan-jansen/machine-learning-for-trading](https://github.com/stefan-jansen/machine-learning-for-trading)).
+  - **machine-learning-for-trading:** A comprehensive GitHub repository exploring various machine-learning techniques for trading (GitHub: [https://github.com/stefan-jansen/machine-learning-for-trading](https://github.com/stefan-jansen/machine-learning-for-trading)).
+  - https://github.com/jiewwantan/StarTrader/
+  - https://github.com/releat215/releat/tree/dev 
 
 **Hardware and Infrastructure**
 
