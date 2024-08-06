@@ -52,22 +52,22 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8.0.1
 
-      - name: Build MetaTrader 5 image (latest)
+      - name: Build MetaTrader 5 Terminal image (latest)
         if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
         id: mt5_build_latest
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/metatrader5:latest
+          tags: ghcr.io/${{ github.repository_owner }}/metatrader5-terminal:latest
           cache-from: type=gha
           cache-to: type=gha
-      - name: Digest metatrader5 image
+      - name: Digest metatrader5-terminal image
         run: echo ${{ steps.mt5_build_latest.outputs.digest }}
 
-      - name: Build trade_flow image (latest)
+      - name: Build Trade Flow Environment image (latest)
         if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
-        id: trade_flow_environment_latest
+        id: trade_flow_env_build_latest
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -76,4 +76,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha
       - name: Digest trade_flow image
-        run: echo ${{ steps.trade_flow_environment_latest.outputs.digest }}
+        run: echo ${{ steps.trade_flow_env_build_latest.outputs.digest }}
