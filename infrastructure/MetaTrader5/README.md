@@ -3,7 +3,7 @@
 This Docker image provides a lightweight environment for running the Metatrader 5 Terminal with RPYC API access. It combines two base images:
 
 - `golang:1.14-buster`: Used to build the `easy-novnc` tool for remote desktop access.
-- `tobitz/pywine:3.9`: Provides a Python environment with Wine for running the Metatrader 5 Terminal on Linux.
+- `tobix/pywine:3.9`: Provides a Python environment with Wine for running the Metatrader 5 Terminal on Linux. [tobix/pywine:3.9](https://github.com/webcomics/pywine)
 
 ## Features
 
@@ -35,7 +35,7 @@ This command runs the container in detached mode (`-d`) and maps the container's
 This image includes `easy-novnc` for potential remote desktop access. However, additional configuration is needed outside the container, such as using a reverse proxy like Caddy. Refer to the following resources for setting up remote desktop access:
 
 - [https://www.digitalocean.com/community/tutorial-collections/how-to-set-up-a-remote-desktop-with-x2go](https://www.digitalocean.com/community/tutorial-collections/how-to-set-up-a-remote-desktop-with-x2go)
-- [https://github.com/gmag11/MetaTrader5-Docker-Image](https://github.com/gmag11/MetaTrader5-Docker-Image)
+- [https://github.com/gnzsnz/ib-gateway-docker/](https://github.com/gnzsnz/ib-gateway-docker/)
 
 **Additional notes:**
 
