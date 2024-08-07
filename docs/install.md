@@ -1,4 +1,4 @@
-## TradeFlow Installation Guide
+# TradeFlow Installation Guide
 
 This guide outlines two methods for installing and running TradeFlow:
 
@@ -25,7 +25,10 @@ This method installs TradeFlow directly on your machine.
    cd trade_flow
    ```
 
-3. **(Optional) Create a Virtual Environment:**
+3. **Setup Environment:**
+You can choose from any of the following environment setup
+
+a. **(Optional) Create a Virtual Environment:**
 
    A virtual environment helps isolate project dependencies. Here's an example using `venv`:
 
@@ -33,13 +36,31 @@ This method installs TradeFlow directly on your machine.
    python3 -m venv .venv  # Use a different venv manager if preferred
    source .venv/bin/activate
    ```
+b. **(Optional) Create a Conda Environment:**
 
+   A conda environment also helps isolate project dependencies. You can also control the version of python too:
+   ```bash
+   conda create --name trade_flow python=3.11  # Use the tested and recommended python version
+
+# using conda v4:
+conda activate trade_flow 
+
+# OR
+
+# using conda v3:
+source activate trade_flow
+
+# Verify python version:
+python --version
+   ```
+   
 4. **Install Dependencies:**
 
    ```bash
    pip install --upgrade pip
    pip install -e .
    ```
+
 
 **2. Docker Installation**
 
