@@ -27,7 +27,8 @@ This method installs TradeFlow directly on your machine.
 
 3. **(Optional) Setup Environment:**
 You can choose from any of the following environment setup.
-  a. **Create a Virtual Environment:**
+
+ a. **Create a Virtual Environment:**
 
    A virtual environment helps isolate project dependencies. Here's an example using `venv`:
 
