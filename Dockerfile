@@ -26,8 +26,8 @@ RUN bash scripts/install-talib.sh
 RUN bash scripts/install-pygame.sh
 RUN curl -sSL https://install.python-poetry.org | python - 
 
-# Install package
-RUN python -m pip install -e .
+# Install package | python -m pip install -e .
+RUN poetry install 
 
 # Set the command to run when the container starts
 ENTRYPOINT ["sh"]
