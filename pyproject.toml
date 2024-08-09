@@ -1,9 +1,9 @@
-[project]
+[tool.poetry]
 name = "trade_flow"
-version = "0.0.1"
+version = "0.1.0"
 description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
+authors = ["Foretesense Labs <foretesenselabs@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.10"
 keywords = ["algo", "trading", "trade_flow", "deep learning", "machine learning", "ai"]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -16,21 +16,108 @@ classifiers = [
     "Intended Audience :: Financial and Insurance Industry",
     "Intended Audience :: Science/Research",
 ]
-dynamic = ["dependencies"]
-
-[project.scripts]
-flow = "trade_flow.flow.server:run_server"
-flowcli = "trade_flow.cli.main:cli"
 
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8"]
-build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=64", 
+    "setuptools_scm>=8",
+    "poetry-core>=1.9.0",
+    "numpy>=2.0.1",
+    "toml>=0.10.2",
+]
+build-backend = "poetry.core.masonry.api"
 
 [tool.setuptools]
 packages = ["trade_flow"]
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+[tool.poetry.scripts]
+flow = "trade_flow.flow.server:run_server"
+flowcli = "trade_flow.cli.main:cli"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+nautilus-trader = "^1.198.0"
+numpy = "^2.0.1"  # version might be limited by numba and tensorflow
+pandas = "^2.2.2" # version might be important for parsing timestamps
+numba = "^0.60.0" # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,
+pyarrow = "^17.0.0" # If parquet is used. Alternatively fastparquet
+ta-lib = "^0.4.32" # Python wrapper for TA-lib (native) library
+pandas-ta = "^0.3.14b0"
+tsfresh = "^0.20.3" # Features/label generation # if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
+scikit-learn = "^1.5.1"
+lightgbm = "^4.5.0"
+stable-baselines3 = {extras = ["extra"], version = "^2.3.2"}
+ray = {extras = ["all"], version = "^2.34.0"}
+seaborn = "^0.13.2"
+colorlog = "^6.8.2"
+requests = "^2.32.3"
+websockets = "^12.0"
+pydantic = "^2.8.2"
+python-dotenv = "^1.0.1"
+pyyaml = "^6.0.2"
+cachetools = "4.2.2"
+sqlalchemy = "2.0.31"
+flask = "3.0.0"
+flask-jsonrpc = "1.1.0"
+jsonrpcclient = "4.0.3"
+jsonrpcserver = "5.0.9"
+jsonschema = "4.20.0"
+jsonschema-specifications = "2023.12.1"
+apscheduler = "3.10"
+deprecated = ">=1.2.13"
+matplotlib = ">=3.1.1"
+plotly = ">=4.5.0"
+click = "^8.1.7"
+docker = "^7.1.0"
+rpyc = "^6.0.0"
+tqdm = "^4.66.5"
+
+[tool.poetry.extras]
+docker = ["docker"]
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.8.0"
+docformatter = "^1.7.5"
+mypy = "^1.11.1"
+pandas-stubs = "^2.2.2"
+pre-commit = "^3.8.0"
+ruff = "^0.5.7"
+types-pytz = "^2024.1"
+types-requests = "^2.32"
+types-toml = "^0.10.2"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+coverage = "^7.6.1"
+pytest = "^8.3.2"
+
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+numpydoc = "^1.7.0"
+linkify-it-py = "^2.0.3"
+myst-parser = "^3.0.1"
+sphinx_comments = "^0.0.3"
+sphinx_markdown_builder = "^0.6.6"
+
+[tool.black]
+target_version = ["py310", "py311", "py312"]
+line_length = 100
+
+[tool.docformatter]
+black = true
+make-summary-multi-line = true
+pre-summary-new-line = true
+blank = true
+recursive = true
+in-place = true
 
 [tool.ruff]
 extend-exclude = []

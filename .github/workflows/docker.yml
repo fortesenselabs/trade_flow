@@ -12,8 +12,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-docker-images:
-    name: build-docker-images
+  build-images:
+    name: build-images
     runs-on: ubuntu-latest
     env:
       BUILD_MODE: release
