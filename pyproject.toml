@@ -1,6 +1,6 @@
 [project]
 name = "trade_flow"
-version = "0.0.1"
+version = "0.1.0"
 description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
 readme = "README.md"
 requires-python = ">=3.10"
