@@ -66,6 +66,10 @@ This method installs TradeFlow directly on your machine.
 4. **Install Dependencies:**
 
 ```sh
+   poetry install
+
+   # OR
+
    pip install --upgrade pip
    pip install -e .
 ```
