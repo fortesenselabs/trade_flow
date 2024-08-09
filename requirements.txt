@@ -46,6 +46,8 @@ pytest
 apscheduler==3.10
 click
 # tqdm
+docker
+rpyc
 
 # server
 flask==3.0.0 # via flask-jsonrpc
