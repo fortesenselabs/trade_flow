@@ -66,7 +66,7 @@ This method installs TradeFlow directly on your machine.
 4. **Install Dependencies:**
 
 ```sh
-   poetry install
+   poetry install # recommended package manager
 
    # OR
 
