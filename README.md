@@ -68,6 +68,10 @@ python -m pytest tests/
 - Synthetic Indices
 - DeFi
 
+## MetaTrader 5 Docker Image
+
+[This](./infrastructure/MetaTrader5/) docker image provides an environment to access Metatrader 5 Terminal with a web browser.
+
 ## Disclaimer
 
 TradeFlow is for educational purposes only. The developers are not responsible for any financial losses incurred while using this software. Please understand the inherent risks involved in trading before using any automated system.
