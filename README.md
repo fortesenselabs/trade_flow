@@ -13,11 +13,10 @@ TradeFlow is an intelligent trading bot designed to streamline your trading expe
 1. **Prerequisites:**
 
 - Python (>=3.10)
-- ta-lib, nautilus_trader
-- pandas, pytorch, ray
-- flask, metatrader-sockets-client
+- poetry
+- [TA-Lib](./scripts/install-talib.sh)
 
-1. **Clone the Repository:**
+2. **Clone the Repository:**
 
 ```bash
 git clone https://github.com/fortesenselabs/trade_flow.git
@@ -62,6 +61,12 @@ python -m pytest tests/
 3. Trading Agent: The trained agent that makes decisions. (To be built on after of the Nautilus Adapter and simulated training environment) (3)
 
 4. Ansible: This is for provisioning MetaTrader platforms automatically. (Optional for now)
+
+## Niche Markets
+
+- Forex
+- Synthetic Indices
+- DeFi
 
 ## Disclaimer
 
