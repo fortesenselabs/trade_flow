@@ -2,7 +2,7 @@
 name = "trade_flow"
 version = "0.1.0"
 description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
-authors = ["Foretesense Labs <foretesenselabs@gmail.com>"]
+authors = ["Fortesense Labs <fortesenselabs@gmail.com>"]
 readme = "README.md"
 keywords = ["algo", "trading", "trade_flow", "deep learning", "machine learning", "ai"]
 classifiers = [
@@ -20,9 +20,7 @@ classifiers = [
 [build-system]
 requires = [
     "setuptools>=64", 
-    "setuptools_scm>=8",
     "poetry-core>=1.9.0",
-    "numpy>=2.0.1",
     "toml>=0.10.2",
 ]
 build-backend = "poetry.core.masonry.api"
@@ -36,18 +34,20 @@ flowcli = "trade_flow.cli.main:cli"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-nautilus-trader = "^1.198.0"
 numpy = "^2.0.1"  # version might be limited by numba and tensorflow
 pandas = "^2.2.2" # version might be important for parsing timestamps
 numba = "^0.60.0" # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,
 pyarrow = "^17.0.0" # If parquet is used. Alternatively fastparquet
 ta-lib = "^0.4.32" # Python wrapper for TA-lib (native) library
 pandas-ta = "^0.3.14b0"
-tsfresh = "^0.20.3" # Features/label generation # if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
+nautilus-trader = "^1.198.0"
+tsfresh = "^0.20.3" # Features/label generation | if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
 scikit-learn = "^1.5.1"
 lightgbm = "^4.5.0"
 stable-baselines3 = {extras = ["extra"], version = "^2.3.2"}
 ray = {extras = ["all"], version = "^2.34.0"}
+#tensorflow = "2.14.1"
+torch = "^2.4.0"
 seaborn = "^0.13.2"
 colorlog = "^6.8.2"
 requests = "^2.32.3"
@@ -72,6 +72,7 @@ docker = "^7.1.0"
 rpyc = "^6.0.0"
 tqdm = "^4.66.5"
 
+
 [tool.poetry.extras]
 docker = ["docker"]
 
@@ -95,7 +96,7 @@ optional = true
 [tool.poetry.group.test.dependencies]
 coverage = "^7.6.1"
 pytest = "^8.3.2"
-
+requests-mock = "^1.12.1"
 
 [tool.poetry.group.docs]
 optional = true
