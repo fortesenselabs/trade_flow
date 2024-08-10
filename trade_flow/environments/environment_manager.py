@@ -3,8 +3,6 @@ import uuid
 import json
 import os
 import ray
-import ray.rllib
-import ray.rllib.utils
 from ray.tune.registry import register_env
 from trade_flow.commons import Logger, EnvironmentMode, AssetClass 
 from trade_flow.venues import VenueManager
