@@ -26,7 +26,11 @@ requires = [
 build-backend = "poetry.core.masonry.api"
 
 [tool.setuptools]
-packages = ["trade_flow"]
+packages = [
+"trade_flow",
+"packages.mt5linux",
+"packages.adapters.metatrader5"
+]
 
 [tool.poetry.scripts]
 flow = "trade_flow.flow.server:run_server"

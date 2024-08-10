@@ -30,12 +30,12 @@ print("version: ", mt5.version())
 print("terminal_info: ", mt5.terminal_info())
 print("account_info: ", mt5.account_info())
 
-rates = mt5.copy_rates_from_pos('Step Index',mt5.TIMEFRAME_M1,0,10000)
+rates = mt5.copy_rates_from_pos('EURUSD',mt5.TIMEFRAME_M1,0,10000)
 rates_df = pd.DataFrame(rates)
 print(rates_df)
 
 # prepare the buy request structure
-symbol = "Step Index"
+symbol = "EURUSD"
 symbol_info = mt5.symbol_info(symbol)
 if symbol_info is None:
     print(symbol, "not found, can not call order_check()")
