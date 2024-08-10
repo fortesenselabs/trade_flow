@@ -168,6 +168,5 @@ data/
 trading-analytics/
 dump
 wenv
-.vscode
 
 *environment_ids.json

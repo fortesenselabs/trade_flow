@@ -169,5 +169,6 @@ trading-analytics/
 dump
 wenv
 .vscode
+poetry.lock
 
 *environment_ids.json
