@@ -44,3 +44,8 @@ This section provides a curated list of resources for building a trading platfor
 - **Initial User Scale:** For the initial phase, the platform should be capable of comfortably handling a million users. However, scaling for significantly larger user bases can be addressed in later development stages.
 
 **Note:** This documentation assumes some familiarity with machine learning concepts and tools.
+
+## Dump
+
+Configuration:
+Edit the `config.json` OR `config.yaml` OR `config.jsonc` file to define your API keys, trading strategies, and risk parameters.
