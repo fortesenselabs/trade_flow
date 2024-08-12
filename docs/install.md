@@ -10,18 +10,19 @@ This method installs TradeFlow directly on your machine.
 
 - Git
 - Python 3
+- Debian-based OS (recommended)
 
 **Steps:**
 
 1. **Clone the TradeFlow Repository:**
 
-   ```sh
+   ```bash
    git clone https://github.com/fortesenselabs/trade_flow.git
    ```
 
 2. **Navigate to the Project Directory:**
 
-   ```sh
+   ```bash
    cd trade_flow
    ```
 
@@ -42,14 +43,14 @@ This method installs TradeFlow directly on your machine.
 
    - **(Option A) Create a Virtual Environment:** A virtual environment helps isolate project dependencies. Here's an example using `venv`:
 
-     ```sh
+     ```bash
         python3 -m venv .venv  # Use a different venv manager if preferred
         source .venv/bin/activate
      ```
 
    - **(Option B) Create a Conda Environment:** A conda environment also helps isolate project dependencies. You can also control the version of python too:
 
-     ```sh
+     ```bash
      conda create --name trade_flow python=3.11  # Use the tested and recommended python version
      # using conda v4:
       conda activate trade_flow
@@ -65,7 +66,7 @@ This method installs TradeFlow directly on your machine.
 
 4. **Install Dependencies:**
 
-```sh
+```bash
    poetry install # recommended package manager
 
    # OR
