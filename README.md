@@ -1,4 +1,4 @@
-# TradeFlow: Intelligent Trading Automation Platform
+# TradeFlow
 
 **TradeFlow** is a platform designed to manage and optimize intelligent trading bots. it provides the infrastructure for deploying, maintaining, and scaling your automated trading strategies, functioning as the Kubernetes for trading bots. TradeFlow's bots leverage sophisticated deep-learning algorithms to analyze market trends and execute trades based on your specific risk tolerance and trading objectives. 
 
