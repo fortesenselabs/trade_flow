@@ -66,15 +66,15 @@ jobs:
       - name: Digest metatrader5-terminal image
         run: echo ${{ steps.mt5_build_latest.outputs.digest }}
 
-      - name: Build Trade Flow Environment image (latest)
-        if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
-        id: trade_flow_env_build_latest
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/trade_flow:latest
-          cache-from: type=gha
-          cache-to: type=gha
-      - name: Digest trade_flow image
-        run: echo ${{ steps.trade_flow_env_build_latest.outputs.digest }}
+      # - name: Build Trade Flow Environment image (latest)
+      #   if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
+      #   id: trade_flow_env_build_latest
+      #   uses: docker/build-push-action@v3
+      #   with:
+      #     context: .
+      #     push: true
+      #     tags: ghcr.io/${{ github.repository_owner }}/trade_flow:latest
+      #     cache-from: type=gha
+      #     cache-to: type=gha
+      # - name: Digest trade_flow image
+      #   run: echo ${{ steps.trade_flow_env_build_latest.outputs.digest }}
