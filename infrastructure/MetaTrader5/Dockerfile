@@ -63,3 +63,5 @@ CMD ["supervisord"]
 # /usr/local/bin/easy-novnc --addr :8080 --host localhost --port 5900 --no-url-password --novnc-params "resize=remote"
 # Hide connection options from the main screen: --basic-ui
 # https://github.com/pgaskin/easy-novnc
+
+# TODO: upgrade to wine >= 8 as wine 7 is unstable and unsupported by MT5  
