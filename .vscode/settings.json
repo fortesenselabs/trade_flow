@@ -1,3 +1,6 @@
 {
-  "python.analysis.extraPaths": ["./packages/adapters"]
+  "python.analysis.extraPaths": [
+    "./packages/adapters",
+    "./packages/nautilus_mt5api"
+  ]
 }
