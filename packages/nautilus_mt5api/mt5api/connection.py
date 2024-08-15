@@ -1,5 +1,5 @@
 """
-Just a thin wrapper around rpyc.
+Just a thin wrapper around MetaTrader5 rpyc.
 It allows us to keep some other info along with it.
 """
 
@@ -12,11 +12,9 @@ import sys
 
 import rpyc.utils
 import rpyc.utils.server
-from mt5api.errors import CONNECT_FAIL
+from mt5api.errors import TerminalError, SERVER_CONNECT_FAIL, TERMINAL_CONNECT_FAIL
 from mt5api.common import NO_VALID_ID
-
-#TODO: support SSL !!
-# TODO: convert socket errors to rpyc errors 
+from mt5api.rpyc.metatrader5 import MetaTrader5
 
 logger = logging.getLogger(__name__)
 
@@ -24,34 +22,44 @@ class Connection:
     def __init__(self, host = 'localhost', port = 18812):
         self.host = host
         self.port = port
-        self.rpyc_socket: Optional[rpyc.Connection] = None
+        self.mt5_socket: Optional[MetaTrader5] = None
         self.eval_result = None
         self.wrapper = None
         self.lock = threading.Lock()
 
-    def connect(self):
+    def connect(self, path: str = "", **kwargs):
+        """
+            **kwargs are to pass the trading account path and parameters. e.g:
+               path,                     => path to the MetaTrader 5 terminal EXE file
+               login=LOGIN,              => account number
+               password="PASSWORD",      => password
+               server="SERVER",          => server name as it is specified in the terminal
+               timeout=TIMEOUT,          => timeout
+               portable=False            => portable mode
+        """
         try:
-            self.rpyc_socket = rpyc.classic.connect(self.host, self.port)
-        except socket.error:
-            if self.wrapper:
-                self.wrapper.error(NO_VALID_ID, CONNECT_FAIL.code(), CONNECT_FAIL.msg())
-        
+            self.mt5_socket = MetaTrader5(self.host, self.port)
 
-        try:
-            self.rpyc_socket._config['sync_request_timeout'] = 300 # 5 min
-            self.rpyc_socket.execute('import MetaTrader5 as mt5')
-            self.rpyc_socket.execute('import datetime')
-        except AttributeError:
+            # establish MetaTrader 5 connection to the specified trading account
+            if not self.mt5_socket.initialize(path, **kwargs):
+                TERMINAL_CONNECT_FAIL.errorCode, TERMINAL_CONNECT_FAIL.errorMsg = self.mt5_socket.last_error()
+                raise TerminalError(TERMINAL_CONNECT_FAIL)
+        except TerminalError as e:
+            logger.error(e.__str__())
             if self.wrapper:
-                self.wrapper.error(NO_VALID_ID, CONNECT_FAIL.code(), CONNECT_FAIL.msg())
+                self.wrapper.error(NO_VALID_ID, TERMINAL_CONNECT_FAIL.code(), TERMINAL_CONNECT_FAIL.msg())
+        except socket.error as e:
+            logger.error(e)
+            if self.wrapper:
+                self.wrapper.error(NO_VALID_ID, SERVER_CONNECT_FAIL.code(), SERVER_CONNECT_FAIL.msg())
 
     def disconnect(self):
         self.lock.acquire()
         try:
-            if self.rpyc_socket is not None:
+            if self.mt5_socket is not None:
                 logger.debug("disconnecting")
-                # self.rpyc_socket.close()
-                self.rpyc_socket = None
+                self.mt5_socket.shutdown()
+                self.mt5_socket = None
                 logger.debug("disconnected")
                 if self.wrapper:
                     self.wrapper.connectionClosed()
@@ -59,7 +67,7 @@ class Connection:
             self.lock.release()
 
     def isConnected(self):
-        return self.rpyc_socket is not None
+        return self.mt5_socket is not None
 
     def sendMsg(self, msg: str):
         """
@@ -73,7 +81,7 @@ class Connection:
             self.lock.release()
             return 0
         try:
-            self.eval_result = self.rpyc_socket.eval(msg)
+            self.eval_result = self.mt5_socket.eval(msg)
             nSent = len(msg)
         except socket.error:
             logger.debug("exception from sendMsg %s", sys.exc_info())
@@ -106,16 +114,7 @@ class Connection:
             self.eval_result = None
         except OSError:
             # Thrown if the socket was closed (ex: disconnected at end of script) 
-            # while waiting for self.rpyc_socket.recv() to timeout.
+            # while waiting for self.mt5_socket.recv() to timeout.
             logger.debug("Socket is broken or closed.")
 
         return self.eval_result
-
-    def stream_data(self):
-        """
-            Str
-        """
-        if not self.isConnected():
-            logger.debug("recvMsg attempted while not connected, releasing lock")
-            return None
-        pass
