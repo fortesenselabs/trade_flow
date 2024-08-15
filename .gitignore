@@ -165,8 +165,5 @@ cython_debug/
 .venv
 env.yaml
 data/
-trading-analytics/
-dump
-wenv
 
 *environment_ids.json
