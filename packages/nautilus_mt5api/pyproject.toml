@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "nautilus_mt5api"
+version = "0.1.0"
+description = "Python MetaTrader5 API"
+readme = "README.md"
+repository = "https://github.com/fortesenselabs/trade_flow"
+authors = ["Fortesense Labs <fortesenselabs@gmail.com>"]
+packages = [{include = "mt5api"}]
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+rpyc = "^6.0.0"
+pyparsing = "3.1.2"
+#numpy = [{ version = "1.21.4", platform = "windows" }]
+#MetaTrader5 = [{ version = "*", platform = "windows" }]
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2" 
+
+[build-system]
+requires = [
+    "setuptools>=64", 
+    "poetry-core>=1.9.0",
+    "toml>=0.10.2",
+]
+build-backend = "poetry.core.masonry.api"
