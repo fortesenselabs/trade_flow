@@ -43,13 +43,14 @@ class Connection:
             # establish MetaTrader 5 connection to the specified trading account
             if not self.mt5_socket.initialize(path, **kwargs):
                 TERMINAL_CONNECT_FAIL.errorCode, TERMINAL_CONNECT_FAIL.errorMsg = self.mt5_socket.last_error()
+                self.mt5_socket = None
                 raise TerminalError(TERMINAL_CONNECT_FAIL)
         except TerminalError as e:
             logger.error(e.__str__())
             if self.wrapper:
                 self.wrapper.error(NO_VALID_ID, TERMINAL_CONNECT_FAIL.code(), TERMINAL_CONNECT_FAIL.msg())
         except socket.error as e:
-            logger.error(e)
+            logger.error(e.__str__())
             if self.wrapper:
                 self.wrapper.error(NO_VALID_ID, SERVER_CONNECT_FAIL.code(), SERVER_CONNECT_FAIL.msg())
 
