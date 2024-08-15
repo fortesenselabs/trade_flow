@@ -1,23 +1,25 @@
 from mt5api.connection import Connection
 from mt5api.client import MT5Client
 
-# Raw RPYC Connection
-rpyc_conn = Connection()
-rpyc_conn.connect()
+# Raw MT5 RPYC Connection
+mt5_conn = Connection()
+mt5_conn.connect()
 
-rpyc_conn.sendMsg("mt5.initialize()")
-print(rpyc_conn.recvMsg())
-rpyc_conn.sendMsg("mt5.version()")
-print(rpyc_conn.recvMsg())
-rpyc_conn.sendMsg("mt5.terminal_info()")
-print(rpyc_conn.recvMsg())
-rpyc_conn.sendMsg("mt5.account_info()")
-print(rpyc_conn.recvMsg())
-rpyc_conn.sendMsg("mt5.market_book_add('Step Index')")
-print(rpyc_conn.recvMsg())
-rpyc_conn.sendMsg("mt5.market_book_get('Step Index')")
-print(rpyc_conn.recvMsg())
-rpyc_conn.disconnect()
+mt5_conn.sendMsg("mt5.version()")
+print(mt5_conn.recvMsg())
+mt5_conn.sendMsg("mt5.terminal_info()")
+print(mt5_conn.recvMsg())
+mt5_conn.sendMsg("mt5.account_info()")
+print(mt5_conn.recvMsg())
+mt5_conn.sendMsg("mt5.market_book_add('Step Index')")
+print(mt5_conn.recvMsg())
+mt5_conn.sendMsg("mt5.market_book_get('Step Index')")
+print(mt5_conn.recvMsg())
+mt5_conn.sendMsg("mt5.symbol_select('Step Index', True)")
+print(mt5_conn.recvMsg())
+mt5_conn.sendMsg("mt5.symbol_info_tick('Step Index')")
+print(mt5_conn.recvMsg())
+mt5_conn.disconnect()
 
 
 # if self.rpyc_socket is not None:
