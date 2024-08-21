@@ -284,8 +284,7 @@ class MT5Client(object):
                                NOT_CONNECTED.msg())
             return
 
-        conn_time = datetime.now(timezone.utc)
-        self.conn.eval_result = conn_time
+        self.sendMsg("get_connection_time")
 
     ##########################################################################
     ################## Market Data
@@ -320,15 +319,18 @@ class MT5Client(object):
 
         try:
             # send market_book_add msg with contract symbol
-            msg = comm.make_msg("market_book_add", contract.symbol)
-            self.sendMsg(msg)
+            if not self.conn.mt5_socket.market_book_add(contract.symbol):
+                raise ClientException()
+            
             self.market_book[reqId] = contract.symbol
-            msg = comm.make_msg("market_book_get", contract.symbol)
-            self.sendMsg(msg)
-
+            # TODO: spin up a separate process for his, that continuously fetches market data
+            result = self.conn.mt5_socket.market_book_get(contract.symbol)
+            self.conn.msg_queue.put(result)
+            
             if snapshot:
-                msg = comm.make_msg("market_book_release", contract.symbol)
-                self.sendMsg(msg)
+                if not self.conn.mt5_socket.market_book_release(contract.symbol):
+                    raise ClientException()
+
                 del self.market_book[reqId]
         except ClientException as ex:
             self.wrapper.error(reqId, ex.code, ex.msg + ex.text)
@@ -352,8 +354,8 @@ class MT5Client(object):
         if self.market_book is not None:
             if reqId in list(self.market_book.keys()):
                 symbol = self.market_book[reqId]
-                msg = comm.make_msg("market_book_release", symbol)
-                self.sendMsg(msg)
+                if not self.conn.mt5_socket.market_book_release(symbol):
+                    raise ClientException()
 
     def reqTickByTickData(self, reqId: int, contract: Contract, 
                           numberOfTicks: int, ignoreSize: bool = False, flags: str = "COPY_TICKS_ALL"):
