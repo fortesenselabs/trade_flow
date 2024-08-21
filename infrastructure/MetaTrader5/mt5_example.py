@@ -1,7 +1,7 @@
 import os
 import time
 import pandas as pd
-from mt5linux import MetaTrader5
+from metatrader5 import MetaTrader5
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,6 +30,45 @@ print("version: ", mt5.version())
 print("terminal_info: ", mt5.terminal_info())
 print("account_info: ", mt5.account_info())
 
+# get all symbols
+symbols=mt5.symbols_get()
+print('Symbols: ', len(symbols))
+count=0
+# display the first five ones
+for s in symbols:
+    count+=1
+    print("{}. {}".format(count,s.name))
+    if count==5: break
+print()
+ 
+# get symbols containing EURUSD in their names
+eurusd_symbol=mt5.symbols_get("EURUSD")
+print('len(EURUSD*): ', len(eurusd_symbol))
+for s in eurusd_symbol:
+    print(s.name,":",s)
+print()
+
+# get symbols containing RU in their names
+ru_symbols=mt5.symbols_get("*RU*")
+print('len(*RU*): ', len(ru_symbols))
+for s in ru_symbols:
+    print(s.name)
+print()
+
+# get symbols whose names do not contain USD, EUR, JPY and GBP
+group_symbols=mt5.symbols_get(group="*,!*USD*,!*EUR*,!*JPY*,!*GBP*")
+print('len(*,!*USD*,!*EUR*,!*JPY*,!*GBP*):', len(group_symbols))
+for s in group_symbols:
+    print(s.name,":",s)
+
+# get symbols containing Step Index in their names
+step_index_symbol=mt5.symbols_get("Step Index")
+print('len(Step Index*): ', len(step_index_symbol))
+for s in step_index_symbol:
+    print(s.name,":",s)
+print()
+
+# get rates   
 rates = mt5.copy_rates_from_pos('EURUSD',mt5.TIMEFRAME_M1,0,10000)
 rates_df = pd.DataFrame(rates)
 print(rates_df)

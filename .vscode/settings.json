@@ -2,5 +2,6 @@
   "python.analysis.extraPaths": [
     "./packages/adapters",
     "./packages/nautilus_mt5api"
-  ]
+  ],
+  "makefile.configureOnOpen": true
 }
