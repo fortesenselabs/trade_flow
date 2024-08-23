@@ -1,10 +1,10 @@
-FROM golang:1.14-buster AS novnc-build
+# FROM golang:1.14-buster AS novnc-build
 
-WORKDIR /src
+# WORKDIR /src
 
-RUN go mod init build && \
-    go get github.com/geek1011/easy-novnc@v1.1.0 && \
-    go build -o /bin/easy-novnc github.com/geek1011/easy-novnc
+# RUN go mod init build && \
+#     go get github.com/geek1011/easy-novnc@v1.1.0 && \
+#     go build -o /bin/easy-novnc github.com/geek1011/easy-novnc
 
 FROM tobix/pywine:3.9
 
@@ -25,12 +25,10 @@ ENV VNC_GEOMETRY="1280x800"
 ENV DRIVE_C=${WINEPREFIX}/drive_c
 STOPSIGNAL SIGRTMIN+3
 
-# TODO: we should abe able to pass this as arguments when trying to run the docker image
 # MT5 Account Details 
 ENV MT5_ACCOUNT_NUMBER=''
 ENV MT5_PASSWORD=''
 ENV MT5_SERVER=''
-
 
 # Install required packages
 RUN apt-get update -y && \
@@ -45,7 +43,7 @@ RUN apt-get update -y && \
     apt-get clean && \ 
     rm -rf /var/lib/apt/lists
 
-COPY --from=novnc-build /bin/easy-novnc /usr/local/bin/
+# COPY --from=novnc-build /bin/easy-novnc /usr/local/bin/
 COPY assets/menu.xml /etc/xdg/openbox/
 COPY assets/supervisord.conf /etc/
 
@@ -60,7 +58,8 @@ RUN tar -xzf Metatrader-5.tar.gz -C "$DRIVE_C/" \
 RUN wine pip install -r requirements.txt \
     && chmod +x run_server.sh xtigervnc.sh easy-novnc.sh
 
-EXPOSE 5900 18812 8000
+EXPOSE 5900 18812 
+# easy-novnc => 8000
 
 CMD ["supervisord"]
 
