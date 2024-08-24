@@ -28,7 +28,7 @@ class DockerizedMT5Terminal:
 
     IMAGE: ClassVar[str] = "metatrader5-terminal:latest" 
     CONTAINER_NAME: ClassVar[str] = "nautilus-mt5"
-    PORTS: ClassVar[dict[str, int]] = {"web": 8000, "rpyc": DEFAULT_SERVER_PORT}
+    PORTS: ClassVar[dict[str, int]] = {"web": 8000, "vnc": 5900, "rpyc": DEFAULT_SERVER_PORT}
 
     def __init__(self, config: DockerizedMT5TerminalConfig):
         self.log = NautilusLogger(repr(self))
@@ -92,15 +92,12 @@ class DockerizedMT5Terminal:
     def is_logged_in(container) -> bool:
         """
             Check if account was successfully logged in.
-
-            TODO: Resolve this after auto-login functionality has been sorted out
-            For now we will check if the rpyc server was started successfully instead
         """
         try:
             logs = container.logs()
         except NoContainer:
             return False
-        return any(b":18812" in line for line in logs.split(b"\n"))
+        return any(b"Login successful: True" in line for line in logs.split(b"\n")) and any(b":18812" in line for line in logs.split(b"\n"))
 
     def start(self, wait: int | None = None) -> None:
         """
@@ -137,8 +134,9 @@ class DockerizedMT5Terminal:
             restart_policy={"Name": "always"},
             detach=True,
             ports={
+                f"{self.PORTS['vnc']}": (self.host, self.PORTS['vnc']),
                 f"{self.PORTS['rpyc']}": (self.host, self.PORTS['rpyc']),
-                f"{self.PORTS['web']}": (self.host, self.PORTS['web']),
+                # f"{self.PORTS['web']}": (self.host, self.PORTS['web']),
             },
             platform="amd64",
             environment={
@@ -158,7 +156,7 @@ class DockerizedMT5Terminal:
             raise RuntimeError(f"Terminal `{self.CONTAINER_NAME}-{self.port}` not ready")
 
         self.log.info(
-            f"Terminal `{self.CONTAINER_NAME}-{self.port}` ready. Web port is {self.PORTS['web']}",
+            f"Terminal `{self.CONTAINER_NAME}-{self.port}` ready. VNC port is {self.PORTS['vnc']}",
         )
 
     def safe_start(self, wait: int | None = None) -> None:
