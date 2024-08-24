@@ -31,19 +31,21 @@ class StreamManager:
                 print(f"Error while streaming data for {symbol}: {e}")
                 break
 
-    def create_streaming_task(self, symbols: List[str], interval: float, func: Callable, *args, **kwargs):
+    def create_streaming_task(self, req_id: str, symbols: List[str], interval: float, func: Callable, *args, **kwargs):
         for symbol in symbols:
-            if symbol not in self.stream_tasks:
+            _id = f"{symbol}-{req_id}"
+            if _id not in self.stream_tasks:
                 task = asyncio.run_coroutine_threadsafe(
                     self._stream_symbol_data(symbol, interval, func, *args, **kwargs),
                     asyncio.get_event_loop()
                 )
-                self.stream_tasks[symbol] = task
-                print(f"Started streaming for {symbol}")
+                self.stream_tasks[_id] = task
+                print(f"Started streaming for {_id}")
 
-    def stop_streaming_task(self, symbols: List[str]):
+    def stop_streaming_task(self, req_id: str, symbols: List[str]):
         for symbol in symbols:
-            if symbol in self.stream_tasks:
-                self.stream_tasks[symbol].cancel()
-                del self.stream_tasks[symbol]
-                print(f"Stopped streaming for {symbol}")
+            _id = f"{symbol}-{req_id}"
+            if _id in self.stream_tasks:
+                self.stream_tasks[_id].cancel()
+                del self.stream_tasks[_id]
+                print(f"Stopped streaming for {_id}")

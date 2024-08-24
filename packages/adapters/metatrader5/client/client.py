@@ -7,7 +7,7 @@ from collections.abc import Coroutine
 from inspect import iscoroutinefunction
 from typing import Any
 
-from metatrader5.mt5api.client import MT5Client
+from metatrader5.mt5api.decoder import Decoder
 # from metatrader5.mt5api.commission_report import CommissionReport
 from metatrader5.mt5api.common import BarData
 # from metatrader5.mt5api.execution import Execution
@@ -27,7 +27,6 @@ from metatrader5.client.symbol import MetaTrader5ClientSymbolMixin
 from metatrader5.client.market_data import MetaTrader5ClientMarketDataMixin
 # from metatrader5.client.order import MetaTrader5ClientOrderMixin
 # from metatrader5.client.error import MetaTrader5ClientErrorMixin
-from metatrader5.client.decoder import Decoder
 from metatrader5.client.common import AccountOrderRef, Request, Requests, Subscriptions
 
 class MetaTrader5Client(
@@ -71,8 +70,7 @@ class MetaTrader5Client(
         self._port = port
         self._client_id = client_id
 
-        # Terminal API
-        # self._mt5Client: MT5Client = MT5Client(logger=self._log)
+        # Terminal API Decoder
         self.decoder: Decoder = Decoder(self)
 
         # Tasks
@@ -521,12 +519,11 @@ class MetaTrader5Client(
         try:
             while self._mt5Client.is_connected():
                 data = await asyncio.to_thread(self._mt5Client.recv_msg)
-                # print("_run_terminal_incoming_msg_reader data => ", data)
+                # self._log.debug(f"Msg data received: {data!s}")
                 # if data is None:
                 #     self._log.debug("No data available, incoming packets are needed.")
                 #     break
 
-                # self._log.debug(f"Msg data received: {data!s}")
                 # Place msg in the internal queue for processing
                 self._loop.call_soon_threadsafe(self._internal_msg_queue.put_nowait, data)
         except asyncio.CancelledError:
@@ -587,9 +584,7 @@ class MetaTrader5Client(
         """
         self._log.debug(f"Msg received: {msg}")
 
-        # TODO: make this run in a separate thread if it block other operation calls 
-        # await asyncio.to_thread(await self.decode, msg)
-        await self.decoder.decode(msg)
+        asyncio.run_coroutine_threadsafe(self.decoder.decode(msg), self._loop)
         return True
 
     async def _run_msg_handler_processor(self):
