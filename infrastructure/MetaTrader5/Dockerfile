@@ -59,7 +59,9 @@ RUN wine pip install -r requirements.txt \
     && chmod +x run_server.sh xtigervnc.sh easy-novnc.sh
 
 EXPOSE 5900 18812 
-# easy-novnc => 8000
+# Used for debugs:
+# - tiger vnc server => 5900
+# - easy-novnc => 8000
 
 CMD ["supervisord"]
 

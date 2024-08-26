@@ -10,6 +10,7 @@ import time
 from vncdotool import api
 from dotenv import load_dotenv
 
+
 class VNCMT5Client:
     """
     A client to automate MetaTrader 5 login using VNC.
@@ -17,13 +18,15 @@ class VNCMT5Client:
     Attributes:
         client (api.VNCDoToolClient): The VNC client connection object.
     """
-    def __init__(self, server_url, password=None, timeout=10):
+
+    def __init__(self, server_url: str, password: str = None, timeout: int = 10):
         """
         Initialize the VNCMT5Client with the server URL and optional password.
 
-        :param server_url: The VNC server URL to connect to.
-        :param password: The password for the VNC server (default is None).
-        :param timeout: Timeout for the VNC client connection (default is 10 seconds).
+        Args:
+            server_url (str): The VNC server URL to connect to.
+            password (str): The password for the VNC server (default is None).
+            timeout (int): Timeout for the VNC client connection (default is 10 seconds).
         """
         self.client = api.connect(server_url, password=password)
         self.client.timeout = timeout
@@ -32,11 +35,12 @@ class VNCMT5Client:
         """
         Clears a form field, enters a new value, and optionally moves to the next field.
 
-        :param value: The string value to enter in the form field.
-        :param empty_field: Whether to empty the field before entering the value (default is False).
-        :param next_field_count: The number of times to press 'Tab' to move to the next field.
+        Args:
+            value (str): The string value to enter in the form field.
+            empty_field (bool): Whether to empty the field before entering the value (default is False).
+            next_field_count (int): The number of times to press 'Tab' to move to the next field (default is 1).
         """
-        if not empty_field:
+        if empty_field:
             # Select all text and delete it
             self.client.keyPress('ctrl-A')
             self.client.keyPress('del')
@@ -58,7 +62,8 @@ class VNCMT5Client:
         """
         Ping MetaTrader's server by searching for the broker server in the list of company servers available.
         
-        :param server: The broker server name to search for.
+        Args:
+            server (str): The broker server name to search for.
         """
         time.sleep(5)
 
@@ -81,7 +86,7 @@ class VNCMT5Client:
         self.client.keyPress('enter')
         time.sleep(5)
 
-        # Close search Dialog 
+        # Close search dialog 
         self.client.mouseMove(930, 630)
         self.client.mousePress(1)
         time.sleep(0.5)
@@ -90,9 +95,10 @@ class VNCMT5Client:
         """
         Logs in to the MetaTrader 5 account.
 
-        :param login: The MetaTrader 5 account login number.
-        :param password: The MetaTrader 5 account password.
-        :param server: The MetaTrader 5 server name.
+        Args:
+            login (str): The MetaTrader 5 account login number.
+            password (str): The MetaTrader 5 account password.
+            server (str): The MetaTrader 5 server name.
         """
         # Probe server
         self.ping_mt_server(server)
@@ -140,7 +146,8 @@ class VNCMT5Client:
         """
         Captures a screenshot of the current VNC screen.
 
-        :param file_name: The name of the file to save the screenshot (default is 'screenshot.png').
+        Args:
+            file_name (str): The name of the file to save the screenshot (default is 'screenshot.png').
         """
         try:
             self.client.captureScreen(file_name)
@@ -160,22 +167,25 @@ class VNCMT5Client:
         Sets an environment variable to indicate a successful login.
         """
         os.environ['LOGIN_SUCCESSFUL'] = 'true'
-        # os.putenv('LOGIN_SUCCESSFUL', 'true')
 
-    def verify_login(self, login: str, password: str, server: str):
+    def verify_login(self, login: str, password: str, server: str) -> bool:
         """
         Verifies if the MetaTrader 5 login was successful.
 
         This method attempts to log in to the MetaTrader 5 server using the provided credentials.
         If the login is unsuccessful, it raises an exception with the error details.
 
-        :param login: The MetaTrader 5 account login number.
-        :param password: The MetaTrader 5 account password.
-        :param server: The MetaTrader 5 server name.
-        :return: True if the login is successful, False otherwise.
-        :raises: Exception if the login fails, with the error code and description.
+        Args:
+            login (str): The MetaTrader 5 account login number.
+            password (str): The MetaTrader 5 account password.
+            server (str): The MetaTrader 5 server name.
+        
+        Returns:
+            bool: True if the login is successful, False otherwise.
+        
+        Raises:
+            Exception: If the login fails, with the error code and description.
         """
-
         time.sleep(15)
 
         import MetaTrader5 as mt5
@@ -197,7 +207,7 @@ class VNCMT5Client:
         else:
             error_code, error_description = mt5.last_error()
 
-            # check for IPC timeout
+            # Check for IPC timeout
             if error_code == -10005:
                 # Probe server
                 self.ping_mt_server(server)
@@ -206,7 +216,12 @@ class VNCMT5Client:
 
             raise Exception(f"Login failed, error code = {error_code}, description = {error_description}")
 
-def main():
+def load_mt5_credentials():
+    """
+    Loads environment variables and retrieves MetaTrader 5 credentials.
+
+    :return: A tuple containing the login, password, and server values.
+    """
     # Load environment variables
     load_dotenv()
 
@@ -215,10 +230,19 @@ def main():
     password = os.getenv('MT5_PASSWORD')
     server = os.getenv('MT5_SERVER')
 
+    return login, password, server
+
+def main():
+    # Load and check MetaTrader 5 credentials
+    login, password, server = load_mt5_credentials()
+
     # Ensure required environment variables are set
-    if not all([login, password, server]):
-        raise ValueError("Required environment variables (MT5_ACCOUNT_NUMBER, MT5_PASSWORD, MT5_SERVER) are not set.")
-    
+    while not all([login, password, server]):
+        print("Required environment variables (MT5_ACCOUNT_NUMBER, MT5_PASSWORD, MT5_SERVER) are not set.")
+        time.sleep(5)  # Wait for 5 seconds before checking again
+        # Reload credentials in case they are set during the loop
+        login, password, server = load_mt5_credentials()
+
     VNC_SERVER_URL = "localhost"
     VNC_SERVER_PASSWORD = None
 
