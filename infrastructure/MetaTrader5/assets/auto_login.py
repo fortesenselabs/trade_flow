@@ -202,7 +202,7 @@ class VNCMT5Client:
                 # Probe server
                 self.ping_mt_server(server)
                 time.sleep(0.5)
-                self.verify_login()
+                self.verify_login(login, password, server)
 
             raise Exception(f"Login failed, error code = {error_code}, description = {error_description}")
 
