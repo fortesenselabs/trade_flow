@@ -28,7 +28,7 @@ class VNCMT5Client:
         self.client = api.connect(server_url, password=password)
         self.client.timeout = timeout
 
-    def clear_and_type_value(self, value, empty_field: bool = False, next_field_count: int = 1):
+    def clear_and_type_value(self, value: str, empty_field: bool = False, next_field_count: int = 1):
         """
         Clears a form field, enters a new value, and optionally moves to the next field.
 
@@ -54,7 +54,7 @@ class VNCMT5Client:
         
         time.sleep(2)
 
-    def ping_mt_server(self, server):
+    def ping_mt_server(self, server: str):
         """
         Ping MetaTrader's server by searching for the broker server in the list of company servers available.
         
@@ -86,7 +86,7 @@ class VNCMT5Client:
         self.client.mousePress(1)
         time.sleep(0.5)
 
-    def login_to_mt5(self, login, password, server):
+    def login_to_mt5(self, login: str, password: str, server: str):
         """
         Logs in to the MetaTrader 5 account.
 
@@ -136,7 +136,7 @@ class VNCMT5Client:
         self.client.mousePress(1)
         time.sleep(0.2)
 
-    def capture_screenshot(self, file_name='screenshot.png'):
+    def capture_screenshot(self, file_name: str = 'screenshot.png'):
         """
         Captures a screenshot of the current VNC screen.
 
@@ -162,7 +162,7 @@ class VNCMT5Client:
         os.environ['LOGIN_SUCCESSFUL'] = 'true'
         # os.putenv('LOGIN_SUCCESSFUL', 'true')
 
-    def verify_login(self, login, password, server):
+    def verify_login(self, login: str, password: str, server: str):
         """
         Verifies if the MetaTrader 5 login was successful.
 
