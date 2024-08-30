@@ -70,4 +70,4 @@ Access the MetaTrader 5 Terminal with a web browser using this Docker image: [ht
 
 ## Disclaimer
 
-**Important Note:** TradeFlow is designed for educational purposes only. The developers take no responsibility for any financial losses incurred while using this software. We strongly recommend thoroughly understanding the inherent risks associated with trading before using any automated system.
+**Important Note:** The developers take no responsibility for any financial losses incurred while using this software. We strongly recommend thoroughly understanding the inherent risks associated with trading before using any automated system.
