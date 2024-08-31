@@ -207,14 +207,14 @@ class VNCMT5Client:
         else:
             error_code, error_description = mt5.last_error()
 
-            # Check for IPC timeout
-            if error_code == -10005:
-                # Probe server
-                self.ping_mt_server(server)
-                time.sleep(0.5)
-                self.verify_login(login, password, server)
-
-            raise Exception(f"Login failed, error code = {error_code}, description = {error_description}")
+            # Check for IPC timeout => -10005:
+            if int(error_code) != mt5.RES_E_INTERNAL_FAIL_TIMEOUT: 
+                raise Exception(f"Login failed, error code = {error_code}, description = {error_description}")
+            
+            # Probe server
+            self.ping_mt_server(server)
+            time.sleep(0.5)
+            self.verify_login(login, password, server)
 
 def load_mt5_credentials():
     """
