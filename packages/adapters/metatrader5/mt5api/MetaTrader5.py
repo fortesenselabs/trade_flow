@@ -2,9 +2,16 @@ import rpyc
 from numpy import array
 import datetime
 
+
+
 class MetaTrader5(object):
-    ''' MetaTrader5'''
+    ''' MetaTrader5
     
+        The MetaTrader 5 RPYC Client
+    
+    '''
+
+    """MetaTrader 5 Constants"""
     # Constants
     ACCOUNT_MARGIN_MODE_RETAIL_NETTING = 0
     ACCOUNT_MARGIN_MODE_EXCHANGE = 1
@@ -12,15 +19,15 @@ class MetaTrader5(object):
 
     ACCOUNT_STOPOUT_MODE_PERCENT = 0
     ACCOUNT_STOPOUT_MODE_MONEY = 1
-    
+
     ACCOUNT_TRADE_MODE_DEMO = 0
     ACCOUNT_TRADE_MODE_CONTEST = 1
     ACCOUNT_TRADE_MODE_REAL = 2
-    
+
     COPY_TICKS_ALL = -1
     COPY_TICKS_INFO = 1
     COPY_TICKS_TRADE = 2
-    
+
     DAY_OF_WEEK_SUNDAY = 0
     DAY_OF_WEEK_MONDAY = 1
     DAY_OF_WEEK_TUESDAY = 2
@@ -28,15 +35,15 @@ class MetaTrader5(object):
     DAY_OF_WEEK_THURSDAY = 4
     DAY_OF_WEEK_FRIDAY = 5
     DAY_OF_WEEK_SATURDAY = 6
-    
+
     DEAL_DIVIDEND = 15
     DEAL_DIVIDEND_FRANKED = 16
-    
+
     DEAL_ENTRY_IN = 0
     DEAL_ENTRY_OUT = 1
     DEAL_ENTRY_INOUT = 2
     DEAL_ENTRY_OUT_BY = 3
-    
+
     DEAL_REASON_CLIENT = 0
     DEAL_REASON_MOBILE = 1
     DEAL_REASON_WEB = 2
@@ -47,9 +54,9 @@ class MetaTrader5(object):
     DEAL_REASON_ROLLOVER = 7
     DEAL_REASON_VMARGIN = 8
     DEAL_REASON_SPLIT = 9
-    
+
     DEAL_TAX = 17
-    
+
     DEAL_TYPE_BUY = 0
     DEAL_TYPE_SELL = 1
     DEAL_TYPE_BALANCE = 2
@@ -65,7 +72,7 @@ class MetaTrader5(object):
     DEAL_TYPE_INTEREST = 12
     DEAL_TYPE_BUY_CANCELED = 13
     DEAL_TYPE_SELL_CANCELED = 14
-    
+
     ORDER_REASON_CLIENT = 0
     ORDER_REASON_MOBILE = 1
     ORDER_REASON_WEB = 2
@@ -73,7 +80,7 @@ class MetaTrader5(object):
     ORDER_REASON_SL = 4
     ORDER_REASON_TP = 5
     ORDER_REASON_SO = 6
-    
+
     ORDER_STATE_STARTED = 0
     ORDER_STATE_PLACED = 1
     ORDER_STATE_CANCELED = 2
@@ -84,15 +91,15 @@ class MetaTrader5(object):
     ORDER_STATE_REQUEST_ADD = 7
     ORDER_STATE_REQUEST_MODIFY = 8
     ORDER_STATE_REQUEST_CANCEL = 9
-    
+
     POSITION_REASON_CLIENT = 0
     POSITION_REASON_MOBILE = 1
     POSITION_REASON_WEB = 2
     POSITION_REASON_EXPERT = 3
-    
+
     POSITION_TYPE_BUY = 0
     POSITION_TYPE_SELL = 1
-    
+
     RES_E_INTERNAL_FAIL_TIMEOUT = -10005
     RES_E_INTERNAL_FAIL_CONNECT = -10004
     RES_E_INTERNAL_FAIL_INIT = -10003
@@ -108,7 +115,7 @@ class MetaTrader5(object):
     RES_E_FAIL = -1
     RES_E_INVALID_PARAMS = -2
     RES_S_OK = 1
-    
+
     SYMBOL_CALC_MODE_FOREX = 0
     SYMBOL_CALC_MODE_FUTURES = 1
     SYMBOL_CALC_MODE_CFD = 2
@@ -123,20 +130,18 @@ class MetaTrader5(object):
     SYMBOL_CALC_MODE_EXCH_STOCKS_MOEX = 38
     SYMBOL_CALC_MODE_EXCH_BONDS_MOEX = 39
     SYMBOL_CALC_MODE_SERV_COLLATERAL = 64
-
     SYMBOL_CHART_MODE_BID = 0
     SYMBOL_CHART_MODE_LAST = 1
-    
+
     SYMBOL_OPTION_MODE_EUROPEAN = 0
     SYMBOL_OPTION_MODE_AMERICAN = 1
-
     SYMBOL_OPTION_RIGHT_CALL = 0
     SYMBOL_OPTION_RIGHT_PUT = 1
-    
+
     SYMBOL_ORDERS_GTC = 0
     SYMBOL_ORDERS_DAILY = 1
     SYMBOL_ORDERS_DAILY_NO_STOPS = 2
-    
+
     SYMBOL_SWAP_MODE_DISABLED = 0
     SYMBOL_SWAP_MODE_POINTS = 1
     SYMBOL_SWAP_MODE_CURRENCY_SYMBOL = 2
@@ -146,25 +151,23 @@ class MetaTrader5(object):
     SYMBOL_SWAP_MODE_INTEREST_OPEN = 6
     SYMBOL_SWAP_MODE_REOPEN_CURRENT = 7
     SYMBOL_SWAP_MODE_REOPEN_BID = 8
-    
+
     SYMBOL_TRADE_EXECUTION_REQUEST = 0
     SYMBOL_TRADE_EXECUTION_INSTANT = 1
     SYMBOL_TRADE_EXECUTION_MARKET = 2
     SYMBOL_TRADE_EXECUTION_EXCHANGE = 3
-    
+
     SYMBOL_TRADE_MODE_DISABLED = 0
     SYMBOL_TRADE_MODE_LONGONLY = 1
     SYMBOL_TRADE_MODE_SHORTONLY = 2
     SYMBOL_TRADE_MODE_CLOSEONLY = 3
     SYMBOL_TRADE_MODE_FULL = 4
-
     TICK_FLAG_BID = 2
     TICK_FLAG_ASK = 4
     TICK_FLAG_LAST = 8
     TICK_FLAG_VOLUME = 16
     TICK_FLAG_BUY = 32
     TICK_FLAG_SELL = 64
-
     # TIMEFRAME
     # 1 minute
     TIMEFRAME_M1 = 1
@@ -208,7 +211,6 @@ class MetaTrader5(object):
     TIMEFRAME_W1 = 32769
     # 1 month
     TIMEFRAME_MN1 = 49153
-
     # Requote
     TRADE_RETCODE_REQUOTE = 10004
     # Request rejected
@@ -295,7 +297,7 @@ class MetaTrader5(object):
     TRADE_RETCODE_FIFO_CLOSE = 10045
     # The request is rejected, because the "Opposite positions on a single symbol are disabled" rule is set for the trading account. For example, if the account has a Buy position, then a user cannot open a Sell position or place a pending sell order. The rule is only applied to accounts with hedging accounting system (ACCOUNT_MARGIN_MODE=ACCOUNT_MARGIN_MODE_RETAIL_HEDGING).
     TRADE_RETCODE_HEDGE_PROHIBITED = 10046
-    
+
     # Sell order (Offer)
     BOOK_TYPE_SELL = 1
     # Buy order (Bid)
@@ -304,7 +306,6 @@ class MetaTrader5(object):
     BOOK_TYPE_SELL_MARKET = 3
     # Buy order by Market
     BOOK_TYPE_BUY_MARKET = 4
-
     # Market buy order
     ORDER_TYPE_BUY = 0
     # Market sell order
@@ -323,7 +324,6 @@ class MetaTrader5(object):
     ORDER_TYPE_SELL_STOP_LIMIT = 7
     # Order for closing a position by an opposite one
     ORDER_TYPE_CLOSE_BY = 8
-
     # Place an order for an instant deal with the specified parameters (set a market order)
     TRADE_ACTION_DEAL = 1
     # Place an order for performing a deal at specified conditions (pending order)
@@ -336,14 +336,12 @@ class MetaTrader5(object):
     TRADE_ACTION_REMOVE = 8
     # Close a position by an opposite one
     TRADE_ACTION_CLOSE_BY = 10
-
     # This execution policy means that an order can be executed only in the specified volume. If the necessary amount of a financial instrument is currently unavailable in the market, the order will not be executed. The desired volume can be made up of several available offers.
     ORDER_FILLING_FOK = 0
     # An agreement to execute a deal at the maximum volume available in the market within the volume specified in the order. If the request cannot be filled completely, an order with the available volume will be executed, and the remaining volume will be canceled.
     ORDER_FILLING_IOC = 1
     # This policy is used only for market (ORDER_TYPE_BUY and ORDER_TYPE_SELL), limit and stop limit orders (ORDER_TYPE_BUY_LIMIT, ORDER_TYPE_SELL_LIMIT, ORDER_TYPE_BUY_STOP_LIMIT and ORDER_TYPE_SELL_STOP_LIMIT) and only for the symbols with Market or Exchange execution modes. If filled partially, a market or limit order with the remaining volume is not canceled, and is processed further. During activation of the ORDER_TYPE_BUY_STOP_LIMIT and ORDER_TYPE_SELL_STOP_LIMIT orders, an appropriate limit order ORDER_TYPE_BUY_LIMIT/ORDER_TYPE_SELL_LIMIT with the ORDER_FILLING_RETURN type is created.
     ORDER_FILLING_RETURN = 2
-
     # The order stays in the queue until it is manually canceled
     ORDER_TIME_GTC = 0
     # The order is active only during the current trading day
@@ -353,15 +351,16 @@ class MetaTrader5(object):
     # The order is active until 23:59:59 of the specified day. If this time appears to be out of a trading session, the expiration is processed at the nearest trading time.
     ORDER_TIME_SPECIFIED_DAY = 3
 
+    """End MT5 Constants"""
 
-    def __init__(self,host='localhost',port=18812):
+    def __init__(self, host='localhost', port=18812, keep_alive=True):
         '''
 host: str
     default = localhost
 port: int
     default = 18812
         '''
-        self.__conn = rpyc.classic.connect(host,port)
+        self.__conn = rpyc.classic.connect(host, port, keepalive = keep_alive)
         self.__conn._config['sync_request_timeout'] = 300 #5 min
         self.__conn.execute('import MetaTrader5 as mt5')
         self.__conn.execute('import datetime')

@@ -4,3 +4,6 @@ rpyc # ==5.2.3
 pyparsing==2.4.7
 # mt5linux
 pandas==1.4.1
+# 
+vncdotool 
+python-dotenv

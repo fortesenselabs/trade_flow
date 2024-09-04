@@ -5,7 +5,7 @@ This directory contains external packages and dependencies used within the Trade
 ## Structure
 
 - **adapters:** This subdirectory houses Nautilus Trader adapters. These adapters handle communication protocols and data exchange between TradeFlow and the Nautilus Trader platform.
-- **mt5linux:** This subdirectory contain code related to the MT5 trading platform on Linux. It is a custom library for interacting with MT5 on the Linux operating system. It depends on the [metatrader5-terminal](https://github.com/fortesenselabs/trade_flow/pkgs/container/metatrader5-terminal) docker image.
+- **mt5api:** This subdirectory contain code related to the MT5 trading platform. It is a custom library for interacting with MT5 on almost any operating system. It depends on the [metatrader5-terminal](https://github.com/fortesenselabs/trade_flow/pkgs/container/metatrader5-terminal) docker image.
 
 **Important Note:**
 
