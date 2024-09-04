@@ -28,7 +28,7 @@ CATALOG_PATH = f"{os.getcwd()}"
 catalog = ParquetDataCatalog(CATALOG_PATH)
 SANDBOX_INSTRUMENTS = catalog.instruments(instrument_ids=["EUR/USD.MetaQuotes-Demo"]) # Step Index
 
-# Set up the Interactive Brokers gateway configuration, this is applicable only when using Docker.
+# Set up the MetaTrader 5 configuration, this is applicable only when using Docker.
 dockerized_gateway = DockerizedMT5TerminalConfig(
     account_number=os.environ["MT5_ACCOUNT_NUMBER"],
     password=os.environ["MT5_PASSWORD"],
@@ -47,7 +47,7 @@ for venue in SANDBOX_VENUES:
     exec_clients[venue] = SandboxExecutionClientConfig(
         venue=venue,
         base_currency="USD",
-        starting_balances=["1_000 USD"],
+        starting_balances=["10_000 USD"],
         instrument_provider=instrument_provider,
     )
 

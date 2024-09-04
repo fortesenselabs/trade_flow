@@ -8,7 +8,8 @@ from typing import Annotated, Any, NamedTuple
 
 import msgspec
 from metatrader5.mt5api.client import MT5Client
-from metatrader5.mt5api.common import BarData
+from metatrader5.mt5api.common import BarData, CommissionReport
+from metatrader5.mt5api.execution import Execution
 
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock
@@ -501,7 +502,7 @@ class BaseMixin:
 
     # Order
     _next_valid_order_id: int
-    # _exec_id_details: dict[
-    #     str,
-    #     dict[str, Execution | (CommissionReport | str)],
-    # ]
+    _exec_id_details: dict[
+        str,
+        dict[str, Execution | (CommissionReport | str)],
+    ]

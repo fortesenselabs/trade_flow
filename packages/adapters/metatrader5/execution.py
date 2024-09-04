@@ -1,18 +1,16 @@
-
 import asyncio
 import json
 from decimal import Decimal
 from typing import Any
 
 import pandas as pd
-from ibapi.commission_report import CommissionReport
-from ibapi.common import UNSET_DECIMAL
-from ibapi.common import UNSET_DOUBLE
-from ibapi.execution import Execution
-from ibapi.order import Order as IBOrder
-from ibapi.order_state import OrderState as IBOrderState
 
-# fmt: off
+from metatrader5.mt5api.common import CommissionReport
+from metatrader5.mt5api.common import UNSET_DECIMAL, UNSET_DOUBLE # TODO: remove dependency 
+from metatrader5.mt5api.execution import Execution
+from metatrader5.mt5api.order import Order as MT5Order
+from metatrader5.mt5api.order import OrderState as MT5OrderState
+
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import LiveClock
 from nautilus_trader.common.component import MessageBus
@@ -75,18 +73,17 @@ from metatrader5.parsing.execution import ORDER_SIDE_TO_ORDER_ACTION
 from metatrader5.parsing.execution import timestring_to_timestamp
 from metatrader5.providers import MetaTrader5InstrumentProvider
 
-# fmt: on
 
-ib_to_nautilus_trigger_method = dict(
+mt5_to_nautilus_trigger_method = dict(
     zip(MAP_TRIGGER_METHOD.values(), MAP_TRIGGER_METHOD.keys(), strict=False),
 )
-ib_to_nautilus_time_in_force = dict(
+mt5_to_nautilus_time_in_force = dict(
     zip(MAP_TIME_IN_FORCE.values(), MAP_TIME_IN_FORCE.keys(), strict=False),
 )
-ib_to_nautilus_order_side = dict(
+mt5_to_nautilus_order_side = dict(
     zip(MAP_ORDER_ACTION.values(), MAP_ORDER_ACTION.keys(), strict=False),
 )
-ib_to_nautilus_order_type = dict(zip(MAP_ORDER_TYPE.values(), MAP_ORDER_TYPE.keys(), strict=False))
+mt5_to_nautilus_order_type = dict(zip(MAP_ORDER_TYPE.values(), MAP_ORDER_TYPE.keys(), strict=False))
 
 
 class MetaTrader5ExecutionClient(LiveExecutionClient):
@@ -235,15 +232,15 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
 
         report = None
         mt5_orders = await self._client.get_open_orders(self.account_id.get_id())
-        for ib_order in mt5_orders:
-            if (client_order_id and client_order_id.value == ib_order.orderRef) or (
+        for mt5_order in mt5_orders:
+            if (client_order_id and client_order_id.value == mt5_order.orderRef) or (
                 venue_order_id
                 and venue_order_id.value
                 == str(
-                    ib_order.orderId,
+                    mt5_order.order_id,
                 )
             ):
-                report = await self._parse_ib_order_to_order_status_report(ib_order)
+                report = await self._parse_mt5_order_to_order_status_report(mt5_order)
                 break
         if report is None:
             self._log.warning(
@@ -256,46 +253,46 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             )
         return report
 
-    async def _parse_ib_order_to_order_status_report(self, ib_order: IBOrder) -> OrderStatusReport:
-        self._log.debug(f"Trying OrderStatusReport for {ib_order.__dict__}")
-        instrument = await self.instrument_provider.find_with_contract_id(
-            ib_order.contract.conId,
+    async def _parse_mt5_order_to_order_status_report(self, mt5_order: MT5Order) -> OrderStatusReport:
+        self._log.debug(f"Trying OrderStatusReport for {mt5_order.__dict__}")
+        instrument = await self.instrument_provider.find_with_symbol_id(
+            mt5_order.contract.sym_id,
         )
 
         total_qty = (
             Quantity.from_int(0)
-            if ib_order.totalQuantity == UNSET_DECIMAL
-            else Quantity.from_str(str(ib_order.totalQuantity))
+            if mt5_order.totalQuantity == UNSET_DECIMAL
+            else Quantity.from_str(str(mt5_order.totalQuantity))
         )
         filled_qty = (
             Quantity.from_int(0)
-            if ib_order.filledQuantity == UNSET_DECIMAL
-            else Quantity.from_str(str(ib_order.filledQuantity))
+            if mt5_order.filledQuantity == UNSET_DECIMAL
+            else Quantity.from_str(str(mt5_order.filledQuantity))
         )
         if total_qty.as_double() > filled_qty.as_double() > 0:
             order_status = OrderStatus.PARTIALLY_FILLED
         else:
-            order_status = MAP_ORDER_STATUS[ib_order.order_state.status]
+            order_status = MAP_ORDER_STATUS[mt5_order.order_state.status]
         ts_init = self._clock.timestamp_ns()
         price = (
-            None if ib_order.lmtPrice == UNSET_DOUBLE else instrument.make_price(ib_order.lmtPrice)
+            None if mt5_order.lmtPrice == UNSET_DOUBLE else instrument.make_price(mt5_order.lmtPrice)
         )
         expire_time = (
-            timestring_to_timestamp(ib_order.goodTillDate) if ib_order.tif == "GTD" else None
+            timestring_to_timestamp(mt5_order.goodTillDate) if mt5_order.tif == "GTD" else None
         )
 
-        mapped_order_type_info = ib_to_nautilus_order_type[ib_order.orderType]
+        mapped_order_type_info = mt5_to_nautilus_order_type[mt5_order.orderType]
         if isinstance(mapped_order_type_info, tuple):
             order_type, time_in_force = mapped_order_type_info
         else:
             order_type = mapped_order_type_info
-            time_in_force = ib_to_nautilus_time_in_force[ib_order.tif]
+            time_in_force = mt5_to_nautilus_time_in_force[mt5_order.tif]
 
         order_status = OrderStatusReport(
             account_id=self.account_id,
             instrument_id=instrument.id,
-            venue_order_id=VenueOrderId(str(ib_order.orderId)),
-            order_side=ib_to_nautilus_order_side[ib_order.action],
+            venue_order_id=VenueOrderId(str(mt5_order.order_id)),
+            order_side=mt5_to_nautilus_order_side[mt5_order.action],
             order_type=order_type,
             time_in_force=time_in_force,
             order_status=order_status,
@@ -306,12 +303,12 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             ts_accepted=ts_init,
             ts_last=ts_init,
             ts_init=ts_init,
-            client_order_id=ClientOrderId(ib_order.orderRef),
+            client_order_id=ClientOrderId(mt5_order.orderRef),
             # order_list_id=,
             # contingency_type=,
             expire_time=expire_time,
             price=price,
-            trigger_price=instrument.make_price(ib_order.auxPrice),
+            trigger_price=instrument.make_price(mt5_order.auxPrice),
             trigger_type=TriggerType.BID_ASK,
             # limit_offset=,
             # trailing_offset=,
@@ -365,12 +362,12 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             else:
                 continue  # Skip, IB may continue to display closed positions
 
-            instrument = await self.instrument_provider.find_with_contract_id(
-                position.contract.conId,
+            instrument = await self.instrument_provider.find_with_symbol_id(
+                position.contract.sym_id,
             )
             if instrument is None:
                 self._log.error(
-                    f"Cannot generate report: instrument not found for contract ID {position.contract.conId}",
+                    f"Cannot generate report: instrument not found for contract ID {position.contract.sym_id}",
                 )
                 continue
 
@@ -399,11 +396,11 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             report.append(order_status)
 
         # Create the Open OrderStatusReport from Open Orders
-        ib_orders: list[IBOrder] = await self._client.get_open_orders(
+        mt5_orders: list[MT5Order] = await self._client.get_open_orders(
             self.account_id.get_id(),
         )
-        for ib_order in ib_orders:
-            order_status = await self._parse_ib_order_to_order_status_report(ib_order)
+        for mt5_order in mt5_orders:
+            order_status = await self._parse_mt5_order_to_order_status_report(mt5_order)
             report.append(order_status)
         return report
 
@@ -469,7 +466,7 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
         if not positions:
             return []
         for position in positions:
-            self._log.debug(f"Trying PositionStatusReport for {position.contract.conId}")
+            self._log.debug(f"Trying PositionStatusReport for {position.contract.sym_id}")
             if position.quantity > 0:
                 side = PositionSide.LONG
             elif position.quantity < 0:
@@ -477,12 +474,12 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             else:
                 continue  # Skip, IB may continue to display closed positions
 
-            instrument = await self.instrument_provider.find_with_contract_id(
-                position.contract.conId,
+            instrument = await self.instrument_provider.find_with_symbol_id(
+                position.contract.sym_id,
             )
             if instrument is None:
                 self._log.error(
-                    f"Cannot generate report: instrument not found for contract ID {position.contract.conId}",
+                    f"Cannot generate report: instrument not found for contract ID {position.contract.sym_id}",
                 )
                 continue
 
@@ -503,22 +500,22 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
 
         return report
 
-    def _transform_order_to_ib_order(self, order: Order) -> IBOrder:  # noqa: C901 11 > 10
+    def _transform_order_to_mt5_order(self, order: Order) -> MT5Order:  # noqa: C901 11 > 10
         if order.is_post_only:
             raise ValueError("`post_only` not supported by Interactive Brokers")
 
-        ib_order = IBOrder()
+        mt5_order = MT5Order()
         time_in_force = order.time_in_force
         for key, field, fn in MAP_ORDER_FIELDS:
             if value := getattr(order, key, None):
                 if key == "order_type" and time_in_force == TimeInForce.AT_THE_CLOSE:
-                    setattr(ib_order, field, fn((value, time_in_force)))
+                    setattr(mt5_order, field, fn((value, time_in_force)))
                 else:
-                    setattr(ib_order, field, fn(value))
+                    setattr(mt5_order, field, fn(value))
 
         if self._cache.instrument(order.instrument_id).is_inverse:
-            ib_order.cashQty = int(ib_order.totalQuantity)
-            ib_order.totalQuantity = 0
+            mt5_order.cashQty = int(mt5_order.totalQuantity)
+            mt5_order.totalQuantity = 0
 
         if isinstance(order, TrailingStopLimitOrder | TrailingStopMarketOrder):
             if order.trailing_offset_type != TrailingOffsetType.PRICE:
@@ -526,29 +523,29 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
                     f"`TrailingOffsetType` {trailing_offset_type_to_str(order.trailing_offset_type)} is not supported",
                 )
 
-            ib_order.auxPrice = float(order.trailing_offset)
+            mt5_order.auxPrice = float(order.trailing_offset)
             if order.trigger_price:
-                ib_order.trailStopPrice = order.trigger_price.as_double()
-                ib_order.triggerMethod = MAP_TRIGGER_METHOD[order.trigger_type]
+                mt5_order.trailStopPrice = order.trigger_price.as_double()
+                mt5_order.triggerMethod = MAP_TRIGGER_METHOD[order.trigger_type]
         elif (
             isinstance(
                 order,
                 MarketIfTouchedOrder | LimitIfTouchedOrder | StopLimitOrder | StopMarketOrder,
             )
         ) and order.trigger_price:
-            ib_order.auxPrice = order.trigger_price.as_double()
+            mt5_order.auxPrice = order.trigger_price.as_double()
 
         details = self.instrument_provider.contract_details[order.instrument_id.value]
-        ib_order.contract = details.contract
-        ib_order.account = self.account_id.get_id()
-        ib_order.clearingAccount = self.account_id.get_id()
+        mt5_order.contract = details.contract
+        mt5_order.account = self.account_id.get_id()
+        mt5_order.clearingAccount = self.account_id.get_id()
 
         if order.tags:
-            return self._attach_order_tags(ib_order, order)
+            return self._attach_order_tags(mt5_order, order)
         else:
-            return ib_order
+            return mt5_order
 
-    def _attach_order_tags(self, ib_order: IBOrder, order: Order) -> IBOrder:
+    def _attach_order_tags(self, mt5_order: MT5Order, order: Order) -> MT5Order:
         tags: dict = {}
         for ot in order.tags:
             if ot.startswith("MT5OrderTags:"):
@@ -560,16 +557,16 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
                 for condition in tags[tag]:
                     pass  # TODO:
             else:
-                setattr(ib_order, tag, tags[tag])
+                setattr(mt5_order, tag, tags[tag])
 
-        return ib_order
+        return mt5_order
 
     async def _submit_order(self, command: SubmitOrder) -> None:
         PyCondition.type(command, SubmitOrder, "command")
         try:
-            ib_order: IBOrder = self._transform_order_to_ib_order(command.order)
-            ib_order.orderId = self._client.next_order_id()
-            self._client.place_order(ib_order)
+            mt5_order: MT5Order = self._transform_order_to_mt5_order(command.order)
+            mt5_order.order_id = self._client.next_order_id()
+            self._client.place_order(mt5_order)
             self._handle_order_event(status=OrderStatus.SUBMITTED, order=command.order)
         except ValueError as e:
             self._handle_order_event(
@@ -583,7 +580,7 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
 
         order_id_map = {}
         client_id_to_orders = {}
-        ib_orders = []
+        mt5_orders = []
 
         # Translate orders
         for order in command.order_list.orders:
@@ -591,10 +588,10 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             client_id_to_orders[order.client_order_id.value] = order
 
             try:
-                ib_order = self._transform_order_to_ib_order(order)
-                ib_order.transmit = False
-                ib_order.orderId = order_id_map[order.client_order_id.value]
-                ib_orders.append(ib_order)
+                mt5_order = self._transform_order_to_mt5_order(order)
+                mt5_order.transmit = False
+                mt5_order.order_id = order_id_map[order.client_order_id.value]
+                mt5_orders.append(mt5_order)
             except ValueError as e:
                 # All orders in the list are declined to prevent unintended side effects
                 for o in command.order_list.orders:
@@ -614,15 +611,15 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
                 return
 
         # Mark last order to transmit
-        ib_orders[-1].transmit = True
+        mt5_orders[-1].transmit = True
 
-        for ib_order in ib_orders:
+        for mt5_order in mt5_orders:
             # Map the Parent Order Ids
-            if parent_id := order_id_map.get(ib_order.parentId):
-                ib_order.parentId = parent_id
+            if parent_id := order_id_map.get(mt5_order.parentId):
+                mt5_order.parentId = parent_id
             # Place orders
-            order_ref = ib_order.orderRef
-            self._client.place_order(ib_order)
+            order_ref = mt5_order.orderRef
+            self._client.place_order(mt5_order)
             self._handle_order_event(
                 status=OrderStatus.SUBMITTED,
                 order=client_id_to_orders[order_ref],
@@ -636,7 +633,7 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
         nautilus_order: Order = self._cache.order(command.client_order_id)
         self._log.info(f"Nautilus order status is {nautilus_order.status_string()}")
         try:
-            ib_order: IBOrder = self._transform_order_to_ib_order(nautilus_order)
+            mt5_order: MT5Order = self._transform_order_to_mt5_order(nautilus_order)
         except ValueError as e:
             self._handle_order_event(
                 status=OrderStatus.REJECTED,
@@ -645,25 +642,25 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             )
             return
 
-        ib_order.orderId = int(command.venue_order_id.value)
-        if ib_order.parentId:
-            parent_nautilus_order = self._cache.order(ClientOrderId(ib_order.parentId))
+        mt5_order.order_id = int(command.venue_order_id.value)
+        if mt5_order.parentId:
+            parent_nautilus_order = self._cache.order(ClientOrderId(mt5_order.parentId))
             if parent_nautilus_order:
-                ib_order.parentId = int(parent_nautilus_order.venue_order_id.value)
+                mt5_order.parentId = int(parent_nautilus_order.venue_order_id.value)
             else:
-                ib_order.parentId = 0
-        if command.quantity and command.quantity != ib_order.totalQuantity:
-            ib_order.totalQuantity = command.quantity.as_double()
-        if command.price and command.price.as_double() != getattr(ib_order, "lmtPrice", None):
-            ib_order.lmtPrice = command.price.as_double()
+                mt5_order.parentId = 0
+        if command.quantity and command.quantity != mt5_order.totalQuantity:
+            mt5_order.totalQuantity = command.quantity.as_double()
+        if command.price and command.price.as_double() != getattr(mt5_order, "lmtPrice", None):
+            mt5_order.lmtPrice = command.price.as_double()
         if command.trigger_price and command.trigger_price.as_double() != getattr(
-            ib_order,
+            mt5_order,
             "auxPrice",
             None,
         ):
-            ib_order.auxPrice = command.trigger_price.as_double()
-        self._log.info(f"Placing {ib_order!r}")
-        self._client.place_order(ib_order)
+            mt5_order.auxPrice = command.trigger_price.as_double()
+        self._log.info(f"Placing {mt5_order!r}")
+        self._client.place_order(mt5_order)
 
     async def _cancel_order(self, command: CancelOrder) -> None:
         PyCondition.not_none(command, "command")
@@ -795,11 +792,11 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
                 "not yet implemented.",
             )
 
-    async def handle_order_status_report(self, ib_order: IBOrder) -> None:
-        report = await self._parse_ib_order_to_order_status_report(ib_order)
+    async def handle_order_status_report(self, mt5_order: MT5Order) -> None:
+        report = await self._parse_mt5_order_to_order_status_report(mt5_order)
         self._send_order_status_report(report)
 
-    def _on_open_order(self, order_ref: str, order: IBOrder, order_state: IBOrderState) -> None:
+    def _on_open_order(self, order_ref: str, order: MT5Order, order_state: MT5OrderState) -> None:
         if not order.orderRef:
             self._log.warning(
                 f"ClientOrderId not available, order={order.__dict__}, state={order_state.__dict__}",
@@ -837,7 +834,7 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             )
             venue_order_id_modified = bool(
                 nautilus_order.venue_order_id is None
-                or nautilus_order.venue_order_id != VenueOrderId(str(order.orderId)),
+                or nautilus_order.venue_order_id != VenueOrderId(str(order.order_id)),
             )
 
             if total_qty != nautilus_order.quantity or price or trigger_price:
@@ -845,7 +842,7 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
                     strategy_id=nautilus_order.strategy_id,
                     instrument_id=nautilus_order.instrument_id,
                     client_order_id=nautilus_order.client_order_id,
-                    venue_order_id=VenueOrderId(str(order.orderId)),
+                    venue_order_id=VenueOrderId(str(order.order_id)),
                     quantity=total_qty,
                     price=price,
                     trigger_price=trigger_price,
@@ -855,7 +852,7 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
             self._handle_order_event(
                 status=OrderStatus.ACCEPTED,
                 order=nautilus_order,
-                order_id=order.orderId,
+                order_id=order.order_id,
             )
 
     def _on_order_status(self, order_ref: str, order_status: str, reason: str = "") -> None:
@@ -913,7 +910,7 @@ class MetaTrader5ExecutionClient(LiveExecutionClient):
                 strategy_id=nautilus_order.strategy_id,
                 instrument_id=nautilus_order.instrument_id,
                 client_order_id=nautilus_order.client_order_id,
-                venue_order_id=VenueOrderId(str(execution.orderId)),
+                venue_order_id=VenueOrderId(str(execution.order_id)),
                 venue_position_id=None,
                 trade_id=TradeId(execution.execId),
                 order_side=OrderSide[ORDER_SIDE_TO_ORDER_ACTION[execution.side]],

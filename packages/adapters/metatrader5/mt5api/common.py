@@ -3,7 +3,8 @@ import sys
 import math
 
 from decimal import Decimal
-from .utils import Object, intMaxString, floatMaxString, decimalMaxString
+from dataclasses import dataclass
+
 
 
 NO_VALID_ID = -1
@@ -55,41 +56,28 @@ ListOfHistoricalTickLast = list
 ListOfHistoricalSessions = list
 
 
-class BarData(Object):
+
+@dataclass
+class BarData:
+    time: int
+    open_: float
+    high: float
+    low: float
+    close: float
+    tick_volume: float
+    spread: float
+    real_volume: float
+
+
+@dataclass
+class CommissionReport:
     """
-        MT5 Bar Data Structure
+    Class describing an commission report's definition.
+
     """
-    def __init__(self):
-        self.date = ""
-        self.open = 0.
-        self.high = 0.
-        self.low = 0.
-        self.close = 0.
-        self.volume = UNSET_DECIMAL
-        self.wap = UNSET_DECIMAL
-        self.barCount = 0
-
-    def __str__(self):
-        return "Date: %s, Open: %s, High: %s, Low: %s, Close: %s, Volume: %s, WAP: %s, BarCount: %s" % (self.date, floatMaxString(self.open), 
-            floatMaxString(self.high), floatMaxString(self.low), floatMaxString(self.close), 
-            decimalMaxString(self.volume), decimalMaxString(self.wap), intMaxString(self.barCount))
-
-
-# class RealTimeBar(Object):
-#     def __init__(self, time = 0, endTime = -1, open_ = 0., high = 0., low = 0., close = 0., volume = UNSET_DECIMAL, wap = UNSET_DECIMAL, count = 0):
-#         self.time = time
-#         self.endTime = endTime
-#         self.open_ = open_
-#         self.high = high
-#         self.low = low
-#         self.close = close
-#         self.volume = volume
-#         self.wap = wap
-#         self.count = count
-
-#     def __str__(self):
-#         return "Time: %s, Open: %s, High: %s, Low: %s, Close: %s, Volume: %s, WAP: %s, Count: %s" % (intMaxString(self.time), 
-#             floatMaxString(self.open), floatMaxString(self.high), floatMaxString(self.low), 
-#             floatMaxString(self.close), decimalMaxString(self.volume), decimalMaxString(self.wap), 
-#             intMaxString(self.count))
-
+    execId = ""
+    commission = 0. 
+    currency = ""
+    realizedPNL =  0.
+    yield_ = 0.
+    yieldRedemptionDate = 0  # YYYYMMDD format

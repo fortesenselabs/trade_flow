@@ -142,7 +142,6 @@ class MetaTrader5InstrumentProvider(InstrumentProvider):
         if not (symbol_details := await self.get_symbol_details(symbol)):
             return
         
-        # print("symbol_details => ", symbol_details)
         for details in copy.deepcopy(symbol_details):
             # details.symbol = MT5Symbol(symbol=details.name)
             # details = MT5SymbolDetails(**details.__dict__)
@@ -163,12 +162,12 @@ class MetaTrader5InstrumentProvider(InstrumentProvider):
             self.add(instrument)
             self._client._cache.add_instrument(instrument)
             self.symbol_details[instrument.id.value] = details
-            self.symbol_id_to_instrument_id[details.symbol.conId] = instrument.id
+            self.symbol_id_to_instrument_id[details.symbol.sym_id] = instrument.id
 
-    async def find_with_contract_id(self, contract_id: int) -> Instrument:
-        instrument_id = self.contract_id_to_instrument_id.get(contract_id)
+    async def find_with_symbol_id(self, symbol_id: int) -> Instrument:
+        instrument_id = self.symbol_id_to_instrument_id.get(symbol_id)
         if not instrument_id:
-            await self.load_async(MT5Symbol(conId=contract_id))
-            instrument_id = self.contract_id_to_instrument_id.get(contract_id)
+            await self.load_async(MT5Symbol(sym_id=symbol_id))
+            instrument_id = self.symbol_id_to_instrument_id.get(symbol_id)
         instrument = self.find(instrument_id)
         return instrument

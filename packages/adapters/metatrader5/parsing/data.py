@@ -1,18 +1,3 @@
-# -------------------------------------------------------------------------------------------------
-#  Copyright (C) 2015-2024 Nautech Systems Pty Ltd. All rights reserved.
-#  https://nautechsystems.io
-#
-#  Licensed under the GNU Lesser General Public License Version 3.0 (the "License");
-#  You may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at https://www.gnu.org/licenses/lgpl-3.0.en.html
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-# -------------------------------------------------------------------------------------------------
-
 import datetime
 from decimal import Decimal
 
@@ -53,10 +38,7 @@ def what_to_show(bar_type: BarType) -> str:
         PriceType.LAST: "TRADES",
         PriceType.MID: "MIDPOINT",
     }
-    if str(bar_type.instrument_id.venue) == "PAXOS" and bar_type.spec.price_type == PriceType.LAST:
-        return "AGGTRADES"
-    else:
-        return mapping[bar_type.spec.price_type]
+    return mapping[bar_type.spec.price_type]
 
 
 def generate_trade_id(ts_event: int, price: float, size: Decimal) -> TradeId:
@@ -70,9 +52,9 @@ def bar_spec_to_bar_size(bar_spec: BarSpecification) -> str:
     step = bar_spec.step
     if (
         aggregation == BarAggregation.SECOND
-        and step == 5
+        and step == 60
         or aggregation == BarAggregation.SECOND
-        and step in [10, 15, 30]
+        and step in [10, 15, 30, 60]
     ):
         return f"{step} secs"
     elif aggregation == BarAggregation.MINUTE and step in [1, 2, 3, 5, 10, 15, 20, 30]:
@@ -85,7 +67,7 @@ def bar_spec_to_bar_size(bar_spec: BarSpecification) -> str:
         return f"{step} week"
     else:
         raise ValueError(
-            f"InteractiveBrokers doesn't support subscription for {bar_spec!r}",
+            f"MetaTrader5 doesn't support subscription for {bar_spec!r}",
         )
 
 

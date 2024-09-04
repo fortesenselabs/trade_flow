@@ -1,5 +1,6 @@
 from decimal import Decimal
 import functools
+from typing import Tuple
 
 
 from metatrader5.client.common import BaseMixin
@@ -50,11 +51,11 @@ class MetaTrader5ClientAccountMixin(BaseMixin):
                 name=name,
                 handle=functools.partial(
                     self._mt5Client.req_account_summary,
-                    reqId=req_id,
+                    req_id=req_id,
                 ),
                 cancel=functools.partial(
                     self._mt5Client.cancel_account_summary,
-                    reqId=req_id,
+                    req_id=req_id,
                 ),
             )
 
@@ -76,7 +77,7 @@ class MetaTrader5ClientAccountMixin(BaseMixin):
         name = "accountSummary"
         if subscription := self._subscriptions.get(name=name):
             self._subscriptions.remove(subscription.req_id)
-            self._mt5Client.cancel_account_summary(reqId=subscription.req_id)
+            self._mt5Client.cancel_account_summary(req_id=subscription.req_id)
             self._log.debug(f"Unsubscribed from {subscription}")
         else:
             self._log.debug(f"Subscription doesn't exist for {name}")
@@ -132,19 +133,21 @@ class MetaTrader5ClientAccountMixin(BaseMixin):
         if handler := self._event_subscriptions.get(name, None):
             handler(value, currency)
 
-    async def process_managed_accounts(self, *, accounts_list: str) -> None:
+    async def process_managed_accounts(self, *, accounts: Tuple[str]) -> None:
         """
-        Receive a comma-separated string with the managed account ids.
+        Receive a tuple with the managed account ids.
 
         Occurs automatically on initial API client connection.
 
         """
-        account_info = self._mt5Client.account_info()
-        # print("accounts_list => ", accounts_list)
-        self._account_ids =  {str(account_info.login)} # {a for a in accounts_list.split(",") if a}
+
+        self._account_ids =  set(accounts)
         self._log.debug(f"Managed accounts set: {self._account_ids}")
+
+        # if self._next_valid_order_id >= 0 and not self._is_mt5_connected.is_set(): # TODO: Use this when the execution client has been added
+        # if not self._is_mt5_connected.is_set():
         if self._next_valid_order_id >= 0 and not self._is_mt5_connected.is_set():
-            self._log.debug("`_is_mt5_connected` set by `managedAccounts`.", LogColor.BLUE)
+            self._log.debug("`_is_mt5_connected` set by `managed_accounts`.", LogColor.BLUE)
             self._is_mt5_connected.set()
 
     async def process_position(

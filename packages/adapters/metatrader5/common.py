@@ -1,18 +1,9 @@
-import math
-import sys
 from typing import Final, Literal, Optional
 
 from nautilus_trader.config import NautilusConfig
 from nautilus_trader.model.identifiers import Venue
 
 MT5_VENUE: Final[Venue] = Venue("METATRADER_5")
-
-
-class ContractId(int):
-    """
-    ContractId type.
-    """
-
 
 class MT5Symbol(NautilusConfig, frozen=True, repr_omit_defaults=True):
     """
@@ -24,22 +15,22 @@ class MT5Symbol(NautilusConfig, frozen=True, repr_omit_defaults=True):
         Unique Symbol registered in Exchange.
 
     """
-    secType: Literal[
+    sec_type: Literal[
         "CFD"
         "",
     ] = ""
-    conId: int = 0
+    sym_id: int = 0
     symbol: str = ""
     broker: str = ""
 
 
 class MT5SymbolDetails(NautilusConfig, frozen=True, repr_omit_defaults=True):
     """
-    ContractDetails class to be used internally in Nautilus for ease of
+    MT5SymbolDetails class to be used internally in Nautilus for ease of
     encoding/decoding.
     """
 
-    underSecType: Optional[str] = None
+    under_sec_type: Optional[str] = None
     symbol: MT5Symbol | None = None
     custom: bool = False
     chart_mode: int = 0

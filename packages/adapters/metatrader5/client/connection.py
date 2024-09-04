@@ -43,7 +43,6 @@ class MetaTrader5ClientConnectionMixin(BaseMixin):
                 f"at {self._mt5Client.connection_time} from {self._host}:{self._port} "
                 f"with client id: {self._client_id}."
             )
-            self._is_mt5_connected.set() # TODO: move this to TWrapper managed accounts
         except asyncio.CancelledError:
             self._log.info("Connection cancelled.")
             await self._disconnect()

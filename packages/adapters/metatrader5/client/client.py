@@ -8,9 +8,8 @@ from inspect import iscoroutinefunction
 from typing import Any
 
 from metatrader5.mt5api.decoder import Decoder
-# from metatrader5.mt5api.commission_report import CommissionReport
-from metatrader5.mt5api.common import BarData
-# from metatrader5.mt5api.execution import Execution
+from metatrader5.mt5api.common import CommissionReport, BarData
+from metatrader5.mt5api.execution import Execution
 
 from nautilus_trader.cache.cache import Cache
 from nautilus_trader.common.component import Component
@@ -25,7 +24,7 @@ from metatrader5.client.connection import MetaTrader5ClientConnectionMixin
 from metatrader5.client.account import MetaTrader5ClientAccountMixin
 from metatrader5.client.symbol import MetaTrader5ClientSymbolMixin
 from metatrader5.client.market_data import MetaTrader5ClientMarketDataMixin
-# from metatrader5.client.order import MetaTrader5ClientOrderMixin
+from metatrader5.client.order import MetaTrader5ClientOrderMixin
 # from metatrader5.client.error import MetaTrader5ClientErrorMixin
 from metatrader5.client.common import AccountOrderRef, Request, Requests, Subscriptions
 
@@ -35,6 +34,7 @@ class MetaTrader5Client(
     MetaTrader5ClientAccountMixin,
     MetaTrader5ClientSymbolMixin,
     MetaTrader5ClientMarketDataMixin,
+    MetaTrader5ClientOrderMixin,
 ):
     """
     A client component that interfaces with the MetaTrader 5 Terminal
@@ -106,12 +106,12 @@ class MetaTrader5Client(
         self._bar_type_to_last_bar: dict[str, BarData | None] = {}
 
         # OrderMixin
-        # self._exec_id_details: dict[
-        #     str,
-        #     dict[str, Execution | (CommissionReport | str)],
-        # ] = {}
-        # self._order_id_to_order_ref: dict[int, AccountOrderRef] = {}
-        # self._next_valid_order_id: int = -1
+        self._exec_id_details: dict[
+            str,
+            dict[str, Execution | (CommissionReport | str)],
+        ] = {}
+        self._order_id_to_order_ref: dict[int, AccountOrderRef] = {}
+        self._next_valid_order_id: int = -1
 
         # Start client
         self._request_id_seq: int = 10000
@@ -152,7 +152,7 @@ class MetaTrader5Client(
                 self._start_terminal_incoming_msg_reader()
                 self._start_internal_msg_queue_processor()
                 self._mt5Client.start_api()
-                # Terminal will send a managedAccounts message upon successful connection,
+                # Terminal will send process_managed_accounts a message upon successful connection,
                 # which will set the `_is_mt5_connected` event. This typically takes a few
                 # seconds, so we wait for it here.
                 await asyncio.wait_for(self._is_mt5_connected.wait(), 15)
@@ -465,6 +465,7 @@ class MetaTrader5Client(
             The result of the request, or default_value if the request times out or fails.
 
         """
+
         try:
             return await asyncio.wait_for(request.future, timeout)
         except asyncio.TimeoutError as e:
@@ -511,9 +512,7 @@ class MetaTrader5Client(
         """
         Continuously read messages from Terminal and then put them in the internal
         message queue for processing.
-
-        TODO: fix this, as it cause the client to always reconnect, make sure it receives message properly
-
+        
         """
         self._log.debug("Client Terminal incoming message reader started.")
         try:

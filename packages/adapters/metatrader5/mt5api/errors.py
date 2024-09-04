@@ -3,7 +3,7 @@ This is the interface that will need to be overloaded by the customer so
 that his/her code can receive info from the Terminal.
 """
 
-from mt5api.rpyc import metatrader5 as mt5
+from .MetaTrader5 import MetaTrader5 as mt5
 
 
 class TerminalError(Exception):

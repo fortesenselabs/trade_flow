@@ -5,14 +5,14 @@ import socket
 import sys
 import threading
 import time
-from typing import Callable, Optional
-from metatrader5.common import MT5Symbol, MT5SymbolDetails
+import numpy as np
+from typing import Any, Callable, List, Optional
 from metatrader5.mt5api.stream_manager import StreamManager
-from metatrader5.mt5api.symbol import convert_symbol_info_to_mt5_symbol_details
+from metatrader5.mt5api.symbol import Symbol, SymbolInfo, process_symbol_details
 from metatrader5.mt5api.errors import TERMINAL_CONNECT_FAIL, SERVER_CONNECT_FAIL, TerminalError,  CodeMsgPair
 from metatrader5.mt5api.utils import ClientException, current_fn_name
 from metatrader5.mt5api.MetaTrader5 import MetaTrader5 
-from metatrader5.mt5api.common import NO_VALID_ID, MarketDataTypeEnum
+from metatrader5.mt5api.common import NO_VALID_ID, BarData, MarketDataTypeEnum, TickerId
 
 
 # 
@@ -29,6 +29,7 @@ class MT5Client(MetaTrader5):
         self.msg_queue = queue.Queue()
         self.lock = threading.Lock()
         self.stream_manager: StreamManager = StreamManager()
+        self.stream_interval: float = 1
 
         self.enable_stream = False
         self.connected: bool = False
@@ -52,7 +53,6 @@ class MT5Client(MetaTrader5):
             portable=False            => portable mode
         """
         try:
-            # self.mt5_conn = MetaTrader5(self.host, self.port) if self.mt5_conn is None else self.mt5_conn
             # establish MetaTrader 5 connection to the specified trading account
             self.connected = super().initialize(path, **kwargs)
             if not self.connected:
@@ -60,7 +60,7 @@ class MT5Client(MetaTrader5):
                 raise TerminalError(TERMINAL_CONNECT_FAIL)
             
             self.connection_time = datetime.now(timezone.utc).timestamp()
-            self.msg_queue.put((0, current_fn_name(), self.terminal_info()))
+            self.send_msg((0, current_fn_name(), self.terminal_info()))
         except TerminalError as e:
             if self.logger:
                 TERMINAL_CONNECT_FAIL.errorMsg += f" => {e.__str__()}" 
@@ -83,9 +83,8 @@ class MT5Client(MetaTrader5):
     def is_connected(self):
         return MT5Client.CONNECTED == self.conn_state and self.connected
     
-    def send_msg(self, msg: str):
+    def send_msg(self, msg: Any):
         """
-        msg in this case is the code to be executed in the rpyc server
         """
         self.logger.debug("acquiring lock")
         self.lock.acquire()
@@ -95,7 +94,7 @@ class MT5Client(MetaTrader5):
             self.lock.release()
             return 0
         try:
-            self.msg_queue.put(msg)
+            self.msg_queue.put_nowait(msg) # put_nowait
             nSent = len(msg)
         except socket.error:
             self.logger.debug("exception from sendMsg %s", sys.exc_info())
@@ -189,53 +188,77 @@ class MT5Client(MetaTrader5):
             self.logger.error(text)
             raise ClientException(TERMINAL_CONNECT_FAIL.code(), TERMINAL_CONNECT_FAIL.msg(), text)
         
-        account_info = self.account_info()
-        self.connected_server = account_info.server
-        self.logger.info(f"{self.is_connected()} | {self.connected_server}")
+        self.req_ids()
+        self.managed_accounts()
+
+
+    def req_ids(self):
+        """Call this function to request from Terminal the next valid ID that
+        can be used when placing an order.  After calling this function, the
+        next_valid_id() event will be triggered, and the id returned is that next
+        valid ID. That ID will reflect any autobinding that has occurred (which
+        generates new IDs and increments the next valid ID therein).
+        """
+        ids = np.random.randint(10000, size=1)
+        self.send_msg((0, current_fn_name(), ids.tolist()))
 
     def req_market_data_type(self, market_data_type: MarketDataTypeEnum):
         self.market_data_type = market_data_type
-        # self.msg_queue.put((0, current_fn_name(), market_data_type))
-        return
+        self.send_msg((0, current_fn_name(), self.market_data_type.value))
+        return None
     
-    def req_account_summary(self, req_id):
+    def managed_accounts(self):
+        account_info = self.account_info()
+        self.connected_server = account_info.server
+        self.logger.info(f"{self.is_connected()} | {self.connected_server}")
+        accounts = tuple([f"{account_info.login}"])
+        self.send_msg((0, current_fn_name(), accounts))
+    
+    def req_account_summary(self, req_id: TickerId):
         return 
     
-    def cancel_account_summary(self, req_id):
+    def cancel_account_summary(self, req_id: TickerId):
         return
     
     def req_positions(self):
         return
     
-    def req_symbol_details(self, req_id, symbol: str) -> list[MT5SymbolDetails] | None:
+    
+    def req_symbol_details(self, req_id: TickerId, symbol: str) -> list[SymbolInfo] | None:
+        if symbol == "":
+            return None 
+        
         if "-" in symbol:
             symbol = symbol.replace("-", " ")
         
         mt5_results = self.symbols_get(symbol)
         if len(mt5_results) > 0:
-            converted_mt5_symbol_details: list[MT5SymbolDetails] = []
+            symbol_details: List[SymbolInfo] = []
             for symbol_info in mt5_results:
                 if ("*" not in symbol or "!" not in symbol, "," not in symbol) and symbol_info.name == symbol:
-                    converted_mt5_symbol_details.append(convert_symbol_info_to_mt5_symbol_details(symbol_info, self.connected_server))
+                    symbol_details.append(process_symbol_details(symbol_info, self.connected_server))
+                    break 
 
-            self.msg_queue.put((req_id, current_fn_name(), converted_mt5_symbol_details))
-            return converted_mt5_symbol_details
+            # if self.market_data_type == MarketDataTypeEnum.REALTIME:
+            self.send_msg((req_id, current_fn_name(), symbol_details))
+            return symbol_details
         
         return None
     
-    def req_matching_symbols(self, req_id, pattern: str):
+    def req_matching_symbols(self, req_id: TickerId, pattern: str):
         mt5_results = self.symbols_get(pattern)
         if len(mt5_results) > 0:
-            converted_mt5_symbol_details: list[MT5SymbolDetails] = []
+            symbol_details: List[SymbolInfo] = []
             for symbol_info in mt5_results:
-                converted_mt5_symbol_details.append(convert_symbol_info_to_mt5_symbol_details(symbol_info, self.connected_server))
+                symbol_details.append(process_symbol_details(symbol_info, self.connected_server))
 
-            self.msg_queue.put((req_id, current_fn_name(), converted_mt5_symbol_details))
-            return converted_mt5_symbol_details
-        
+            # if self.market_data_type == MarketDataTypeEnum.REALTIME:
+            self.send_msg((req_id, current_fn_name(), symbol_details))
+            return symbol_details
+            
         return None
     
-    def req_tick_by_tick_data(self, req_id, symbol: MT5Symbol, type: str = "BidAsk", size: int = 1, ignore_size: bool = False):
+    def req_tick_by_tick_data(self, req_id: TickerId, symbol: Symbol, type: str = "BidAsk", size: int = 1, ignore_size: bool = False):
         # Attempt to enable the display of the symbol in MarketWatch
         if not self.symbol_select(symbol.symbol, True):
             code, msg = self.get_error()
@@ -247,11 +270,11 @@ class MT5Client(MetaTrader5):
         if self.market_data_type == MarketDataTypeEnum.REALTIME:
             def fetch_latest_tick(symbol):
                 tick = self.symbol_info_tick(symbol)
-                self.msg_queue.put((req_id, _current_fn_name, type, tick))
+                self.send_msg((req_id, _current_fn_name, type, tick))
                 return tick
             
             # Start the streaming task in its own thread
-            self.stream_manager.create_streaming_task([symbol.symbol], 1, fetch_latest_tick)
+            self.stream_manager.create_streaming_task(f"TICK-{str(req_id)}", [symbol.symbol], self.stream_interval, fetch_latest_tick)
 
         else:
             # TODO: fix this
@@ -263,16 +286,118 @@ class MT5Client(MetaTrader5):
             # )
             ticks = self.copy_ticks_range()
 
-    def cancel_tick_by_tick_data(self, req_id, symbol: MT5Symbol, type: str = "BidAsk", size: int = 1, ignore_size: bool = False):
-        self.stream_manager.stop_streaming_task([symbol.symbol])
-        print(f"Streaming task for {symbol.symbol} has been stopped.")
+    def cancel_tick_by_tick_data(self, req_id: TickerId, symbol: Symbol, type: str = "BidAsk", size: int = 1, ignore_size: bool = False):
+        self.stream_manager.stop_streaming_task(f"TICK-{str(req_id)}", [symbol.symbol])
+        print(f"Streaming task for {req_id} has been stopped.")
 
-    def req_historical_data(self, req_id):
-        print("MT5Client.req_historical_data()")
-        pass 
+    def req_real_time_bars(self, req_id: TickerId, symbol: Symbol, bar_size: int, what_to_show: str, use_rth: bool):
+        _current_fn_name = current_fn_name()
+        
+        if self.market_data_type == MarketDataTypeEnum.REALTIME:
+            def fetch_latest_tick(symbol):
+                raw_bars = self.copy_rates_from_pos(symbol, MetaTrader5.TIMEFRAME_M1, 0, 1)
 
-    def cancel_historical_data(self, req_id):
-        print("MT5Client.cancel_historical_data()")
-        pass 
+                processed_bars = []
+                for raw_bar in raw_bars:
+                    processed_bars.append(BarData(
+                        time=raw_bar[0],
+                        open_=raw_bar[1],
+                        high=raw_bar[2],
+                        low=raw_bar[3],
+                        close=raw_bar[4],
+                        tick_volume=raw_bar[5],
+                        spread=raw_bar[6],
+                        real_volume=raw_bar[7],
+                    ))
+                
+                self.send_msg((req_id, _current_fn_name, processed_bars))
+                return processed_bars
+            
+            # Start the streaming task in its own thread
+            self.stream_manager.create_streaming_task(f"BAR-{str(req_id)}", [symbol.symbol], MetaTrader5.TIMEFRAME_M1 * 60, fetch_latest_tick)
+        else:
+            pass 
+
+        
+    def cancel_real_time_bars(self, req_id: TickerId, symbol: Symbol):
+        self.stream_manager.stop_streaming_task(f"BAR-{str(req_id)}", [symbol.symbol])
+        print(f"Streaming task for {req_id} has been stopped.")
+
+    def req_historical_data(self, req_id: TickerId , symbol: Symbol, end_datetime: str,
+                                  duration_str: str, bar_size_setting: str, what_to_show: str,
+                                  use_rth:int, format_date: int, keep_up_to_date: bool):
+        """Requests symbols' historical data. When requesting historical data, a
+        finishing time and date is required along with a duration string.
+
+        req_id: TickerId - The id of the request. Must be a unique value. When the
+            market data returns.
+        symbol: Symbol - This object contains a description of the symbol for which
+            market data is being requested.
+        end_datetime: str - Defines a query end date and time at any point during the past 6 mos.
+            Valid values include any date/time within the past six months in the format:
+            YYYY-MM-dd HH:MM:SS 
+        duration_str: str - Set the query duration up to one week, using a time unit
+            of minutes, days or weeks. Valid values include any integer followed by a space
+            and then M (minutes), D (days) or W (week). If no unit is specified, minutes is used.
+        bar_size_setting: str - Specifies the size of the bars that will be returned (within Terminal listimits).
+            Valid values include:
+            1 sec
+            5 secs
+            15 secs
+            30 secs
+            1 min
+            2 mins
+            3 mins
+            5 mins
+            15 mins
+            30 mins
+            1 hour
+            1 day
+        what_to_show: str - Determines the nature of data being extracted. Valid values include:
+            TRADES
+            BID_ASK
+        use_rth: int - Determines whether to return all data available during the requested time span,
+            or only data that falls within regular trading hours. Valid values include:
+
+            0 - all data is returned even where the market in question was outside of its
+            regular trading hours.
+            1 - only data within the regular trading hours is returned, even if the
+            requested time span falls partially or completely outside of the RTH.
+        format_date: int - Determines the date format applied to returned bars. Valid values include:
+            1 - dates applying to bars returned in the format: yyyymmdd{space}{space}hh:mm:dd
+            2 - dates are returned as a long integer specifying the number of seconds since
+                1/1/1970 GMT.
+        """
+        
+        _current_fn_name = current_fn_name()
+        
+        # if self.market_data_type == MarketDataTypeEnum.REALTIME:
+        #     def fetch_latest_tick(symbol):
+        #         raw_bars = self.copy_rates_from(symbol, MetaTrader5.TIMEFRAME_M1, 0, 1)
+                
+        #         processed_bars = []
+        #         for raw_bar in raw_bars:
+        #             processed_bars.append(BarData(
+        #                 time=raw_bar[0],
+        #                 open_=raw_bar[1],
+        #                 high=raw_bar[2],
+        #                 low=raw_bar[3],
+        #                 close=raw_bar[4],
+        #                 tick_volume=raw_bar[5],
+        #                 spread=raw_bar[6],
+        #                 real_volume=raw_bar[7],
+        #             ))
+                
+        #         self.send_msg((req_id, _current_fn_name, processed_bars))
+        #         return processed_bars
+            
+        #     # Start the streaming task in its own thread
+        #     self.stream_manager.create_streaming_task(f"HISTORICAL-BAR-{str(req_id)}", [symbol.symbol], MetaTrader5.TIMEFRAME_M1 * 60, fetch_latest_tick)
+        # else:
+        #     pass  
+
+    def cancel_historical_data(self, req_id: TickerId, symbol: Symbol):
+        self.stream_manager.stop_streaming_task(f"HISTORICAL-BAR-{str(req_id)}", [symbol.symbol])
+        print(f"Streaming task for {req_id} has been stopped.")
 
     

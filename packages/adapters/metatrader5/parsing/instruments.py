@@ -1,13 +1,8 @@
-import datetime
 import re
-import time
 from decimal import Decimal
 
 import pandas as pd
-from ibapi.contract import ContractDetails
 
-# fmt: off
-from nautilus_trader.adapters.interactive_brokers.common import IBContract
 from nautilus_trader.core.correctness import PyCondition
 from nautilus_trader.model.enums import AssetClass
 from nautilus_trader.model.enums import asset_class_from_str
@@ -23,25 +18,8 @@ from nautilus_trader.model.objects import Quantity
 
 from metatrader5.common import MT5Symbol
 from metatrader5.common import MT5SymbolDetails
+from metatrader5.mt5api.symbol import SymbolInfo
 
-
-FUTURES_MONTH_TO_CODE: dict[str, str] = {
-    "JAN": "F",
-    "FEB": "G",
-    "MAR": "H",
-    "APR": "J",
-    "MAY": "K",
-    "JUN": "M",
-    "JUL": "N",
-    "AUG": "Q",
-    "SEP": "U",
-    "OCT": "V",
-    "NOV": "X",
-    "DEC": "Z",
-}
-FUTURES_CODE_TO_MONTH = dict(
-    zip(FUTURES_MONTH_TO_CODE.values(), FUTURES_MONTH_TO_CODE.keys(), strict=False),
-)
 
 VENUES_CASH = ["IDEALPRO"]
 VENUES_CRYPTO = ["PAXOS"]
@@ -57,21 +35,14 @@ VENUES_FUT = [
     "SNFE",  # AU
 ]
 VENUES_CFD = [
-    "IBCFD",  # self named, in fact mapping to "SMART" when parsing
+    "MT5CFD",  # self named, in fact mapping to "SMART" when parsing
 ]
-VENUES_CMDTY = ["IBCMDTY"]  # self named, in fact mapping to "SMART" when parsing
+VENUES_CMDTY = ["MT5CMDTY"]  # self named, in fact mapping to "SMART" when parsing
 
 RE_CASH = re.compile(r"^(?P<symbol>[A-Z]{3})\/(?P<currency>[A-Z]{3})$")
 
 RE_CFD_CASH = re.compile(r"^Forex\\(?P<currency>[A-Z]{6})$")
 # 'Indexes\\SP500m'
-
-def _extract_isin(details: MT5SymbolDetails) -> int:
-    if details.secIdList:
-        for tag_value in details.secIdList:
-            if tag_value.tag == "ISIN":
-                return tag_value.value
-    raise ValueError("No ISIN found")
 
 
 def _tick_size_to_precision(tick_size: float | Decimal) -> int:
@@ -88,13 +59,6 @@ def sec_type_to_asset_class(sec_type: str) -> AssetClass:
     }
     return asset_class_from_str(mapping.get(sec_type, sec_type))
 
-
-def contract_details_to_mt5_symbol_info_details(details: ContractDetails) -> MT5SymbolDetails:
-    details.contract = IBContract(**details.contract.__dict__)
-    details = MT5SymbolDetails(**details.__dict__)
-    return details
-
-
 def parse_instrument(
     symbol_details: MT5SymbolDetails,
     strict_symbology: bool = False,
@@ -107,7 +71,7 @@ def parse_instrument(
     return parse_cfd_contract(details=symbol_details, instrument_id=instrument_id)
 
 
-def contract_details_to_dict(details: MT5SymbolDetails) -> dict:
+def symbol_details_to_dict(details: MT5SymbolDetails) -> dict:
     dict_details = details.dict().copy()
     dict_details["symbol"] = details.symbol.dict().copy()
     return dict_details
@@ -126,7 +90,7 @@ def parse_cfd_contract(
         return Cfd(
             instrument_id=instrument_id,
             raw_symbol=Symbol(details.symbol.symbol),
-            asset_class=sec_type_to_asset_class(details.underSecType),
+            asset_class=sec_type_to_asset_class(details.under_sec_type),
             base_currency=Currency.from_str(details.currency_base),
             quote_currency=Currency.from_str(details.currency_profit),
             price_precision=price_precision,
@@ -146,13 +110,13 @@ def parse_cfd_contract(
             taker_fee=Decimal(0),
             ts_event=timestamp,
             ts_init=timestamp,
-            info=contract_details_to_dict(details),
+            info=symbol_details_to_dict(details),
         )
     else:
         return Cfd(
             instrument_id=instrument_id,
             raw_symbol=Symbol(details.symbol.symbol),
-            asset_class=sec_type_to_asset_class(details.underSecType),
+            asset_class=sec_type_to_asset_class(details.under_sec_type),
             quote_currency=Currency.from_str(details.currency_profit),
             price_precision=price_precision,
             size_precision=size_precision,
@@ -171,7 +135,7 @@ def parse_cfd_contract(
             taker_fee=Decimal(0),
             ts_event=timestamp,
             ts_init=timestamp,
-            info=contract_details_to_dict(details),
+            info=symbol_details_to_dict(details),
         )
 
 def expiry_timestring_to_datetime(expiry: str) -> pd.Timestamp:
@@ -186,42 +150,19 @@ def expiry_timestring_to_datetime(expiry: str) -> pd.Timestamp:
         ts = pd.Timestamp(dt, tz=tz)
         return ts.tz_convert("UTC")
 
-
-def decade_digit(last_digit: str, contract: IBContract) -> int:
-    if year := contract.lastTradeDateOrContractMonth[:4]:
-        return int(year[2:3])
-    elif int(last_digit) > int(repr(datetime.datetime.now().year)[-1]):
-        return int(repr(datetime.datetime.now().year)[-2]) - 1
-    else:
-        return int(repr(datetime.datetime.now().year)[-2])
-
-
 def mt5_symbol_to_instrument_id(
     symbol: MT5Symbol,
     strict_symbology: bool = False,
 ) -> InstrumentId:
     PyCondition.type(symbol, MT5Symbol, "MT5Symbol")
 
-    if strict_symbology:
-        return mt5_symbol_to_instrument_id_strict_symbology(symbol)
-    else:
-        return mt5_symbol_to_instrument_id_simplified_symbology(symbol)
+    # if strict_symbology:
+    #     return mt5_symbol_to_instrument_id_strict_symbology(symbol)
+    # else:
+    return mt5_symbol_to_instrument_id_simplified_symbology(symbol)
 
 
-def mt5_symbol_to_instrument_id_strict_symbology(symbol: MT5Symbol) -> InstrumentId:
-    if symbol.secType == "CFD":
-        symbol = f"{symbol.localSymbol}={symbol.secType}"
-        venue = "IBCFD"
-    elif symbol.secType == "CMDTY":
-        symbol = f"{symbol.localSymbol}={symbol.secType}"
-        venue = "IBCMDTY"
-    else:
-        symbol = f"{symbol.localSymbol}={symbol.secType}"
-        venue = (symbol.primaryExchange or symbol.exchange).replace(".", "/")
-    return InstrumentId.from_str(f"{symbol}.{venue}")
-
-
-def mt5_symbol_to_instrument_id_simplified_symbology(  # noqa: C901 (too complex)
+def mt5_symbol_to_instrument_id_simplified_symbology( 
     mt5_symbol: MT5Symbol,
 ) -> InstrumentId:
     if len(mt5_symbol.symbol) > 0:
@@ -251,121 +192,103 @@ def instrument_id_to_mt5_symbol(
     return MT5Symbol(symbol=mt_symbol, broker=mt_broker)
 
 
-def instrument_id_to_ib_contract_strict_symbology(instrument_id: InstrumentId) -> IBContract:
-    local_symbol, security_type = instrument_id.symbol.value.rsplit("=", 1)
-    exchange = instrument_id.venue.value.replace("/", ".")
-    if security_type == "STK":
-        return IBContract(
-            secType=security_type,
-            exchange="SMART",
-            primaryExchange=exchange,
-            localSymbol=local_symbol,
-        )
-    elif security_type == "CFD":
-        return IBContract(
-            secType=security_type,
-            exchange="SMART",
-            localSymbol=local_symbol,  # by IB is a cfd's local symbol of STK with a "n" as tail, e.g. "NVDAn". "
-        )
-    elif security_type == "CMDTY":
-        return IBContract(
-            secType=security_type,
-            exchange="SMART",
-            localSymbol=local_symbol,
-        )
-    elif security_type == "IND":
-        return IBContract(
-            secType=security_type,
-            exchange=exchange,
-            localSymbol=local_symbol,
-        )
-    else:
-        return IBContract(
-            secType=security_type,
-            exchange=exchange,
-            localSymbol=local_symbol,
-        )
-
-
-def instrument_id_to_ib_contract_simplified_symbology(  # noqa: C901 (too complex)
-    instrument_id: InstrumentId,
-) -> IBContract:
-    if instrument_id.venue.value in VENUES_CASH and (
-        m := RE_CASH.match(instrument_id.symbol.value)
-    ):
-        return IBContract(
-            secType="CASH",
-            exchange=instrument_id.venue.value,
-            localSymbol=f"{m['symbol']}.{m['currency']}",
-        )
-    elif instrument_id.venue.value in VENUES_CRYPTO and (
-        m := RE_CRYPTO.match(instrument_id.symbol.value)
-    ):
-        return IBContract(
-            secType="CRYPTO",
-            exchange=instrument_id.venue.value,
-            localSymbol=f"{m['symbol']}.{m['currency']}",
-        )
-    elif instrument_id.venue.value in VENUES_OPT and (
-        m := RE_OPT.match(instrument_id.symbol.value)
-    ):
-        return IBContract(
-            secType="OPT",
-            exchange=instrument_id.venue.value,
-            localSymbol=f"{m['symbol'].ljust(6)}{m['expiry']}{m['right']}{m['strike']}{m['decimal']}",
-        )
-    elif instrument_id.venue.value in VENUES_FUT:
-        if m := RE_FUT.match(instrument_id.symbol.value):
-            return IBContract(
-                secType="FUT",
-                exchange=instrument_id.venue.value,
-                localSymbol=f"{m['symbol']}{m['month']}{m['year'][-1]}",
-            )
-        elif m := RE_FUT_UNDERLYING.match(instrument_id.symbol.value):
-            return IBContract(
-                secType="CONTFUT",
-                exchange=instrument_id.venue.value,
-                symbol=m["symbol"],
-            )
-        elif m := RE_FOP.match(instrument_id.symbol.value):
-            return IBContract(
-                secType="FOP",
-                exchange=instrument_id.venue.value,
-                localSymbol=f"{m['symbol']}{m['month']}{m['year'][-1]} {m['right']}{m['strike']}",
-            )
-        else:
-            raise ValueError(f"Cannot parse {instrument_id}, use 2-digit year for FUT and FOP")
-    elif instrument_id.venue.value in VENUES_CFD:
-        if m := RE_CASH.match(instrument_id.symbol.value):
-            return IBContract(
-                secType="CFD",
-                exchange="SMART",
-                symbol=m["symbol"],
-                localSymbol=f"{m['symbol']}.{m['currency']}",
-            )
-        else:
-            return IBContract(
-                secType="CFD",
-                exchange="SMART",
-                symbol=f"{instrument_id.symbol.value}".replace("-", " "),
-            )
-    elif instrument_id.venue.value in VENUES_CMDTY:
-        return IBContract(
-            secType="CMDTY",
-            exchange="SMART",
-            symbol=f"{instrument_id.symbol.value}".replace("-", " "),
-        )
-    elif str(instrument_id.symbol).startswith("^"):
-        return IBContract(
-            secType="IND",
-            exchange=instrument_id.venue.value,
-            localSymbol=instrument_id.symbol.value[1:],
-        )
-
-    # Default to Stock
-    return IBContract(
-        secType="STK",
-        exchange="SMART",
-        primaryExchange=instrument_id.venue.value,
-        localSymbol=f"{instrument_id.symbol.value}".replace("-", " "),
+def convert_symbol_info_to_mt5_symbol_details(symbol_info: SymbolInfo) -> MT5SymbolDetails:
+    return MT5SymbolDetails(
+        under_sec_type=symbol_info.under_sec_type,
+        symbol=MT5Symbol(symbol=symbol_info.symbol.symbol, broker=symbol_info.symbol.broker, sec_type=symbol_info.symbol.sec_type),
+        custom=symbol_info.custom,
+        chart_mode=symbol_info.chart_mode,
+        select=symbol_info.select,
+        visible=symbol_info.visible,
+        session_deals=symbol_info.session_deals,
+        session_buy_orders=symbol_info.session_buy_orders,
+        session_sell_orders=symbol_info.session_sell_orders,
+        volume=symbol_info.volume,
+        volumehigh=symbol_info.volumehigh,
+        volumelow=symbol_info.volumelow,
+        time=symbol_info.time,
+        digits=symbol_info.digits,
+        spread=symbol_info.spread,
+        spread_float=symbol_info.spread_float,
+        ticks_bookdepth=symbol_info.ticks_bookdepth,
+        trade_calc_mode=symbol_info.trade_calc_mode,
+        trade_mode=symbol_info.trade_mode,
+        start_time=symbol_info.start_time,
+        expiration_time=symbol_info.expiration_time,
+        trade_stops_level=symbol_info.trade_stops_level,
+        trade_freeze_level=symbol_info.trade_freeze_level,
+        trade_exemode=symbol_info.trade_exemode,
+        swap_mode=symbol_info.swap_mode,
+        swap_rollover3days=symbol_info.swap_rollover3days,
+        margin_hedged_use_leg=symbol_info.margin_hedged_use_leg,
+        expiration_mode=symbol_info.expiration_mode,
+        filling_mode=symbol_info.filling_mode,
+        order_mode=symbol_info.order_mode,
+        order_gtc_mode=symbol_info.order_gtc_mode,
+        option_mode=symbol_info.option_mode,
+        option_right=symbol_info.option_right,
+        bid=symbol_info.bid,
+        bidhigh=symbol_info.bidhigh,
+        bidlow=symbol_info.bidlow,
+        ask=symbol_info.ask,
+        askhigh=symbol_info.askhigh,
+        asklow=symbol_info.asklow,
+        last=symbol_info.last,
+        lasthigh=symbol_info.lasthigh,
+        lastlow=symbol_info.lastlow,
+        volume_real=symbol_info.volume_real,
+        volumehigh_real=symbol_info.volumehigh_real,
+        volumelow_real=symbol_info.volumelow_real,
+        option_strike=symbol_info.option_strike,
+        point=symbol_info.point,
+        trade_tick_value=symbol_info.trade_tick_value,
+        trade_tick_value_profit=symbol_info.trade_tick_value_profit,
+        trade_tick_value_loss=symbol_info.trade_tick_value_loss,
+        trade_tick_size=symbol_info.trade_tick_size,
+        trade_contract_size=symbol_info.trade_contract_size,
+        trade_accrued_interest=symbol_info.trade_accrued_interest,
+        trade_face_value=symbol_info.trade_face_value,
+        trade_liquidity_rate=symbol_info.trade_liquidity_rate,
+        volume_min=symbol_info.volume_min,
+        volume_max=symbol_info.volume_max,
+        volume_step=symbol_info.volume_step,
+        volume_limit=symbol_info.volume_limit,
+        swap_long=symbol_info.swap_long,
+        swap_short=symbol_info.swap_short,
+        margin_initial=symbol_info.margin_initial,
+        margin_maintenance=symbol_info.margin_maintenance,
+        session_volume=symbol_info.session_volume,
+        session_turnover=symbol_info.session_turnover,
+        session_interest=symbol_info.session_interest,
+        session_buy_orders_volume=symbol_info.session_buy_orders_volume,
+        session_sell_orders_volume=symbol_info.session_sell_orders_volume,
+        session_open=symbol_info.session_open,
+        session_close=symbol_info.session_close,
+        session_aw=symbol_info.session_aw,
+        session_price_settlement=symbol_info.session_price_settlement,
+        session_price_limit_min=symbol_info.session_price_limit_min,
+        session_price_limit_max=symbol_info.session_price_limit_max,
+        margin_hedged=symbol_info.margin_hedged,
+        price_change=symbol_info.price_change,
+        price_volatility=symbol_info.price_volatility,
+        price_theoretical=symbol_info.price_theoretical,
+        price_greeks_delta=symbol_info.price_greeks_delta,
+        price_greeks_theta=symbol_info.price_greeks_theta,
+        price_greeks_gamma=symbol_info.price_greeks_gamma,
+        price_greeks_vega=symbol_info.price_greeks_vega,
+        price_greeks_rho=symbol_info.price_greeks_rho,
+        price_greeks_omega=symbol_info.price_greeks_omega,
+        price_sensitivity=symbol_info.price_sensitivity,
+        basis=symbol_info.basis,
+        currency_base=symbol_info.currency_base,
+        currency_profit=symbol_info.currency_profit,
+        currency_margin=symbol_info.currency_margin,
+        bank=symbol_info.bank,
+        description=symbol_info.description,
+        exchange=symbol_info.exchange,
+        formula=symbol_info.formula,
+        isin=symbol_info.isin,
+        name=symbol_info.name,
+        page=symbol_info.page,
+        path=symbol_info.path
     )

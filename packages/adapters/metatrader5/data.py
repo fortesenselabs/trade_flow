@@ -178,13 +178,13 @@ class MetaTrader5DataClient(LiveMarketDataClient):
         if bar_type.spec.timedelta.total_seconds() == 5:
             await self._client.subscribe_realtime_bars(
                 bar_type=bar_type,
-                contract=MT5Symbol(**instrument.info["contract"]),
+                symbol=MT5Symbol(**instrument.info["symbol"]),
                 use_rth=self._use_regular_trading_hours,
             )
         else:
             await self._client.subscribe_historical_bars(
                 bar_type=bar_type,
-                contract=MT5Symbol(**instrument.info["contract"]),
+                symbol=MT5Symbol(**instrument.info["symbol"]),
                 use_rth=self._use_regular_trading_hours,
                 handle_revised_bars=self._handle_revised_bars,
             )
@@ -327,7 +327,7 @@ class MetaTrader5DataClient(LiveMarketDataClient):
             return
 
         ticks = await self._handle_ticks_request(
-            MT5Symbol(**instrument.info["contract"]),
+            MT5Symbol(**instrument.info["symbol"]),
             "TRADES",
             limit,
             start,
@@ -404,9 +404,9 @@ class MetaTrader5DataClient(LiveMarketDataClient):
 
         bars: list[Bar] = []
         while (start and end > start) or (len(bars) < limit > 0):
-            bars_part: list[Bar] = await self._client.get_historical_bars(
+            bars_part: list[Bar] = await self._client.get_historical_bars( # TODO: consider realtime bars
                 bar_type=bar_type,
-                contract=MT5Symbol(**instrument.info["contract"]),
+                symbol=MT5Symbol(**instrument.info["symbol"]),
                 use_rth=self._use_regular_trading_hours,
                 end_date_time=end,
                 duration=duration_str,

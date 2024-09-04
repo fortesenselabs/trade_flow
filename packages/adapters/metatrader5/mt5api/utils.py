@@ -7,7 +7,7 @@ import logging
 import inspect
 
 from decimal import Decimal
-from mt5api.common import UNSET_INTEGER, UNSET_DOUBLE, UNSET_LONG, UNSET_DECIMAL, DOUBLE_INFINITY, INFINITY_STR
+from metatrader5.mt5api.common import UNSET_INTEGER, UNSET_DOUBLE, UNSET_LONG, UNSET_DECIMAL, DOUBLE_INFINITY, INFINITY_STR
 
 
 logger = logging.getLogger(__name__)
