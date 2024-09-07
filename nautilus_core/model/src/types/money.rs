@@ -48,7 +48,7 @@ pub const MONEY_MIN: f64 = -9_223_372_036.0;
 #[derive(Clone, Copy, Eq)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
 )]
 pub struct Money {
     /// The raw monetary amount as a signed 64-bit integer.

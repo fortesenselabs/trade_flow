@@ -28,7 +28,7 @@ use crate::indicator::{Indicator, MovingAverage};
 #[derive(Debug)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.indicators")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.indicators")
 )]
 pub struct WeightedMovingAverage {
     /// The rolling window period for the indicator (> 0).

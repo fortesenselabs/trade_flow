@@ -66,7 +66,7 @@ pub const ERROR_PRICE: Price = Price {
 #[derive(Clone, Copy, Default, Eq)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
 )]
 pub struct Price {
     /// The raw price as a signed 64-bit integer.

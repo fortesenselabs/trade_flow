@@ -34,7 +34,7 @@ pub const TRADE_ID_LEN: usize = 37;
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
 )]
 pub struct TradeId {
     /// The trade match ID value as a fixed-length C string byte array (includes null terminator).

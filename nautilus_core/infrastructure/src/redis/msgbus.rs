@@ -52,7 +52,7 @@ type RedisStreamBulk = Vec<HashMap<String, Vec<HashMap<String, redis::Value>>>>;
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.infrastructure")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.infrastructure")
 )]
 pub struct RedisMessageBusDatabase {
     /// The trader ID for this message bus database.

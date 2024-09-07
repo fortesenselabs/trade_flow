@@ -19,12 +19,12 @@ header = '"../includes/backtest.h"'
     "PyObject",
 ]
 
-"nautilus_trader.core.rust.common" = [
+"trade_flow.core.rust.common" = [
     "TestClock_API",
     "LiveClock_API",
 ]
 
-"nautilus_trader.core.rust.core" = [
+"trade_flow.core.rust.core" = [
     "CVec",
     "UUID4_t",
 ]

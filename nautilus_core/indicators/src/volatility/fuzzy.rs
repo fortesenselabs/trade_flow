@@ -29,7 +29,7 @@ use crate::{indicator::Indicator, momentum::bb::fast_std_with_mean};
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.indicators")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.indicators")
 )]
 pub enum CandleBodySize {
     None = 0,
@@ -45,7 +45,7 @@ pub enum CandleBodySize {
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.indicators")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.indicators")
 )]
 pub enum CandleDirection {
     Bull = 1,
@@ -59,7 +59,7 @@ pub enum CandleDirection {
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.indicators")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.indicators")
 )]
 pub enum CandleSize {
     None = 0,
@@ -77,7 +77,7 @@ pub enum CandleSize {
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.indicators")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.indicators")
 )]
 pub enum CandleWickSize {
     None = 0,
@@ -90,7 +90,7 @@ pub enum CandleWickSize {
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.indicators")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.indicators")
 )]
 pub struct FuzzyCandle {
     pub direction: CandleDirection,
@@ -133,7 +133,7 @@ impl FuzzyCandle {
 #[derive(Debug)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.indicators")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.indicators")
 )]
 pub struct FuzzyCandlesticks {
     pub period: usize,

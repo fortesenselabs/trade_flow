@@ -35,7 +35,7 @@ pub(crate) const UUID4_LEN: usize = 37;
 #[derive(Copy, Clone, Hash, PartialEq, Eq)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.core")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.core")
 )]
 pub struct UUID4 {
     /// The UUID v4 value as a fixed-length C string byte array (includes null terminator).

@@ -47,7 +47,7 @@ use crate::{handlers::EventHandler, runtime::get_runtime};
 #[derive(Clone, Debug)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
 )]
 /// Represents a time event occurring at the event timestamp.
 ///

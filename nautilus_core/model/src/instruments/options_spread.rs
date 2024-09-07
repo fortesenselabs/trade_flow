@@ -36,7 +36,7 @@ use crate::{
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
 )]
 #[cfg_attr(feature = "trivial_copy", derive(Copy))]
 pub struct OptionsSpread {

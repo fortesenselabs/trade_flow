@@ -34,7 +34,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, Eq)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
 )]
 pub struct BookPrice {
     pub value: Price,

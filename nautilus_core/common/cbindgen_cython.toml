@@ -19,12 +19,12 @@ header = '"../includes/common.h"'
     "PyObject",
 ]
 
-"nautilus_trader.core.rust.core" = [
+"trade_flow.core.rust.core" = [
     "CVec",
     "UUID4_t",
 ]
 
-"nautilus_trader.core.rust.model" = [
+"trade_flow.core.rust.model" = [
     "TraderId_t",
 ]
 

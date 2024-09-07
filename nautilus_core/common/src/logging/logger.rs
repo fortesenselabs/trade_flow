@@ -46,7 +46,7 @@ const LOGGING: &str = "logging";
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
 )]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoggerConfig {
@@ -474,7 +474,7 @@ pub fn log(level: LogLevel, color: LogColor, component: Ustr, message: &str) {
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
 )]
 #[derive(Debug)]
 pub struct LogGuard {
