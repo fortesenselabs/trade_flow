@@ -7,14 +7,6 @@ class EnvironmentMode(Enum):
     BACKTEST = "backtest"
     TRAIN = "train"
 
-class AssetClass(Enum):
-    FOREX = "forex"
-    EQUITY = "equity"
-    COMMODITY = "commodity"
-    DEBT = "debt"
-    INDEX = "index"
-    CRYPTOCURRENCY = "cryptocurrency"
-    ALTERNATIVE = "alternative"
 
 class TradingState(Enum):
     IDLE = "IDLE"

@@ -2,9 +2,10 @@ import os
 import stat
 from pathlib import Path
 import subprocess
-from trade_flow.commons.logging import Logger
+from trade_flow.common.logging import Logger
 
 logger = Logger(name="utils")
+
 
 def get_architecture():
     """
@@ -18,6 +19,7 @@ def get_architecture():
     if arch is None:
         raise Exception("Failed to detect architecture.")
     return arch
+
 
 def gen_config_dir(flow_name: str) -> Path:
     """
