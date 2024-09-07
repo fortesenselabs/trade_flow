@@ -18,6 +18,8 @@ The platform is exclusively dedicated to the management and optimization of rein
 
 **Before you begin, ensure you have the following:**
 
+- **Rust (>=1.78):** Download and install Rust version 1.78 or later from the official website ([https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)).
+
 - **Python (>=3.10):** Download and install Python version 3.10 or later from the official website ([https://www.python.org/downloads/](https://www.python.org/downloads/)).
 - **Poetry:** Poetry simplifies dependency management for Python projects. Follow the installation instructions on their website ([https://python-poetry.org/docs/](https://python-poetry.org/docs/)).
 - **TA-Lib:** TA-Lib is a technical analysis library used by TradeFlow. Find installation instructions in the script: `./scripts/install-talib.sh`
@@ -64,9 +66,9 @@ poetry run pytest --maxfail=1 --disable-warnings -q tests/
 
 TradeFlow currently focuses on the following markets:
 
-- Forex
-- Synthetic Indices
-- DeFi
+- Forex [on-going]
+- Synthetic Indices[on-going]
+- DeFi[not-done]
 
 ## MetaTrader 5 Docker Image
 
