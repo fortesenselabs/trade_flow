@@ -17,10 +17,6 @@ from trade_flow.feed.core import DataFeed
 from trade_flow.oms.wallets import Portfolio
 
 
-def cli_help():
-    return "Default Environment"
-
-
 def create(
     portfolio: "Portfolio",
     action_scheme: "Union[actions.TradeFlowActionScheme, str]",

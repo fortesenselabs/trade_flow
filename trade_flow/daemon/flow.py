@@ -1,7 +1,5 @@
 from typing import Optional
-from trade_flow.environments import EnvironmentManager
 from trade_flow.common import Logger, EnvironmentMode, gen_config_dir
-from trade_flow.venues import VenueManager
 from trade_flow.daemon.kubernetes_backend import KubernetesBackend
 
 
@@ -13,10 +11,10 @@ class Flow:
         self.namespace = "trade_flow"
 
         # Initialize VenueManager
-        self.venue_manager: Optional[VenueManager] = None
+        # self.venue_manager: Optional[VenueManager] = None
 
         # Initialize EnvironmentManager for training mode
-        self.env_manager: Optional[EnvironmentManager] = None
+        # self.env_manager: Optional[EnvironmentManager] = None
 
     @classmethod
     def from_file(cls, flow_name):
@@ -26,10 +24,10 @@ class Flow:
 
     def run(self):
         # Initialize VenueManager
-        self.venue_manager = VenueManager()
+        # self.venue_manager = VenueManager()
 
         # Initialize EnvironmentManager for training mode
-        self.env_manager = EnvironmentManager(EnvironmentMode.TRAIN, self.venue_manager)
+        # self.env_manager = EnvironmentManager(EnvironmentMode.TRAIN, self.venue_manager)
         self.logger.info("EnvironmentManager initialized and process started.")
 
     def parse_objective_function(self):

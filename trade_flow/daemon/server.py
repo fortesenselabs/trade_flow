@@ -1,11 +1,16 @@
 import os
 import argparse
+from pathlib import Path
 import pkgutil
 import platform
 import traceback
 
+import jsonschema
+import toml
+
+from trade_flow.common.logging import Logger
 import trade_flow.environments
-import trade_flow
+from trade_flow.environments import __path__ as environment_path
 from trade_flow.daemon import Flow, TaskManager
 from flask import Flask, json, jsonify, request
 from flask_jsonrpc.app import JSONRPC
@@ -109,15 +114,58 @@ class Server:
 
     def environments_available(self) -> list[tuple]:
         """
-        List available environments in Trade Flow
+            List available environments in Trade Flow, using environment.toml files for information.
+
+        Returns:
+            A list of tuples, where each tuple contains the environment name, version, and description.
         """
+        schema = {
+            "type": "object",
+            "required": ["environment"],
+            "properties": {
+                "environment": {
+                    "type": "object",
+                    "required": ["name", "version", "description"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "version": {"type": "string"},
+                        "description": {"type": "string"},
+                    },
+                },
+            },
+        }
+
         try:
-            environment_list = []
-            for s in pkgutil.iter_modules(trade_flow.environments.__path__):
-                m = pkgutil.resolve_name(f"trade_flow.environments.{s.name}")
-                if hasattr(m, "cli_help"):
-                    environment_list.append((s.name, m.cli_help()))
-            return environment_list
+            environments = []
+
+            for module_info in pkgutil.iter_modules(environment_path):
+                environment_toml_path = os.path.join(
+                    f"{environment_path[0]}/{module_info.name}", "environment.toml"
+                )
+
+                if os.path.exists(environment_toml_path):
+                    try:
+                        with open(environment_toml_path, "r") as f:
+                            environment_config = toml.load(f)
+                            jsonschema.validate(environment_config, schema)
+                            environment_name = environment_config["environment"]["name"]
+                            environment_version = environment_config["environment"]["version"]
+                            environment_description = environment_config["environment"][
+                                "description"
+                            ]
+                            environments.append(
+                                (environment_name, environment_description, environment_version)
+                            )
+                    except FileNotFoundError as e:
+                        print(f"Environment.toml file not found for {environment_path}: {e}")
+                    except KeyError as e:
+                        print(
+                            f"Missing required field in environment.toml for {environment_path}: {e}"
+                        )
+                    except jsonschema.ValidationError as e:
+                        print(f"Invalid environment.toml for {environment_path}: {e}")
+
+            return environments
         except Exception as e:
             msg = f"Error listing environments: {e}"
             self.logger.error(msg)

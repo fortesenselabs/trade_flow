@@ -1,5 +1,5 @@
-from trade_flow.live.node import TradingNode
-from trade_flow.config import TradingNodeConfig
+from nautilus_trader.live.node import TradingNode
+from nautilus_trader.config import TradingNodeConfig
 from trade_flow.common import TradingState
 from trade_flow.environments.generic import Venue, TradingEnvironment
 

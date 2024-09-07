@@ -3,11 +3,13 @@ import requests
 from typing import Any
 from jsonrpcclient.requests import request
 from jsonrpcclient.responses import Error, Ok, parse
-from trade_flow.commons import Logger, TRADE_FLOW_SERVER_PORT
+from trade_flow.common import Logger
+from trade_flow.daemon.server import TRADE_FLOW_SERVER_PORT
 
 BASE_URL = "http://127.0.0.1"
 
 logger = Logger(name=__name__)
+
 
 class JSONRPCException(Exception):
     def __init__(self, code, message):

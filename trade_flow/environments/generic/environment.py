@@ -7,7 +7,7 @@ from random import randint
 import gymnasium
 import numpy as np
 
-from trade_flow.core import TimeIndexed, Clock, AssetClass, AgentId, Component
+from trade_flow.core import TimeIndexed, Clock, AssetClass, TraderId, Component
 from trade_flow.environments.generic import (
     ActionScheme,
     RewardScheme,
@@ -41,7 +41,7 @@ class TradingEnvironment(gymnasium.Env, TimeIndexed):
         Additional keyword arguments needed to create the environment.
     """
 
-    agent_id: Optional[AgentId] = None
+    agent_id: Optional[TraderId] = None
     episode_id: str = None
 
     def __init__(
