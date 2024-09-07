@@ -1,5 +1,5 @@
 import time
-from trade_flow.commons import EnvironmentMode
+from trade_flow.common import EnvironmentMode
 from trade_flow.environments import EnvironmentManager
 from trade_flow.venues import VenueManager
 
@@ -20,7 +20,7 @@ if len(env_keys) > 0:
     env_id = env_keys[0]
     env = env_manager.get_environment(env_id)
 
-time.sleep(60*60*60)
+time.sleep(60 * 60 * 60)
 
 # Reset all environments
 env_manager.reset()

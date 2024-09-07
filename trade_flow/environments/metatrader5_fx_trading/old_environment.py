@@ -1,19 +1,19 @@
-from trade_flow.commons import TradingState
-from trade_flow.venues import VenueManager
+from trade_flow.common import TradingState
+from trade_flow.environments.generic import Venue
 
 
-class BaseEnvironment:
-    def __init__(self, venue_manager: VenueManager) -> None:
+class OldTradingEnvironment:
+    def __init__(self, venue: Venue) -> None:
         """
         Initialize the base environment.
 
         Args:
-        - venue_manager (VenueManager): Manager for handling venue-specific data and operations
+        - venue (Venue): Venue for handling exchange/broker-specific data and operations
         """
         self.trading_state: TradingState = TradingState.IDLE
-        self.venue_manager = venue_manager
+        self.venue = venue
         self.engine = None  # Initialize or replace with actual trading engine
-    
+
     def reset(self):
         """
         Reset the environment.
@@ -47,12 +47,12 @@ class BaseEnvironment:
     def get_trading_state(self):
         """
         Get the current trading state.
-        
+
         Returns:
         - TradingState: Current state of the trading environment
         """
         return self.trading_state
-    
+
     def set_trading_state(self, state: TradingState = TradingState.IDLE):
         """
         Set the trading state.
@@ -65,4 +65,3 @@ class BaseEnvironment:
         """
         self.trading_state = state
         return self.trading_state
-

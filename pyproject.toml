@@ -4,9 +4,24 @@ version = "0.1.0"
 description = "TradeFlow is an intelligent trading bot that leverages automation and analysis to navigate markets for you"
 authors = ["Fortesense Labs <fortesenselabs@gmail.com>"]
 readme = "README.md"
-keywords = ["algo", "trading", "trade_flow", "deep learning", "machine learning", "ai"]
+keywords = [
+    "algo",
+    "trading",
+    "deep learning",
+    "machine learning",
+    "ai",
+    "Reinforcement Learning",
+    "Finance",
+]
 classifiers = [
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Scientific/Engineering",
@@ -18,18 +33,14 @@ classifiers = [
 ]
 
 [build-system]
-requires = [
-    "setuptools>=64", 
-    "poetry-core>=1.9.0",
-    "toml>=0.10.2",
-]
+requires = ["setuptools>=64", "poetry-core>=1.9.0", "toml>=0.10.2"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.setuptools]
 packages = [
-"trade_flow",
-"packages.nautilus_mt5api",
-"packages.adapters.metatrader5"
+    "trade_flow",
+    "packages.nautilus_mt5api",
+    "packages.adapters.metatrader5",
 ]
 
 [tool.poetry.scripts]
@@ -38,18 +49,19 @@ flowcli = "trade_flow.cli.main:cli"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-numpy = "^2.0.1"  # version might be limited by numba and tensorflow
-pandas = "^2.2.2" # version might be important for parsing timestamps
-numba = "^0.60.0" # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,
-pyarrow = "^17.0.0" # If parquet is used. Alternatively fastparquet
-ta-lib = "^0.4.32" # Python wrapper for TA-lib (native) library
+numpy = "^2.0.1"                                                                             # version might be limited by numba and tensorflow
+pandas = "^2.2.2"                                                                            # version might be important for parsing timestamps
+numba = "^0.60.0"                                                                            # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,
+pyarrow = "^17.0.0"                                                                          # If parquet is used. Alternatively fastparquet
+ta-lib = "^0.4.32"                                                                           # Python wrapper for TA-lib (native) library
 pandas-ta = "^0.3.14b0"
 nautilus-trader = "^1.198.0"
-tsfresh = "^0.20.3" # Features/label generation | if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
+elegantrl = { git = "https://github.com/AI4Finance-Foundation/ElegantRL.git#egg=elegantrl" }
+tsfresh = "^0.20.3"                                                                          # Features/label generation | if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
 scikit-learn = "^1.5.1"
 lightgbm = "^4.5.0"
-stable-baselines3 = {extras = ["extra"], version = "^2.3.2"}
-ray = {extras = ["all"], version = "^2.34.0"}
+stable-baselines3 = { extras = ["extra"], version = "^2.3.2" }
+ray = { extras = ["default"], version = "^2.34.0" }
 #tensorflow = "2.14.1"
 torch = "^2.4.0"
 seaborn = "^0.13.2"
@@ -76,13 +88,19 @@ docker = "^7.1.0"
 rpyc = "^6.0.0"
 tqdm = "^4.66.5"
 typing-extensions = "4.9.0"
-typeguard="2.13.3"
-tabulate="0.9.0"
+typeguard = "2.13.3"
+tabulate = "0.9.0"
 
 
 [tool.poetry.extras]
 docker = ["docker"]
 #mt5 = ["nautilus_mt5api", "async-timeout", "defusedxml"]
+
+[tool.poetry.group.mt5]
+optional = true
+
+[tool.poetry.group.mt5.dependencies]
+MetaTrader5 = "^5.0"
 
 [tool.poetry.group.dev]
 optional = true
@@ -151,13 +169,8 @@ select = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = [
-  ".", "trade_flow"
-]
+pythonpath = [".", "trade_flow"]
 asyncio_mode = "strict"
-filterwarnings = [
-    "ignore::UserWarning",
-    "ignore::DeprecationWarning",
-]
+filterwarnings = ["ignore::UserWarning", "ignore::DeprecationWarning"]
 
 ignore = ["E501"] # Line too long

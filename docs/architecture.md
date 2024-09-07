@@ -1,6 +1,8 @@
 # Architecture
 
-![architecture](images/mock_architecture.jpeg)
+<div align="center">
+<img align="center" src=images/architecture.png>
+</div>
 
 ## Components
 
@@ -20,6 +22,8 @@
 ## Documentation
 
 The TradeFlow system employs a client-server architecture, utilizing JSON-RPC for communication between the CLI and backend services. The system is comprised of several key components, each with distinct responsibilities.
+
+![components architecture overview](images/mock_architecture.jpeg)
 
 ### Components
 
@@ -53,6 +57,12 @@ The TradeFlow system employs a client-server architecture, utilizing JSON-RPC fo
 3. The RPC server processes the request and routes it to the appropriate backend service.
 4. The backend service performs the requested operation.
 5. The RPC server returns the result to the CLI.
+
+#### Data Layer
+
+<div align="center">
+<img align="center" src=images/data_layer_v2.png>
+</div>
 
 ### Communication Protocol
 
