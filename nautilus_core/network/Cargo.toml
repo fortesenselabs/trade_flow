@@ -1,0 +1,44 @@
+[package]
+name = "nautilus-network"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+
+[lib]
+name = "nautilus_network"
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[dependencies]
+nautilus-core = { path = "../core" }
+anyhow = { workspace = true }
+bytes = { workspace = true }
+futures = { workspace = true }
+pyo3 = { workspace = true, optional = true }
+pyo3-asyncio-0-21 = { workspace = true, optional = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+dashmap = "6.0.1"
+futures-util = "0.3.30"
+http = "1.1.0"
+hyper = "1.4.1"
+nonzero_ext = "0.3.0"
+reqwest = "0.12.7"
+tokio-tungstenite = { path = "./tokio-tungstenite", features = ["rustls-tls-native-roots"] }
+
+[dev-dependencies]
+criterion = { workspace = true }
+serde_json = { workspace = true }
+rstest = { workspace = true }
+axum = "0.7.5"
+tracing-test = "0.2.4"
+
+[features]
+default = ["python"]
+extension-module = [
+  "pyo3/extension-module",
+  "nautilus-core/extension-module",
+]
+python = ["pyo3", "pyo3-asyncio-0-21"]
