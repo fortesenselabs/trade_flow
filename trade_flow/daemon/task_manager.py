@@ -1,13 +1,16 @@
 import threading
 from typing import Callable, Dict, Optional, Any
-from trade_flow.commons import Logger  
+from trade_flow.common import Logger
+
 
 class TaskManager:
     def __init__(self):
         self.logger = Logger(name=__class__.__name__)
         self.processes: Dict[str, threading.Thread] = {}  # Dictionary to keep track of processes
-    
-    def start_process_in_thread(self, task_name: str, target_function: Callable, *args: Any, **kwargs: Any) -> Optional[threading.Thread]:
+
+    def start_process_in_thread(
+        self, task_name: str, target_function: Callable, *args: Any, **kwargs: Any
+    ) -> Optional[threading.Thread]:
         """
         Start a process in a separate thread.
 
@@ -23,7 +26,7 @@ class TaskManager:
         if task_name in self.processes:
             self.logger.error(f"Task '{task_name}' is already running.")
             return None
-        
+
         thread = threading.Thread(target=target_function, args=args, kwargs=kwargs)
         thread.start()
         self.processes[task_name] = thread
@@ -41,7 +44,7 @@ class TaskManager:
         - Optional[threading.Thread]: The thread associated with the task, or None if it doesn't exist.
         """
         return self.processes.get(task_name)
-    
+
     def stop_process(self, task_name: str) -> bool:
         """
         Stop a running process by its task name.
@@ -56,7 +59,9 @@ class TaskManager:
         if thread and thread.is_alive():
             # Note: Python's threading doesn't provide a direct way to stop threads
             # In practice, you'd use a flag or other mechanism to signal the thread to stop
-            self.logger.warning(f"Stopping thread '{task_name}' is not directly supported. Consider implementing a stop mechanism.")
+            self.logger.warning(
+                f"Stopping thread '{task_name}' is not directly supported. Consider implementing a stop mechanism."
+            )
             return False
         return True
 
@@ -67,4 +72,7 @@ class TaskManager:
         Returns:
         - Dict[str, str]: Dictionary with task names and their statuses.
         """
-        return {name: ("Running" if thread.is_alive() else "Stopped") for name, thread in self.processes.items()}
+        return {
+            name: ("Running" if thread.is_alive() else "Stopped")
+            for name, thread in self.processes.items()
+        }

@@ -6,12 +6,12 @@ import traceback
 
 import trade_flow.environments
 import trade_flow
-from trade_flow.commons import Logger, TRADE_FLOW_SERVER_PORT
-from trade_flow.flow import Flow, TaskManager
+from trade_flow.daemon import Flow, TaskManager
 from flask import Flask, json, jsonify, request
 from flask_jsonrpc.app import JSONRPC
 from flask_jsonrpc.exceptions import ServerError
 
+TRADE_FLOW_SERVER_PORT = 9165
 
 
 class Server:
@@ -19,11 +19,7 @@ class Server:
         system = os.name
         if system == "nt" or platform.system() == "Windows":
             self.basedir = os.path.join(os.path.expanduser("~"), "trade_flow")
-        elif (
-            system == "posix"
-            or platform.system() == "Linux"
-            or platform.system() == "Darwin"
-        ):
+        elif system == "posix" or platform.system() == "Linux" or platform.system() == "Darwin":
             self.basedir = os.environ.get("XDG_STATE_HOME")
             if self.basedir is None:
                 self.basedir = os.path.join(os.environ["HOME"], ".trade_flow")
@@ -31,7 +27,7 @@ class Server:
                 self.basedir = os.path.join(self.basedir, "trade_flow")
         else:
             raise NotImplementedError("Unsupported operating system")
-        
+
         self.app = Flask(__name__)
         self.jsonrpc = JSONRPC(self.app, "/api")
 
@@ -50,21 +46,22 @@ class Server:
         """
         Use flask to log traceback of unhandled exceptions
         """
+
         @self.app.errorhandler(Exception)
         def handle_exception(e):
             trace = traceback.format_exc()
             self.logger.error(f"Unhandled exception: {e}\n{trace}")
             response = {
-                    "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32603,
-                        "message": "Internal server error",
-                        "data": str(e),
-                    },
-                    "id": request.json.get("id", None) if request.json else None,
-                }
+                "jsonrpc": "2.0",
+                "error": {
+                    "code": -32603,
+                    "message": "Internal server error",
+                    "data": str(e),
+                },
+                "id": request.json.get("id", None) if request.json else None,
+            }
             return jsonify(response), 500
-    
+
     def setup_logging(self):
         os.makedirs(os.path.dirname(self.log_file_path), exist_ok=True)
 
@@ -95,7 +92,7 @@ class Server:
 
     def healthy(self):
         return "trade_flow is healthy"
-    
+
     def get_flow(self, flow: str) -> Flow:
         """
         Will get a flow from the cache if it exists.
@@ -109,7 +106,7 @@ class Server:
             self.flows[flow] = fl
             return fl
         raise ServerError(f"Could not find flow {flow}")
-    
+
     def environments_available(self) -> list[tuple]:
         """
         List available environments in Trade Flow
@@ -125,7 +122,7 @@ class Server:
             msg = f"Error listing environments: {e}"
             self.logger.error(msg)
             raise ServerError(message=msg) from e
-        
+
     def venues_available(self) -> list[tuple]:
         """
         List available venues in Trade Flow
@@ -141,7 +138,7 @@ class Server:
             msg = f"Error listing venues: {e}"
             self.logger.error(msg)
             raise ServerError(message=msg) from e
-        
+
     def agents_available(self) -> list[tuple]:
         """
         List available agents in Trade Flow
@@ -166,14 +163,14 @@ class Server:
         - task_name (str): Unique name for the task.
         - target_function_name (str): The name of the function to run in the thread.
         - *args: Arguments to pass to the target_function.
-        
+
         Returns:
         - str: Success or failure message.
         """
         target_function = getattr(self, target_function_name, None)
         if target_function is None:
             return f"Function '{target_function_name}' not found."
-        
+
         thread = self.task_manager.start_process_in_thread(task_name, target_function, *args)
         if thread:
             return f"Task '{task_name}' started successfully."
@@ -193,7 +190,7 @@ class Server:
         if success:
             return f"Task '{task_name}' stopped successfully."
         return f"Failed to stop task '{task_name}'."
-    
+
     def list_tasks(self) -> dict:
         """
         List all running tasks.
@@ -204,7 +201,7 @@ class Server:
         return self.task_manager.list_tasks()
 
 
-def run_server():
+def run():
     parser = argparse.ArgumentParser(description="Run the server")
     parser.add_argument(
         "--dev", action="store_true", help="Run in development mode with debug enabled"
@@ -216,4 +213,4 @@ def run_server():
 
 
 if __name__ == "__main__":
-    run_server()
+    run()

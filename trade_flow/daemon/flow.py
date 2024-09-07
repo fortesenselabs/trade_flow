@@ -1,8 +1,8 @@
 from typing import Optional
 from trade_flow.environments import EnvironmentManager
-from trade_flow.commons import Logger, EnvironmentMode, gen_config_dir
+from trade_flow.common import Logger, EnvironmentMode, gen_config_dir
 from trade_flow.venues import VenueManager
-from trade_flow.flow.kubernetes_backend import KubernetesBackend
+from trade_flow.daemon.kubernetes_backend import KubernetesBackend
 
 
 class Flow:
@@ -23,7 +23,7 @@ class Flow:
         config_dir = gen_config_dir(flow_name)
         self = cls(config_dir, flow_name)
         return self
-    
+
     def run(self):
         # Initialize VenueManager
         self.venue_manager = VenueManager()
@@ -31,14 +31,14 @@ class Flow:
         # Initialize EnvironmentManager for training mode
         self.env_manager = EnvironmentManager(EnvironmentMode.TRAIN, self.venue_manager)
         self.logger.info("EnvironmentManager initialized and process started.")
-    
+
     def parse_objective_function(self):
         """
-            should be able to give the agent an objective:
-            - The common notion for this is profit but profit is the ultimate goal for any trader. 
-               This represents an abstract concept from profit
-                e.g for example a trader might be comfortable seeing short term trades than long term trades
-               this can decide how long an agent holds a trade among other factors.
+        should be able to give the agent an objective:
+        - The common notion for this is profit but profit is the ultimate goal for any trader.
+           This represents an abstract concept from profit
+            e.g for example a trader might be comfortable seeing short term trades than long term trades
+           this can decide how long an agent holds a trade among other factors.
         """
         return
 
@@ -53,6 +53,6 @@ class Flow:
     if it is a str, it would check pre-defined objective functions 
 """
 
-# This can also be thought of as a strategy the agent needs to optimize for  
-# 
-# Also add task_manager to this 
+# This can also be thought of as a strategy the agent needs to optimize for
+#
+# Also add task_manager to this
