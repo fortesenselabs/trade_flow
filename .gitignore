@@ -253,3 +253,23 @@ tests/unit_tests/persistence/catalog/
 # Exceptions
 !/nautilus_core/adapters/src/databento/test_data/*
 !tests/integration_tests/adapters/betfair/responses/*.log
+
+
+# Don't add models to git
+/models/*
+# Don't add logs to git
+/logs/*
+# Don't add experiment models to git
+/Experiments/models/*
+# Don't add experiment logs to git
+/Experiments/logs/*
+# don't track cache
+*/__pycache__/
+# don't track mac specific folder location information
+*.DS_Store
+# don't track cached python files
+*.pyc
+# don't track data
+/data/*
+# don't track data in notebooks
+rl_fts/notebooks/data/*
