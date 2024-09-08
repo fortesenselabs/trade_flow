@@ -6,7 +6,7 @@ from . import core
 from . import adapters
 from . import feed
 from trade_flow.oms import orders, wallets, instruments, exchanges, services
-from . import env
+from . import environments
 from . import stochastic
 from . import agents
 
