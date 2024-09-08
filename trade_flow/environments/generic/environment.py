@@ -7,7 +7,7 @@ from random import randint
 import gymnasium
 import numpy as np
 
-from nautilus_trader.model.enums import AssetClass
+# from nautilus_trader.model.enums import AssetClass
 from trade_flow.core import TimeIndexed, Clock, TraderId, Component
 from trade_flow.environments.generic import (
     ActionScheme,
@@ -47,7 +47,6 @@ class TradingEnvironment(gymnasium.Env, TimeIndexed):
 
     def __init__(
         self,
-        asset_class: AssetClass,
         action_scheme: ActionScheme,
         reward_scheme: RewardScheme,
         observer: Observer,
@@ -61,7 +60,7 @@ class TradingEnvironment(gymnasium.Env, TimeIndexed):
     ) -> None:
         super().__init__()
         self.clock = Clock()
-        self.asset_class = asset_class
+        # self.asset_class = asset_class #  TODO: include asset_class: AssetClass,
 
         self.action_scheme = action_scheme
         self.reward_scheme = reward_scheme
