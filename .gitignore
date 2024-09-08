@@ -3,6 +3,18 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Python related
+*.pyc
+*.pyd
+.history*
+.cache/
+.mypy_cache/
+.profile/
+.pytest_cache/
+.ruff_cache/
+*dask-worker-space*
+venv*/
+
 # C extensions
 *.so
 
@@ -164,7 +176,7 @@ cython_debug/
 .config.jsonc
 .venv
 env.yaml
-data/
+# data/
 
 *environment_ids.json
 
@@ -207,19 +219,6 @@ logs/
 
 # Rust related
 *target/
-
-# Python related
-*.pyc
-*.pyd
-.history*
-.cache/
-.mypy_cache/
-.profile/
-.pytest_cache/
-.ruff_cache/
-*dask-worker-space*
-venv*/
-__pycache__/
 
 # Build environment and temp
 _build/

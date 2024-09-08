@@ -77,7 +77,7 @@ else:  # Linux
     RUST_DYLIB_EXT = "so"
 
 # Directories with headers to include
-RUST_INCLUDES = ["trade_flow/core/includes"]
+RUST_INCLUDES = ["nautilus_trader/core/includes"]
 RUST_LIB_PATHS: list[Path] = [
     TARGET_DIR / f"{RUST_LIB_PFX}nautilus_backtest.{RUST_STATIC_LIB_EXT}",
     TARGET_DIR / f"{RUST_LIB_PFX}nautilus_common.{RUST_STATIC_LIB_EXT}",
@@ -209,7 +209,7 @@ def _build_extensions() -> list[Extension]:
             extra_link_args=extra_link_args,
             extra_compile_args=extra_compile_args,
         )
-        for pyx in itertools.chain(Path("trade_flow").rglob("*.pyx"))
+        for pyx in itertools.chain(Path("nautilus_trader").rglob("*.pyx"))
     ]
 
 
@@ -221,7 +221,7 @@ def _build_distribution(extensions: list[Extension]) -> Distribution:
 
     distribution = Distribution(
         {
-            "name": "trade_flow",
+            "name": "nautilus_trader",
             "ext_modules": cythonize(
                 module_list=extensions,
                 compiler_directives=CYTHON_COMPILER_DIRECTIVES,
@@ -255,7 +255,7 @@ def _copy_rust_dylibs_to_project() -> None:
     # https://pyo3.rs/latest/building_and_distribution#manual-builds
     ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
     src = Path(TARGET_DIR) / f"{RUST_LIB_PFX}nautilus_pyo3.{RUST_DYLIB_EXT}"
-    dst = Path("trade_flow/core") / f"nautilus_pyo3{ext_suffix}"
+    dst = Path("nautilus_trader/core") / f"nautilus_pyo3{ext_suffix}"
     shutil.copyfile(src=src, dst=dst)
 
     print(f"Copied {src} to {dst}")
@@ -305,7 +305,7 @@ def _get_rustc_version() -> str:
 def _strip_unneeded_symbols() -> None:
     try:
         print("Stripping unneeded symbols from binaries...")
-        for so in itertools.chain(Path("trade_flow").rglob("*.so")):
+        for so in itertools.chain(Path("nautilus_trader").rglob("*.so")):
             if platform.system() == "Linux":
                 strip_cmd = ["strip", "--strip-unneeded", so]
             elif platform.system() == "Darwin":
@@ -351,10 +351,10 @@ def build() -> None:
 
 
 if __name__ == "__main__":
-    trade_flow_version = toml.load("pyproject.toml")["tool"]["poetry"]["version"]
+    nautilus_trader_version = toml.load("pyproject.toml")["tool"]["poetry"]["version"]
     print("\033[36m")
     print("=====================================================================")
-    print(f"Nautilus Builder {trade_flow_version}")
+    print(f"Nautilus Builder {nautilus_trader_version}")
     print("=====================================================================\033[0m")
     print(f"System: {platform.system()} {platform.machine()}")
     print(f"Clang:  {_get_clang_version()}")
