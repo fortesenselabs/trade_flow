@@ -11,20 +11,7 @@ common logging components, a high performance `Queue` and `UUID4` factory.
 
 """
 
-from enum import Enum
-from enum import unique
+from trade_flow.common.enums import *
 from trade_flow.common.logging import *
 from trade_flow.common.types import *
 from trade_flow.common.utils import *
-
-
-@unique
-class Environment(Enum):
-    """
-    Represents the environment context for a Nautilus system.
-    """
-
-    TRAIN = "train"
-    BACKTEST = "backtest"
-    SANDBOX = "sandbox"
-    LIVE = "live"

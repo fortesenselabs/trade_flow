@@ -7,14 +7,18 @@ global_clock : `Clock`
     timeline.
 """
 
+from dataclasses import dataclass
 import uuid
-
 from abc import ABCMeta
-
 from trade_flow.core.clock import Clock
 
 
 global_clock = Clock()
+
+
+@dataclass
+class TraderId:
+    id: str
 
 
 class Identifiable(object, metaclass=ABCMeta):
