@@ -18,18 +18,19 @@ def available():
     """
     console = Console()
     result = rpc_call("environments_available", None)
-    if not isinstance(result, list): 
+    if not isinstance(result, list):
         print(f"Error. Expected list but got {type(result)}: {result}")
         sys.exit(1)
 
     # Create the table
     table = Table(show_header=True, header_style="bold")
     table.add_column("Name")
-    # add environment type 
+    # add environment type
     table.add_column("Description")
+    table.add_column("Version")
 
-    for scenario in result:
-        table.add_row(scenario[0], scenario[1])
+    for env in result:
+        table.add_row(env[0], env[1], env[2])
     console.print(table)
 
 

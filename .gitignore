@@ -3,6 +3,18 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Python related
+*.pyc
+*.pyd
+.history*
+.cache/
+.mypy_cache/
+.profile/
+.pytest_cache/
+.ruff_cache/
+*dask-worker-space*
+venv*/
+
 # C extensions
 *.so
 
@@ -164,6 +176,80 @@ cython_debug/
 .config.jsonc
 .venv
 env.yaml
-data/
+# data/
 
 *environment_ids.json
+
+*.c
+*.o
+*.so
+*.exp
+*.obj
+*.lib
+*.xml
+
+# Logs and patches
+*.log
+*.patch
+log/
+logs/
+
+# Profiler and database
+*.prof
+*.rdb
+*.sqlite
+
+# Secrets and environment files
+*.key
+*.key_secret
+*.env
+
+# Compressed files
+*.tar.gz*
+*.zip
+
+# IntelliJ and VSCode project
+*.iml
+.idea/
+.vscode/
+
+# Benchmarking and coverage
+.benchmarks*
+.coverage*
+
+# Rust related
+*target/
+
+# Build environment and temp
+_build/
+build/
+dist/
+env/
+*temp/
+
+# System and editor specific
+.cursorignore
+.DS_Store
+.null-ls*
+PERF.JSON
+output.json
+
+# TradeFlow specific
+.ipynb_checkpoints/
+bench_data/
+/api_reference/
+/catalog/
+/docs/getting_started/catalog/
+/docs/tutorials/catalog/
+/docs/tutorials/databento/
+/examples/backtest/notebooks/catalog/
+/examples/notebooks/catalog/
+trade_flow/**/.gitignore
+trade_flow/test_kit/mocks/.trade_flow/
+tests/test_data/catalog/
+tests/unit_tests/catalog/
+tests/unit_tests/persistence/catalog/
+
+# Exceptions
+!/nautilus_core/adapters/src/databento/test_data/*
+!tests/integration_tests/adapters/betfair/responses/*.log

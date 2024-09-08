@@ -16,7 +16,7 @@ Here's a quick overview of the available documentation:
 
 - **[Interfaces](interfaces.md):** Information about the interfaces used within the project.
 - **[Data Repositories](repositories.md):** Documentation for the data repositories used in TradeFlow.
-- **[Venues](venues.md):** Details about the integration with different trading venues.
+- **[Environments](environments.md):** Details about the integration with different trading environments.
 
 **Images:**
 
@@ -27,6 +27,7 @@ Here's a quick overview of the available documentation:
 - **[Resources](resources.md):** Additional resources or references for users.
 
 **Notes:**
+
 - In this guide, "trade flow extensions" are referred to as "flows".
 
 The documentation serves as a comprehensive guide for developers, users, and contributors to understand the TradeFlow project. It provides clear explanations, examples, and instructions for various aspects of the system.
