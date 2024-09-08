@@ -74,7 +74,7 @@ flowcli = "trade_flow.cli.main:cli"
 # generate-setup-file = false
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.11,<3.13"
 numpy = "^2.0.1"                                                                             # version might be limited by numba and tensorflow
 pandas = "^2.2.2"                                                                            # version might be important for parsing timestamps
 numba = "^0.60.0"                                                                            # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,

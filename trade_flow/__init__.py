@@ -3,7 +3,7 @@ The top-level package contains all sub-packages needed for TradeFlow.
 """
 
 from . import core
-from . import data
+from . import adapters
 from . import feed
 from trade_flow.oms import orders, wallets, instruments, exchanges, services
 from . import env
