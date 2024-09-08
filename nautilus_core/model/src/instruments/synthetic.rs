@@ -20,7 +20,7 @@ use std::{
 
 use derive_builder::Builder;
 use evalexpr::{ContextWithMutableVariables, HashMapContext, Node, Value};
-use nautilus_core::nanos::UnixNanos;
+use nautilus_core::{correctness::FAILED, nanos::UnixNanos};
 
 use crate::{
     identifiers::{InstrumentId, Symbol, Venue},
@@ -32,7 +32,7 @@ use crate::{
 #[derive(Clone, Debug, Builder)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
 )]
 pub struct SyntheticInstrument {
     pub id: InstrumentId,
@@ -102,7 +102,7 @@ impl SyntheticInstrument {
             ts_event,
             ts_init,
         )
-        .expect("Failed to create synthetic instrument")
+        .expect(FAILED)
     }
 
     #[must_use]

@@ -112,7 +112,7 @@ impl LogWriter for StderrWriter {
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
 )]
 #[derive(Debug, Clone, Default)]
 pub struct FileWriterConfig {
@@ -156,7 +156,7 @@ impl FileWriter {
         file_config: FileWriterConfig,
         fileout_level: LevelFilter,
     ) -> Option<Self> {
-        // Setup log file
+        // Set up log file
         let json_format = match file_config.file_format.as_ref().map(|s| s.to_lowercase()) {
             Some(ref format) if format == "json" => true,
             None => false,

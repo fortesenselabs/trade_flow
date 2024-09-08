@@ -17,7 +17,7 @@ use std::hash::{Hash, Hasher};
 
 use nautilus_core::{
     correctness::{
-        check_equal_u8, check_positive_i64, check_valid_string, check_valid_string_optional,
+        check_equal_u8, check_positive_i64, check_valid_string, check_valid_string_optional, FAILED,
     },
     nanos::UnixNanos,
 };
@@ -36,7 +36,7 @@ use crate::{
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
 )]
 #[cfg_attr(feature = "trivial_copy", derive(Copy))]
 pub struct FuturesSpread {
@@ -181,7 +181,7 @@ impl FuturesSpread {
             ts_event,
             ts_init,
         )
-        .expect("Failed to create new FuturesSpread instance")
+        .expect(FAILED)
     }
 }
 

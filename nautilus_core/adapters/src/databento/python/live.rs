@@ -33,7 +33,7 @@ use crate::databento::{
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.databento")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.databento")
 )]
 pub struct DatabentoLiveClient {
     #[pyo3(get)]

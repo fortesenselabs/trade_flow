@@ -38,7 +38,7 @@ use crate::ratelimiter::{clock::MonotonicClock, quota::Quota, RateLimiter};
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.network")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.network")
 )]
 pub enum HttpMethod {
     GET,
@@ -68,7 +68,7 @@ impl Into<Method> for HttpMethod {
 #[derive(Clone, Debug)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.network")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.network")
 )]
 pub struct HttpResponse {
     /// The HTTP status code returned by the server.
@@ -87,7 +87,7 @@ pub struct HttpResponse {
 /// asynchronous HTTP requests.
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.network")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.network")
 )]
 pub struct HttpClient {
     /// The rate limiter to control the request rate.

@@ -33,7 +33,7 @@ use crate::identifiers::{Symbol, Venue};
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.model")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.model")
 )]
 pub struct InstrumentId {
     /// The instruments ticker symbol.

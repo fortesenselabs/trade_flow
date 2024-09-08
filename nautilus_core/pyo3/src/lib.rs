@@ -42,7 +42,7 @@ use pyo3::{
 fn nautilus_pyo3(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     let sys = PyModule::import(py, "sys")?;
     let sys_modules: &PyDict = sys.getattr("modules")?.downcast()?;
-    let module_name = "trade_flow.core.nautilus_pyo3";
+    let module_name = "nautilus_trader.core.nautilus_pyo3";
 
     // Set pyo3_nautilus to be recognized as a subpackage
     sys_modules.set_item(module_name, m)?;

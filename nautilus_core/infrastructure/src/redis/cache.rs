@@ -123,7 +123,7 @@ impl DatabaseCommand {
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.infrastructure")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.infrastructure")
 )]
 pub struct RedisCacheDatabase {
     pub trader_id: TraderId,
@@ -166,7 +166,8 @@ impl RedisCacheDatabase {
     }
 
     pub fn close(&mut self) {
-        log::debug!("Closing cache database adapter");
+        log::debug!("Closing");
+
         if let Err(e) = self.tx.send(DatabaseCommand::close()) {
             log::debug!("Error sending close message: {e:?}")
         }
@@ -177,6 +178,8 @@ impl RedisCacheDatabase {
                 log::error!("Error awaiting task '{CACHE_WRITE}': {:?}", e);
             }
         });
+
+        log::debug!("Closed");
     }
 
     pub fn flushdb(&mut self) {

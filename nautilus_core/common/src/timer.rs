@@ -47,7 +47,7 @@ use crate::{handlers::EventHandler, runtime::get_runtime};
 #[derive(Clone, Debug)]
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
 )]
 /// Represents a time event occurring at the event timestamp.
 ///
@@ -333,7 +333,7 @@ impl LiveTimer {
         // Floor the next time to the nearest microsecond which is within the timers accuracy
         let mut next_time_ns = UnixNanos::from(floor_to_nearest_microsecond(next_time_ns));
 
-        // Setup oneshot channel for canceling timer task
+        // Set up oneshot channel for canceling timer task
         let (cancel_tx, mut cancel_rx) = oneshot::channel();
         self.canceler = Some(cancel_tx);
 

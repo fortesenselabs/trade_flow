@@ -139,7 +139,7 @@ impl Hash for Subscription {
 /// For example, `c??p` would match both of the above examples and `coop`.
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
 )]
 pub struct MessageBus {
     /// The trader ID associated with the message bus.

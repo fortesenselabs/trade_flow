@@ -46,7 +46,7 @@ const LOGGING: &str = "logging";
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
 )]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoggerConfig {
@@ -379,7 +379,7 @@ impl Logger {
 
         let trader_id_cache = Ustr::from(&trader_id);
 
-        // Setup std I/O buffers
+        // Set up std I/O buffers
         let mut stdout_writer = StdoutWriter::new(stdout_level, is_colored);
         let mut stderr_writer = StderrWriter::new(is_colored);
 
@@ -474,7 +474,7 @@ pub fn log(level: LogLevel, color: LogColor, component: Ustr, message: &str) {
 
 #[cfg_attr(
     feature = "python",
-    pyo3::pyclass(module = "trade_flow.core.nautilus_pyo3.common")
+    pyo3::pyclass(module = "nautilus_trader.core.nautilus_pyo3.common")
 )]
 #[derive(Debug)]
 pub struct LogGuard {

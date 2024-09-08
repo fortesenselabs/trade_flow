@@ -18,7 +18,7 @@ header = '"../includes/model.h"'
     "int64_t",
 ]
 
-"trade_flow.core.rust.core" = [
+"nautilus_trader.core.rust.core" = [
     "CVec",
     "UUID4_t",
 ]
