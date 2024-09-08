@@ -94,25 +94,37 @@ class TradingEnvironment(gymnasium.Env, TimeIndexed):
             "renderer": self.renderer,
         }
 
-    def step(self, action: Any) -> "Tuple[np.array, float, bool, dict]":
+    def step(self, action: Any) -> "Tuple[np.array, float, bool, bool, dict]":
         """Makes one step through the environment.
 
         Parameters
         ----------
         action : Any
-            An action to perform on the environment.
+            An action to perform on the environment. This parameter represents
+            the decision or action taken by the agent within the environment.
 
         Returns
         -------
-        `np.array`
+        observation : np.array
             The observation of the environment after the action being
-            performed.
-        float
-            The computed reward for performing the action.
-        bool
-            Whether or not the episode is complete.
-        dict
-            The information gathered after completing the step.
+            performed. This represents the new state of the environment
+            perceived by the agent after taking the action.
+        reward : float
+            The computed reward for performing the action. This represents
+            a numerical feedback signal indicating the success or failure
+            of the action based on the environment's reward scheme.
+        done : bool
+            Whether or not the episode is complete. This indicates if the
+            current interaction with the environment has reached its natural
+            conclusion.
+        truncated : bool
+            Whether or not the episode was terminated prematurely. This
+            indicates if the episode was stopped unexpectedly due to external
+            factors (e.g., time limit reached).
+        info : dict
+            The information gathered after completing the step. This might
+            include additional details about the environment state or
+            performance metrics.
         """
         self.action_scheme.perform(self, action)
 
