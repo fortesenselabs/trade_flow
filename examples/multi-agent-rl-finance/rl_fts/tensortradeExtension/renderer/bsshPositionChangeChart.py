@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
-from tensortrade.env.generic import Renderer
-from tensortrade.env.generic import TradingEnv
+from trade_flow.environments.generic import Renderer
+from trade_flow.environments.generic import TradingEnv
 
 
 class PositionChangeChart(Renderer):
@@ -47,20 +47,16 @@ class PositionChangeChart(Renderer):
                 elif current_action == 3 and previous_action == 2:
                     exit_short[i] = p[i]
 
-        buy_series = pd.Series(buy, dtype='object')
-        sell_series = pd.Series(sell, dtype='object')
-        enter_short_series = pd.Series(enter_short, dtype='object')
-        exit_short_series = pd.Series(exit_short, dtype='object')
+        buy_series = pd.Series(buy, dtype="object")
+        sell_series = pd.Series(sell, dtype="object")
+        enter_short_series = pd.Series(enter_short, dtype="object")
+        exit_short_series = pd.Series(exit_short, dtype="object")
 
         self.ax1.plot(np.arange(len(p)), p, label="price", color="orange")
-        self.ax1.scatter(buy_series.index,
-                         buy_series.values, marker="^", color="g")
-        self.ax1.scatter(sell_series.index,
-                         sell_series.values, marker="^", color="r")
-        self.ax1.scatter(enter_short_series.index,
-                         enter_short_series.values, marker="^", color="b")
-        self.ax1.scatter(exit_short_series.index,
-                         exit_short_series.values, marker="^", color="y")
+        self.ax1.scatter(buy_series.index, buy_series.values, marker="^", color="g")
+        self.ax1.scatter(sell_series.index, sell_series.values, marker="^", color="r")
+        self.ax1.scatter(enter_short_series.index, enter_short_series.values, marker="^", color="b")
+        self.ax1.scatter(exit_short_series.index, exit_short_series.values, marker="^", color="y")
         self.ax1.set_title("Trading Chart")
 
         performance_df = pd.DataFrame().from_dict(env.reward_scheme.net_worth_history)

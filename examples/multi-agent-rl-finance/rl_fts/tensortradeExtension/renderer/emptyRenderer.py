@@ -1,4 +1,5 @@
-from tensortrade.env.generic import Renderer
+from trade_flow.environments.generic import Renderer
+
 
 class EmptyRenderer(Renderer):
     """A renderer that does renders nothing.

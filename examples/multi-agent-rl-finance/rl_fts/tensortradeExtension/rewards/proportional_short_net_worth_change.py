@@ -1,11 +1,11 @@
-from tensortrade.env.default.rewards import TensorTradeRewardScheme
-from tensortrade.env.generic import TradingEnv
+from trade_flow.environments.default.rewards import TensorTradeRewardScheme
+from trade_flow.environments.generic import TradingEnv
 
 from rl_fts.tensortradeExtension.actions.proportion_short_hold import PSH
 
+
 class PSNWC(TensorTradeRewardScheme):
-    """A simple reward scheme that rewards the agent based on the change in its networth
-    """
+    """A simple reward scheme that rewards the agent based on the change in its networth"""
 
     def __init__(self, starting_value: float):
         self.net_worth_history = []
@@ -26,7 +26,7 @@ class PSNWC(TensorTradeRewardScheme):
         Returns
         -------
         float
-            The difference in networth as profit / loss 
+            The difference in networth as profit / loss
         """
         # this represents how much asset we currently have in our wallet
         asset_balance = action_scheme.asset.balance.convert(action_scheme.exchange_pair)
@@ -38,11 +38,17 @@ class PSNWC(TensorTradeRewardScheme):
         deposit_margin = action_scheme.deposit_margin.balance
         # This represents how much, in cash, the borrowed asset is currently worth
         #  This value changes over time as the price of the borrowed asset changes
-        borrowed_asset_current_cash_value = action_scheme.borrow_asset.convert(action_scheme.exchange_pair)
+        borrowed_asset_current_cash_value = action_scheme.borrow_asset.convert(
+            action_scheme.exchange_pair
+        )
         # This represents the current net worth of the agent
-        net_worth = (asset_balance + cash_balance + (deposit_margin) - borrowed_asset_current_cash_value).as_float()
+        net_worth = (
+            asset_balance + cash_balance + (deposit_margin) - borrowed_asset_current_cash_value
+        ).as_float()
         if self.previous_net_worth != net_worth:
-            preportion_net_worth_change = (net_worth - self.previous_net_worth) / self.previous_net_worth
+            preportion_net_worth_change = (
+                net_worth - self.previous_net_worth
+            ) / self.previous_net_worth
             self.previous_net_worth = net_worth
         else:
             preportion_net_worth_change = 0
@@ -57,5 +63,3 @@ class PSNWC(TensorTradeRewardScheme):
         self.reward_history = []
         self.previous_net_worth = self.starting_value
         self.total_reward = 0
-        
-

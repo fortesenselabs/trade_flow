@@ -1,4 +1,4 @@
-from tensortrade.env.default.actions import TensorTradeActionScheme
+from trade_flow.environments.default.actions import TensorTradeActionScheme
 from gym.spaces import Discrete
 from tensortrade.oms.wallets import Wallet, Portfolio
 from tensortrade.oms.instruments import ExchangePair, TradingPair
@@ -7,6 +7,7 @@ from tensortrade.oms.orders import (
     Order,
     proportion_order,
 )
+
 
 class BSH(TensorTradeActionScheme):
     """A simple discrete action scheme where the only options are to buy, sell,
@@ -22,10 +23,7 @@ class BSH(TensorTradeActionScheme):
 
     registered_name = "bsh"
 
-    def __init__(
-        self, cash: 'Wallet', 
-        asset: 'Wallet',
-        **kwargs):
+    def __init__(self, cash: "Wallet", asset: "Wallet", **kwargs):
         super().__init__()
         self.cash = cash
         self.asset = asset
@@ -40,10 +38,10 @@ class BSH(TensorTradeActionScheme):
     @property
     def action_space(self):
         """
-          0 -> Buy everything
-          1 -> Sell everything
-          Note:
-            If the action is the same as the previous action, we implement a hold
+        0 -> Buy everything
+        1 -> Sell everything
+        Note:
+          If the action is the same as the previous action, we implement a hold
         """
         return Discrete(2)
 
@@ -51,21 +49,23 @@ class BSH(TensorTradeActionScheme):
         self.listeners += [listener]
         return self
 
-    def get_orders(self, action: int, portfolio: 'Portfolio') -> 'Order':
+    def get_orders(self, action: int, portfolio: "Portfolio") -> "Order":
         order = None
 
         if abs(action - self.action) > 0:
             src = self.cash if self.action == 0 else self.asset
             tgt = self.asset if self.action == 0 else self.cash
 
-            if src.balance == 0:  # We need to check, regardless of the proposed order, if we have balance in 'src'
+            if (
+                src.balance == 0
+            ):  # We need to check, regardless of the proposed order, if we have balance in 'src'
                 return []  # Otherwise just return an empty order list
 
             order = proportion_order(portfolio, src, tgt, 1.0)
             self.action = action
 
         for listener in self.listeners:
-            if hasattr(listener, 'on_action'):
+            if hasattr(listener, "on_action"):
                 listener.on_action(action)
 
         return [order]

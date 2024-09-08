@@ -1,14 +1,14 @@
 from typing import Tuple
-from tensortrade.env.default.rewards import TensorTradeRewardScheme
+from trade_flow.environments.default.rewards import TensorTradeRewardScheme
 from tensortrade.feed.core import Stream, DataFeed
 
+
 class PPBR(TensorTradeRewardScheme):
-    """A simple reward scheme that rewards the agent based on the change in its networth
-    """
+    """A simple reward scheme that rewards the agent based on the change in its networth"""
 
     registered_name = "cpbr"
 
-    def __init__(self, price: 'Stream') -> None:
+    def __init__(self, price: "Stream") -> None:
         super().__init__()
         self.position = -1
         self.proportion = 0
@@ -23,7 +23,7 @@ class PPBR(TensorTradeRewardScheme):
     def on_action(self, actions: Tuple) -> None:
         self.proportion = actions[1][0]
 
-    def get_reward(self, portfolio: 'Portfolio') -> float:
+    def get_reward(self, portfolio: "Portfolio") -> float:
         """
         Parameters
         ----------
@@ -32,7 +32,7 @@ class PPBR(TensorTradeRewardScheme):
         Returns
         -------
         float
-            The difference in networth as profit / loss 
+            The difference in networth as profit / loss
         """
         reward = self.feed.next()["reward"]
         preportion_reward = reward * self.proportion / 100
@@ -44,5 +44,3 @@ class PPBR(TensorTradeRewardScheme):
         self.position = -1
         self.feed.reset()
         self.proportion = 0
-        
-

@@ -5,18 +5,19 @@ from .short_hold import SH
 from .proportion_short_hold import PSH
 from .proportion_buy_sell_short_hold import PBSSH
 
-from tensortrade.env.generic import ActionScheme
+from trade_flow.environments.generic import ActionScheme
 
 _registry = {
-    'buy-sell-hold': BSH,
-    'proportion-buy-hold-sell': PBSH,
-    'buy-sell-short-hold': BSSH,
-    'short-hold': SH,
-    'proportion-short-hold': PSH,
-    'proportion-buy-sell-short-hold': PBSSH,
+    "buy-sell-hold": BSH,
+    "proportion-buy-hold-sell": PBSH,
+    "buy-sell-short-hold": BSSH,
+    "short-hold": SH,
+    "proportion-short-hold": PSH,
+    "proportion-buy-sell-short-hold": PBSSH,
 }
 
-def get(identifier: str) -> 'ActionScheme':
+
+def get(identifier: str) -> "ActionScheme":
     """Gets the `ActionScheme` that matches with the identifier.
 
     Parameters

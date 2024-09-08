@@ -1,12 +1,13 @@
-from tensortrade.env.default.rewards import TensorTradeRewardScheme
-from tensortrade.env.generic import TradingEnv
+from trade_flow.environments.default.rewards import TensorTradeRewardScheme
+from trade_flow.environments.generic import TradingEnv
 
 from rl_fts.tensortradeExtension.actions.buy_sell_hold import BSH
 
+
 class PNWC(TensorTradeRewardScheme):
     """
-       At every time step, reward the agent on the proportional networth change.
-            preportion_net_worth_change = (net_worth - self.previous_net_worth) / self.previous_net_worth
+    At every time step, reward the agent on the proportional networth change.
+         preportion_net_worth_change = (net_worth - self.previous_net_worth) / self.previous_net_worth
     """
 
     def __init__(self, starting_value: float):
@@ -28,13 +29,15 @@ class PNWC(TensorTradeRewardScheme):
             reward = (new_net_worth - old_net_worth) / old_net_worth
         -------
         float
-            The difference in networth as profit / loss 
+            The difference in networth as profit / loss
         """
         asset_balance = action_scheme.asset.balance.convert(action_scheme.exchange_pair)
         cash_balance = action_scheme.cash.balance
         net_worth = (asset_balance + cash_balance).as_float()
         if self.previous_net_worth != net_worth:
-            preportion_net_worth_change = (net_worth - self.previous_net_worth) / self.previous_net_worth
+            preportion_net_worth_change = (
+                net_worth - self.previous_net_worth
+            ) / self.previous_net_worth
             self.previous_net_worth = net_worth
         else:
             preportion_net_worth_change = 0

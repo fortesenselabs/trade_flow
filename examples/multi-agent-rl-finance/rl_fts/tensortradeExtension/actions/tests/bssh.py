@@ -1,5 +1,5 @@
 from rl_fts.environments.sinewaveBSSH import create_env
-from tensortrade.env.generic import TradingEnv
+from trade_flow.environments.generic import TradingEnv
 
 # TESTS
 """
@@ -12,30 +12,34 @@ from tensortrade.env.generic import TradingEnv
     NOTE: pay attention to the terminal output on a crash.
 """
 
+
 def test_0():
     return [
-        {'price': 100.00000000000011, 'action': -1},
-        {'price': 75.00000000000006, 'action': 2},
-        {'price': 56.69872981077811, 'action': 0},
-        {'price': 50.69872981077811, 'action': 2}
+        {"price": 100.00000000000011, "action": -1},
+        {"price": 75.00000000000006, "action": 2},
+        {"price": 56.69872981077811, "action": 0},
+        {"price": 50.69872981077811, "action": 2},
     ]
+
 
 def test_1():
     return [
-        {'price': 100.00000000000011, 'action': -1}, 
-        {'price': 75.00000000000006, 'action': 0}, 
-        {'price': 56.69872981077811, 'action': 0}, 
-        {'price': 50.0, 'action': 1}, 
-        {'price': 56.69872981077799, 'action': 3}, 
-        {'price': 74.99999999999984, 'action': 0},
-        {'price': 99.99999999999999, 'action': 2},
+        {"price": 100.00000000000011, "action": -1},
+        {"price": 75.00000000000006, "action": 0},
+        {"price": 56.69872981077811, "action": 0},
+        {"price": 50.0, "action": 1},
+        {"price": 56.69872981077799, "action": 3},
+        {"price": 74.99999999999984, "action": 0},
+        {"price": 99.99999999999999, "action": 2},
     ]
+
 
 def test_2():
     return [
-        {'price': 100.00000000000011, 'action': -1}, 
-        {'price': 75.00000000000006, 'action': 1}, 
+        {"price": 100.00000000000011, "action": -1},
+        {"price": 75.00000000000006, "action": 1},
     ]
+
 
 def main():
     config = {
@@ -44,7 +48,7 @@ def main():
         "window_size": 30,
         "min_periods": 30,
         "max_allowed_loss": 1,
-        "trading_days": 121
+        "trading_days": 121,
     }
 
     env: TradingEnv = create_env(config)
@@ -53,8 +57,9 @@ def main():
     trading_simulations.append(test_2())
     for simulation in trading_simulations:
         for row in simulation:
-            action = row['action']
+            action = row["action"]
             env.step(action=action)
     print("done")
+
 
 main()

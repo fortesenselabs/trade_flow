@@ -1,18 +1,20 @@
 from .proportional_short_net_worth_change import PSNWC
+
 # from .proportional_reward import NWC
 from .proportion_position_based_return import PPBR
 
-from tensortrade.env.default.rewards import TensorTradeRewardScheme, PBR, SimpleProfit
+from trade_flow.environments.default.rewards import TensorTradeRewardScheme, PBR, SimpleProfit
 
 _registry = {
-    'simple-profit': SimpleProfit,
-    'position-based-return': PBR,
-    'proportion-short-networth-change': PSNWC,
+    "simple-profit": SimpleProfit,
+    "position-based-return": PBR,
+    "proportion-short-networth-change": PSNWC,
     # 'net-worth-change': NWC,
-    'proportion-position-based-return': PPBR
+    "proportion-position-based-return": PPBR,
 }
 
-def get(identifier: str) -> 'TensorTradeRewardScheme':
+
+def get(identifier: str) -> "TensorTradeRewardScheme":
     """Gets the `RewardScheme` that matches with the identifier.
 
     Parameters

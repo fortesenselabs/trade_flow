@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
-from tensortrade.env.generic import Renderer
-from tensortrade.env.generic import TradingEnv
+from trade_flow.environments.generic import Renderer
+from trade_flow.environments.generic import TradingEnv
+
 
 class PositionChangeChart(Renderer):
 
@@ -38,20 +39,21 @@ class PositionChangeChart(Renderer):
                     sell[i] = p[i]
                     sell_proportions.append(current_proportion)
 
-        buy = pd.Series(buy, dtype='object')
-        sell = pd.Series(sell, dtype='object')
-        
+        buy = pd.Series(buy, dtype="object")
+        sell = pd.Series(sell, dtype="object")
 
         self.ax1.plot(np.arange(len(p)), p, label="price", color="orange")
-        if buy.values.size > 0:   
+        if buy.values.size > 0:
             self.ax1.scatter(buy.index, buy.values, marker="^", color="green")
         # for i, txt in enumerate(n):
         #     plt.annotate(txt, (z[i], y[i]))
-        if sell.values.size > 0: 
+        if sell.values.size > 0:
             self.ax1.scatter(sell.index, sell.values, marker="^", color="red")
         self.ax1.set_title("Trading Chart")
 
-        performance_df = pd.DataFrame().from_dict(env.action_scheme.portfolio.performance, orient='index')
+        performance_df = pd.DataFrame().from_dict(
+            env.action_scheme.portfolio.performance, orient="index"
+        )
         performance_df.plot(ax=self.ax2)
         self.ax2.set_title("Net Worth")
 

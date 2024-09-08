@@ -1,6 +1,7 @@
 from rl_fts.environments.stock.environment1 import create_env
-from tensortrade.env.generic import TradingEnv
+from trade_flow.environments.generic import TradingEnv
 import random
+
 
 def main():
     config = {
@@ -13,7 +14,8 @@ def main():
     env: TradingEnv = create_env(config)
 
     for _ in range(10):
-        action = random.randint(0,2)
+        action = random.randint(0, 2)
         env.step(action=action)
+
 
 main()
