@@ -7,7 +7,8 @@ from random import randint
 import gymnasium
 import numpy as np
 
-from trade_flow.core import TimeIndexed, Clock, AssetClass, TraderId, Component
+from nautilus_trader.model.enums import AssetClass
+from trade_flow.core import TimeIndexed, Clock, TraderId, Component
 from trade_flow.environments.generic import (
     ActionScheme,
     RewardScheme,

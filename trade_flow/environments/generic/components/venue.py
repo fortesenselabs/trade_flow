@@ -2,13 +2,14 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 
-from trade_flow.core import AssetClass, AgentId
+from nautilus_trader.model.enums import AssetClass
+from trade_flow.core import TraderId
 
 
 @dataclass
 class Order:
     id: Optional[str] = None
-    trader_id: AgentId
+    # trader_id: TraderId
 
 
 class DataProvider(ABC):
@@ -84,9 +85,7 @@ class ExecutionProvider(ABC):
 
 
 class Venue(DataProvider, ExecutionProvider):
-    def __init__(
-        self, venue_id: str = "Venue-01", asset_class: AssetClass = AssetClass.FOREX
-    ) -> None:
+    def __init__(self, venue_id: str = "Venue-01", asset_class: AssetClass = AssetClass.FX) -> None:
         self.asset_class: AssetClass = asset_class
         self.venue_id: str = venue_id
 
