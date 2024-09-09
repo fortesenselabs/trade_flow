@@ -10,3 +10,6 @@ quantstats
 # ta>=0.4.7  # Broken metadata?
 # TA-Lib  # Broken metadata?
 pandas_ta
+# https://github.com/bukosabino/ta.git
+# https://github.com/joshyattridge/smart-money-concepts.git
+# https://www.luxalgo.com/library/indicator/Smart-Money-Concepts/
