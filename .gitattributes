@@ -1,10 +1,9 @@
 *.tar.gz filter=lfs diff=lfs merge=lfs -text
-
 # Set standard UNIX/Linux/MacOSX line endings.
 * text=auto eol=lf
-
 # Denote all files that are truly binary and should not be modified.
 *.png binary
 *.ico binary
 *.jpg binary
 *.bz2 binary
+*.csv filter=lfs diff=lfs merge=lfs -text
