@@ -26,7 +26,7 @@ The platform is exclusively dedicated to the management and optimization of rein
 
 **1. Installation:**
 
-Follow the detailed instructions provided in the separate document: [./docs/install.md](./docs/install.md).
+Follow the detailed instructions provided in the separate [document](./docs/install.md):
 
 **2. Start the Server:**
 
