@@ -1,27 +1,15 @@
-# Copyright 2019 The TensorTrade Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
-
-
 from deprecated import deprecated
 import multiprocessing as mp
 
 from multiprocessing.queues import Queue
 
 
-@deprecated(version='1.0.4', reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)")
+@deprecated(
+    version="1.0.4",
+    reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)",
+)
 class SharedCounter(object):
-    """ A synchronized shared counter.
+    """A synchronized shared counter.
 
     The locking done by multiprocessing.Value ensures that only a single
     process or thread may read or write the in-memory ctypes object. However,
@@ -41,7 +29,7 @@ class SharedCounter(object):
     """
 
     def __init__(self, n: int = 0) -> None:
-        self.count = mp.Value('i', n)
+        self.count = mp.Value("i", n)
 
     def increment(self, n: int = 1) -> None:
         """Increment the counter by n.
@@ -56,11 +44,14 @@ class SharedCounter(object):
 
     @property
     def value(self) -> int:
-        """The value of the counter. (int, read-only) """
+        """The value of the counter. (int, read-only)"""
         return self.count.value
 
 
-@deprecated(version='1.0.4', reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)")
+@deprecated(
+    version="1.0.4",
+    reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)",
+)
 class ParallelQueue(Queue):
     """A portable implementation of multiprocessing.Queue.
 

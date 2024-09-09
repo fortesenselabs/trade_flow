@@ -1,24 +1,10 @@
-# Copyright 2019 The TensorTrade Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
-
-
 from deprecated import deprecated
-import tensorflow as tf
-
+import torch
+import torch.nn as nn
+import torch.optim as optim
 from multiprocessing import Process, Queue
-
 from trade_flow.agents import ReplayMemory, DQNTransition
+from trade_flow.agents.deprecated.parallel import ParallelDQNModel
 
 
 @deprecated(
@@ -35,7 +21,6 @@ class ParallelDQNOptimizer(Process):
         done_queue: Queue,
         discount_factor: float = 0.9999,
         batch_size: int = 128,
-        # learning_rate: float = 0.0001,
         learning_rate: float = 0.001,
         memory_capacity: int = 10000,
     ):
@@ -55,10 +40,9 @@ class ParallelDQNOptimizer(Process):
         memory = ReplayMemory(self.memory_capacity, transition_type=DQNTransition)
 
         # Optimization strategy.
-        # optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
-        optimizer = tf.keras.optimizers.Nadam(learning_rate=self.learning_rate)
+        optimizer = optim.Adam(self.model.policy_network.parameters(), lr=self.learning_rate)
 
-        loss_fn = tf.keras.losses.Huber()
+        loss_fn = nn.SmoothL1Loss()  # Equivalent to Huber loss
 
         while self.done_queue.qsize() < self.n_envs:
             while self.memory_queue.qsize() > 0:
@@ -71,32 +55,38 @@ class ParallelDQNOptimizer(Process):
             transitions = memory.sample(self.batch_size)
             batch = DQNTransition(*zip(*transitions))
 
-            state_batch = tf.convert_to_tensor(batch.state)
-            action_batch = tf.convert_to_tensor(batch.action)
-            reward_batch = tf.convert_to_tensor(batch.reward, dtype=tf.float32)
-            next_state_batch = tf.convert_to_tensor(batch.next_state)
-            done_batch = tf.convert_to_tensor(batch.done)
+            state_batch = torch.tensor(batch.state, dtype=torch.float32)
+            action_batch = torch.tensor(batch.action, dtype=torch.int64)
+            reward_batch = torch.tensor(batch.reward, dtype=torch.float32)
+            next_state_batch = torch.tensor(batch.next_state, dtype=torch.float32)
+            done_batch = torch.tensor(batch.done, dtype=torch.bool)
 
-            with tf.GradientTape() as tape:
-                state_action_values = tf.math.reduce_sum(
-                    self.model.policy_network(state_batch)
-                    * tf.one_hot(action_batch, self.model.n_actions),
-                    axis=1,
-                )
+            # Set the model to training mode
+            self.model.policy_network.train()
 
-                next_state_values = tf.where(
-                    done_batch,
-                    tf.zeros(self.batch_size),
-                    tf.math.reduce_max(self.model.target_network(next_state_batch), axis=1),
-                )
+            # Compute Q-values for the current states
+            state_action_values = (
+                self.model.policy_network(state_batch)
+                .gather(1, action_batch.unsqueeze(-1))
+                .squeeze(-1)
+            )
 
-                expected_state_action_values = reward_batch + (
-                    self.discount_factor * next_state_values
-                )
-                loss_value = loss_fn(expected_state_action_values, state_action_values)
+            # Compute Q-values for the next states
+            next_state_values = torch.zeros(self.batch_size)
+            next_state_values[~done_batch] = (
+                self.model.target_network(next_state_batch[~done_batch]).max(1)[0].detach()
+            )
 
-            variables = self.model.policy_network.trainable_variables
-            gradients = tape.gradient(loss_value, variables)
-            optimizer.apply_gradients(zip(gradients, variables))
+            # Calculate expected Q-values
+            expected_state_action_values = reward_batch + (self.discount_factor * next_state_values)
 
+            # Compute loss
+            loss_value = loss_fn(state_action_values, expected_state_action_values)
+
+            # Backpropagate the loss
+            optimizer.zero_grad()
+            loss_value.backward()
+            optimizer.step()
+
+            # Send the updated model to the queue
             self.model_update_queue.put(self.model)

@@ -20,7 +20,7 @@ import multiprocessing as mp
 
 from typing import Callable
 
-from trade_flow.agents import Agent
+from trade_flow.agents.deprecated import Agent
 from trade_flow.agents.parallel.parallel_dqn_model import ParallelDQNModel
 from trade_flow.agents.parallel.parallel_dqn_optimizer import ParallelDQNOptimizer
 from trade_flow.agents.parallel.parallel_dqn_trainer import ParallelDQNTrainer

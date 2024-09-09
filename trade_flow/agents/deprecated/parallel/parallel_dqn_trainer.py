@@ -1,18 +1,3 @@
-# Copyright 2019 The TensorTrade Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
-
-
 from deprecated import deprecated
 import numpy as np
 
@@ -20,21 +5,26 @@ from typing import Callable
 from multiprocessing import Process, Queue
 
 
-@deprecated(version='1.0.4', reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)")
+@deprecated(
+    version="1.0.4",
+    reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)",
+)
 class ParallelDQNTrainer(Process):
 
-    def __init__(self,
-                 agent: 'ParallelDQNAgent',
-                 create_env: Callable[[None], 'TrainingEnvironment'],
-                 memory_queue: Queue,
-                 model_update_queue: Queue,
-                 done_queue: Queue,
-                 n_steps: int,
-                 n_episodes: int,
-                 eps_end: int = 0.05,
-                 eps_start: int = 0.99,
-                 eps_decay_steps: int = 2000,
-                 update_target_every: int = 2):
+    def __init__(
+        self,
+        agent: "ParallelDQNAgent",
+        create_env: Callable[[None], "TrainingEnvironment"],
+        memory_queue: Queue,
+        model_update_queue: Queue,
+        done_queue: Queue,
+        n_steps: int,
+        n_episodes: int,
+        eps_end: int = 0.05,
+        eps_start: int = 0.99,
+        eps_decay_steps: int = 2000,
+        update_target_every: int = 2,
+    ):
         super().__init__()
 
         self.agent = agent
@@ -67,15 +57,18 @@ class ParallelDQNTrainer(Process):
             state = self.env.reset()
             done = False
 
-            print('====      EPISODE ID ({}/{}): {}      ===='.format(episode + 1,
-                                                                      self.n_episodes,
-                                                                      self.env.episode_id))
+            print(
+                "====      EPISODE ID ({}/{}): {}      ====".format(
+                    episode + 1, self.n_episodes, self.env.episode_id
+                )
+            )
 
             while not done:
-                threshold = self.eps_end + (self.eps_start - self.eps_end) * \
-                    np.exp(-steps_done / self.eps_decay_steps)
+                threshold = self.eps_end + (self.eps_start - self.eps_end) * np.exp(
+                    -steps_done / self.eps_decay_steps
+                )
                 action = self.agent.get_action(state, threshold=threshold)
-                next_state, reward, done, _ = self.env.step(action)
+                next_state, reward, done, _, _ = self.env.step(action)
 
                 self.memory_queue.put((state, action, reward, next_state, done))
 

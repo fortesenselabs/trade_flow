@@ -1,35 +1,21 @@
-# Copyright 2020 The TensorTrade Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from deprecated import deprecated
 import random
 import numpy as np
 import tensorflow as tf
 from collections import namedtuple
 
-from trade_flow.agents import Agent, ReplayMemory
+from trade_flow.agents.deprecated import Agent, ReplayMemory
 from datetime import datetime
 
 
-DQNTransition = namedtuple("DQNTransition", ["state", "action", "reward", "next_state", "done"])
+TFDQNTransition = namedtuple("TFDQNTransition", ["state", "action", "reward", "next_state", "done"])
 
 
 @deprecated(
     version="1.0.4",
     reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)",
 )
-class DQNAgent(Agent):
+class TensorFlowDQNAgent(Agent):
     """
 
     References:
@@ -39,7 +25,7 @@ class DQNAgent(Agent):
         - https://arxiv.org/abs/1802.00308
     """
 
-    def __init__(self, env: "TradingEnv", policy_network: tf.keras.Model = None):
+    def __init__(self, env: "TradingEnvironment", policy_network: tf.keras.Model = None):
         self.env = env
         self.n_actions = env.action_space.n
         self.observation_shape = env.observation_space.shape
@@ -283,7 +269,7 @@ class DQNAgent(Agent):
         loss = tf.keras.losses.Huber()
 
         transitions = memory.sample(batch_size)
-        batch = DQNTransition(*zip(*transitions))
+        batch = TFDQNTransition(*zip(*transitions))
 
         state_batch = tf.convert_to_tensor(batch.state)
         action_batch = tf.convert_to_tensor(batch.action)
@@ -330,7 +316,7 @@ class DQNAgent(Agent):
             "render_interval", n_steps // 10
         )  # in steps, None for episode end renderers only
 
-        memory = ReplayMemory(memory_capacity, transition_type=DQNTransition)
+        memory = ReplayMemory(memory_capacity, transition_type=TFDQNTransition)
         episode = 0
         total_steps_done = 0
         total_reward = 0
@@ -351,7 +337,7 @@ class DQNAgent(Agent):
                     -total_steps_done / eps_decay_steps
                 )
                 action = self.get_action(state, threshold=threshold)
-                next_state, reward, done, _ = self.env.step(action)
+                next_state, reward, done, _, _ = self.env.step(action)
 
                 memory.push(state, action, reward, next_state, done)
 

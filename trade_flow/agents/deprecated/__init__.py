@@ -1,7 +1,10 @@
 from .agent import Agent
 from .replay_memory import ReplayMemory
 
-from .dqn_agent import DQNAgent, DQNTransition
-from .a2c_agent import A2CAgent, A2CTransition
+# from .dqn_agent_tf import TensorFlowDQNAgent, TFDQNTransition
+from .dqn_agent_torch import TorchDQNAgent, TorchDQNTransition
 
-from .parallel import ParallelDQNAgent
+# from .a2c_agent_tf import TensorFlowA2CAgent, TFA2CTransition
+from .a2c_agent_torch import TorchA2CAgent, TorchA2CTransition
+
+# from .parallel import ParallelDQNAgent

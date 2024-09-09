@@ -1,18 +1,3 @@
-# Copyright 2019 The TensorTrade Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
-
-
 """
 References:
     - http://inoryy.com/post/tensorflow2-deep-reinforcement-learning/#agent-interface
@@ -25,17 +10,19 @@ import tensorflow as tf
 
 from collections import namedtuple
 
-from trade_flow.agents import Agent, ReplayMemory
+from trade_flow.agents.deprecated import Agent, ReplayMemory
 from datetime import datetime
 
-A2CTransition = namedtuple("A2CTransition", ["state", "action", "reward", "done", "value"])
+from trade_flow.environments.generic import TradingEnvironment
+
+TFA2CTransition = namedtuple("TFA2CTransition", ["state", "action", "reward", "done", "value"])
 
 
 @deprecated(
     version="1.0.4",
     reason="Builtin agents are being deprecated in favor of external implementations (ie: Ray)",
 )
-class A2CAgent(Agent):
+class TensorFlowA2CAgent(Agent):
 
     def __init__(
         self,
@@ -155,7 +142,7 @@ class A2CAgent(Agent):
         optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
 
         transitions = memory.tail(batch_size)
-        batch = A2CTransition(*zip(*transitions))
+        batch = TFA2CTransition(*zip(*transitions))
 
         states = tf.convert_to_tensor(batch.state)
         actions = tf.convert_to_tensor(batch.action)
@@ -212,7 +199,7 @@ class A2CAgent(Agent):
         entropy_c: int = kwargs.get("entropy_c", 0.0001)
         memory_capacity: int = kwargs.get("memory_capacity", 1000)
 
-        memory = ReplayMemory(memory_capacity, transition_type=A2CTransition)
+        memory = ReplayMemory(memory_capacity, transition_type=TFA2CTransition)
         episode = 0
         steps_done = 0
         total_reward = 0
@@ -236,7 +223,7 @@ class A2CAgent(Agent):
             while not done:
                 threshold = eps_end + (eps_start - eps_end) * np.exp(-steps_done / eps_decay_steps)
                 action = self.get_action(state, threshold=threshold)
-                next_state, reward, done, _ = self.env.step(action)
+                next_state, reward, done, _, _ = self.env.step(action)
 
                 value = self.critic_network(state[None, :], training=False)
                 value = tf.squeeze(value, axis=-1)
