@@ -83,7 +83,7 @@ tsfresh = "^0.20.3"                                                             
 scikit-learn = "^1.5.1"
 lightgbm = "^4.5.0"
 stable-baselines3 = { extras = ["extra"], version = "^2.3.2" }
-ray = { extras = ["default"], version = "^2.34.0" }
+ray = {extras = ["default", "rllib", "serve", "tune"], version = "^2.35.0"}
 torch = "^2.4.0"
 seaborn = "^0.13.2"
 colorlog = "^6.8.2"
@@ -119,6 +119,7 @@ ta = "^0.11.0"
 smartmoneyconcepts = "^0.0.24"
 feature-engine = "^1.8.1"
 quantstats = "^0.0.62"
+optuna = "^4.0.0"
 
 
 [tool.poetry.extras]
