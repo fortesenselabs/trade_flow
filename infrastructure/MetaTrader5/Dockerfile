@@ -25,11 +25,6 @@ ENV VNC_GEOMETRY="1280x800"
 ENV DRIVE_C=${WINEPREFIX}/drive_c
 STOPSIGNAL SIGRTMIN+3
 
-# MT5 Account Details 
-ENV MT5_ACCOUNT_NUMBER=''
-ENV MT5_PASSWORD=''
-ENV MT5_SERVER=''
-
 # Install required packages
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends openbox tigervnc-standalone-server supervisor gosu && \

@@ -52,7 +52,7 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8.0.1
 
-      - name: Build MetaTrader 5 Terminal image (latest)
+      - name: Build MetaTrader 5 Terminal Image (latest)
         if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
         id: mt5_build_latest
         uses: docker/build-push-action@v3
