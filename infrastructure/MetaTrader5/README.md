@@ -40,6 +40,8 @@ This image includes `easy-novnc` for potential remote desktop access. However, a
 
 **Additional notes:**
 
+<!-- Access the MetaTrader 5 Terminal with a web browser using this Docker image: [https://github.com/fortesenselabs/trade_flow/pkgs/container/metatrader5-terminal](https://github.com/fortesenselabs/trade_flow/pkgs/container/metatrader5-terminal) -->
+
 - The container starts the `supervisord` process to manage services within the container.
 - The container utilizes the `gosu` user management tool.
 - Configuration files like `menu.xml` and `supervisord.conf` are copied into the container.
