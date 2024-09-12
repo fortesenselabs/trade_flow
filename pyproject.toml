@@ -75,15 +75,13 @@ flowcli = "trade_flow.cli.main:cli"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
-numba = "^0.59.1"
-numpy = "1.26.4"                                                                             # For highlow label generator. numba 0.57.1 requires numpy<1.25,>=1.21,
 ta-lib = "^0.4.32"                                                                           # Python wrapper for TA-lib (native) library
 elegantrl = { git = "https://github.com/AI4Finance-Foundation/ElegantRL.git#egg=elegantrl" }
 tsfresh = "^0.20.3"                                                                          # Features/label generation | if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
 scikit-learn = "^1.5.1"
 lightgbm = "^4.5.0"
 stable-baselines3 = { extras = ["extra"], version = "^2.3.2" }
-ray = {extras = ["default", "rllib", "serve", "tune"], version = "^2.35.0"}
+ray = { extras = ["default", "rllib", "serve", "tune"], version = "^2.35.0" }
 torch = "^2.4.0"
 seaborn = "^0.13.2"
 colorlog = "^6.8.2"
@@ -115,26 +113,30 @@ ipython = "^8.27.0"
 toml = "^0.10.2"
 pandas-ta = "^0.3.14b0"
 pandas = "^2.2.2"
-ta = "^0.11.0"
-smartmoneyconcepts = "^0.0.24"
 feature-engine = "^1.8.1"
 quantstats = "^0.0.62"
 optuna = "^4.0.0"
-
-
-[tool.poetry.extras]
-docker = ["docker"]
-# mt5 = ["nautilus_mt5api", "async-timeout", "defusedxml"]
+tensorboard = "^2.17.1"
 # pandas = "^2.2.2"                                                            >
 # numba = "^0.60.0"   # For highlow label generator. numba 0.57.1 requires numpy<>
 # pyarrow = "^17.0.0" # If parquet is used. Alternatively fastparquet
 # ta-lib = "^0.4.32"  # Python wrapper for TA-lib (native) library
 # pandas-ta = "^0.3.14b0"
+# ta = "^0.11.0"
+# smartmoneyconcepts = "^0.0.24"
 # nautilus-trader = "^1.198.0"
 # tensorflow = "2.14.1"
 # polars = "^1.6.0"
 # polars-talib = "^0.1.3"
+# numpy = "1.26.4"      
+# numba = "^0.59.1"
+nautilus-trader = {extras = ["ib"], version = "^1.201.0"}
+scipy = "^1.14.1"
+invoke = "^2.2.0"
 
+[tool.poetry.extras]
+docker = ["docker"]
+# mt5 = ["nautilus_mt5api", "async-timeout", "defusedxml"]
 
 [tool.poetry.group.mt5]
 optional = true
