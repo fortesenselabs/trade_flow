@@ -1,26 +1,61 @@
-# from templates import TEMPLATES
-# from commons.utils import SUPPORTED_TAGS
 
-# base_url = ""
+import os
+import docker
 
-# dockerfile_template = """FROM {base_url}:{tag}
+"""Instantiate a client to talk to the docker daemon"""
+client = docker.from_env()
 
-# RUN apt-get update && apt-get install -y --no-install-recommends \\
-#         tor \\
-#         iproute2 \\
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
+metatrader_base_image = "ghcr.io/fortesenselabs/metatrader5-terminal:latest"
+nautilus_base_image = "ghcr.io/nautechsystems/nautilus_trader:latest"
+workdir = "/app/common"
+ports = [8080]
+cmd = ["/usr/bin/sh"]
 
-# COPY tor-keys/* /home/debian-tor/.tor/keys/
-# COPY flow_entrypoint.sh /flow_entrypoint.sh
-# """
+def select_image():
+    selected_base_image = input("Press M to build metatrader5 image/ N to build nautilus image ")
+    selected_base_image = selected_base_image.lower() 
+    if selected_base_image == "m":
+        dockerfile_content = generate_dockerfile(metatrader_base_image, workdir, ports, cmd)
+        with open("Dockerfile", "w") as f:
+            f.write(dockerfile_content)
+        # client.images.build(path= "./")
+    elif selected_base_image == "n":
+        dockerfile_content = generate_dockerfile(nautilus_base_image, workdir, ports, cmd)
+        with open("Dockerfile", "w") as f:
+            f.write(dockerfile_content)
+        # client.images.build(path= "./")
+    else:
+        select_image() 
+    
 
-# for tag in SUPPORTED_TAGS:
-#     dockerfile_content = dockerfile_template.format(base_url=base_url, tag=tag)
+def generate_dockerfile(base_image, workdir, ports=[], cmd=[]):
+    """
+    Generates a Dockerfile based on the provided parameters.
 
-#     with open(TEMPLATES / f"Dockerfile_{tag}", "w") as file:
-#         file.write(dockerfile_content)
+    Args:
+        base_image (str): The base image to use.
+        workdir (str): The working directory within the container.
+        commands (list[str]): A list of commands to execute in the container.
+        ports (list[int]): A list of ports to expose.
 
-#     print(f"generated Dockerfile for tag {tag}")
+    Returns:
+        str: The generated Dockerfile content.
+    """
 
-# print("done")
+    dockerfile_content = f"""
+    FROM {base_image}
+    
+    CMD {", ".join(str(c) for c in cmd)}
+
+    WORKDIR {workdir}
+
+    COPY . .
+
+    EXPOSE {", ".join(str(port) for port in ports)}
+
+
+    """
+
+    return dockerfile_content
+
+select_image()
