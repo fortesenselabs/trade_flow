@@ -273,3 +273,5 @@ tests/unit_tests/persistence/catalog/
 /data/*
 # don't track data in notebooks
 rl_fts/notebooks/data/*
+
+research/*
