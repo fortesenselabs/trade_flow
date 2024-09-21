@@ -96,18 +96,18 @@ Here we are using the `config` dictionary to store the CSV filename that we need
 
 ```python
 import pandas as pd
-from trade_flow.feed.core import DataFeed, Stream
-from trade_flow.oms.instruments import Instrument
-from trade_flow.oms.exchanges import Exchange, ExchangeOptions
-from trade_flow.oms.services.execution.simulated import execute_order
-from trade_flow.oms.wallets import Wallet, Portfolio
+from trade_flow.core.feed import DataFeed, Stream
+from trade_flow.model.instruments import Instrument
+from trade_flow.model.exchanges import Exchange, VenueOptions
+from trade_flow.model.services.execution.simulated import execute_order
+from trade_flow.model.wallets import Wallet, Portfolio
 import trade_flow.environments.default as default
 
 def create_env(config):
     dataset = pd.read_csv(filepath_or_buffer=config["csv_filename"], parse_dates=['Datetime']).fillna(method='backfill').fillna(method='ffill')
     ttse_commission = 0.0035  # TODO: adjust according to your commission percentage, if present
     price = Stream.source(list(dataset["Close"]), dtype="float").rename("USD-TTRD")
-    ttse_options = ExchangeOptions(commission=ttse_commission)
+    ttse_options = VenueOptions(commission=ttse_commission)
     ttse_exchange = Exchange("TTSE", service=execute_order, options=ttse_options)(price)
 
  # Instruments, Wallets and Portfolio

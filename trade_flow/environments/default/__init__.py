@@ -13,8 +13,8 @@ from . import renderers
 
 from trade_flow.environments.generic import TradingEnvironment
 from trade_flow.environments.generic.components.renderer import AggregateRenderer
-from trade_flow.feed.core import DataFeed
-from trade_flow.oms.wallets import Portfolio
+from trade_flow.feed import DataFeed
+from trade_flow.model.wallets import Portfolio
 
 
 def create(

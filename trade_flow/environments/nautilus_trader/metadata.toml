@@ -1,0 +1,6 @@
+[environment]
+name = "nautilus_trader"
+version = "0.1.0"
+description = "Nautilus Trader Backtest Environment"
+type = "backtest"
+engine = "nautilus_trader"

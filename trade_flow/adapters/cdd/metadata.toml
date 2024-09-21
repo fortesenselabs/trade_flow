@@ -1,0 +1,4 @@
+[adapter]
+name = "cdd"
+version = "0.1.0"
+description = "Provides methods for retrieving data on different cryptocurrencies from https://www.cryptodatadownload.com/cdd/."

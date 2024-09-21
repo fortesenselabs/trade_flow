@@ -7,11 +7,11 @@ import pandas as pd
 import trade_flow.environments.default as default
 
 from trade_flow.data.cdd import CryptoDataDownload
-from trade_flow.feed.core import Stream, DataFeed, NameSpace
-from trade_flow.oms.instruments import USD, BTC, ETH, LTC
-from trade_flow.oms.wallets import Wallet, Portfolio
-from trade_flow.oms.exchanges import Exchange
-from trade_flow.oms.services.execution.simulated import execute_order
+from trade_flow.core.feed import Stream, DataFeed, NameSpace
+from trade_flow.model.instruments import USD, BTC, ETH, LTC
+from trade_flow.model.wallets import Wallet, Portfolio
+from trade_flow.model.exchanges import Exchange
+from trade_flow.model.services.execution.simulated import execute_order
 ```
 
 <br>**Fetch Historical Data**<br>

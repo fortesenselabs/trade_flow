@@ -122,6 +122,9 @@ All names, logos, and brands of third parties that may be referenced in our site
 
 ## References
 
+- https://github.com/tensortrade-org/tensortrade
 - https://github.com/nautechsystems/nautilus_trader/
 - https://github.com/AI4Finance-Foundation
 - https://github.com/OpenBB-finance
+
+Note: Most of the code and concepts was heavily borrowed from `https://github.com/tensortrade-org/tensortrade` ``

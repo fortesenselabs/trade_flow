@@ -1,3 +1,4 @@
+from abc import ABCMeta
 import threading
 import json
 import yaml
@@ -175,3 +176,67 @@ class Context(UserDict):
     def __str__(self):
         data = ["{}={}".format(k, getattr(self, k)) for k in self.__slots__]
         return "<{}: {}>".format(self.__class__.__name__, ", ".join(data))
+
+
+class InitContextMeta(ABCMeta):
+    """Metaclass that executes `__init__` of instance in its core.
+
+    This class works with the `TradingContext` class to ensure the correct
+    data is being given to the instance created by a concrete class that has
+    subclassed `Component`.
+    """
+
+    def __call__(cls, *args, **kwargs) -> "InitContextMeta":
+        """
+
+        Parameters
+        ----------
+        args :
+            positional arguments to give constructor of subclass of `Component`
+        kwargs :
+            keyword arguments to give constructor of subclass of `Component`
+
+        Returns
+        -------
+        `Component`
+            An instance of a concrete class the subclasses `Component`
+        """
+        context = TradingContext.get_context()
+        registered_name = registry.registry()[cls]
+
+        data = context.data.get(registered_name, {})
+        config = {**context.shared, **data}
+
+        instance = cls.__new__(cls, *args, **kwargs)
+        setattr(instance, "context", Context(**config))
+        instance.__init__(*args, **kwargs)
+
+        return instance
+
+
+class ContextualizedMixin(object):
+    """A mixin that is to be mixed with any class that must function in a
+    contextual setting.
+    """
+
+    @property
+    def context(self) -> Context:
+        """Gets the `Context` the object is under.
+
+        Returns
+        -------
+        `Context`
+            The context the object is under.
+        """
+        return self._context
+
+    @context.setter
+    def context(self, context: Context) -> None:
+        """Sets the context for the object.
+
+        Parameters
+        ----------
+        context : `Context`
+            The context to set for the object.
+        """
+        self._context = context

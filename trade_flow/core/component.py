@@ -1,73 +1,9 @@
-from abc import ABC, ABCMeta
+from abc import ABC
 from typing import Any
 
 from trade_flow.core import registry
-from trade_flow.core.base import Identifiable
-from trade_flow.core.context import TradingContext, Context
-
-
-class InitContextMeta(ABCMeta):
-    """Metaclass that executes `__init__` of instance in its core.
-
-    This class works with the `TradingContext` class to ensure the correct
-    data is being given to the instance created by a concrete class that has
-    subclassed `Component`.
-    """
-
-    def __call__(cls, *args, **kwargs) -> "InitContextMeta":
-        """
-
-        Parameters
-        ----------
-        args :
-            positional arguments to give constructor of subclass of `Component`
-        kwargs :
-            keyword arguments to give constructor of subclass of `Component`
-
-        Returns
-        -------
-        `Component`
-            An instance of a concrete class the subclasses `Component`
-        """
-        context = TradingContext.get_context()
-        registered_name = registry.registry()[cls]
-
-        data = context.data.get(registered_name, {})
-        config = {**context.shared, **data}
-
-        instance = cls.__new__(cls, *args, **kwargs)
-        setattr(instance, "context", Context(**config))
-        instance.__init__(*args, **kwargs)
-
-        return instance
-
-
-class ContextualizedMixin(object):
-    """A mixin that is to be mixed with any class that must function in a
-    contextual setting.
-    """
-
-    @property
-    def context(self) -> Context:
-        """Gets the `Context` the object is under.
-
-        Returns
-        -------
-        `Context`
-            The context the object is under.
-        """
-        return self._context
-
-    @context.setter
-    def context(self, context: Context) -> None:
-        """Sets the context for the object.
-
-        Parameters
-        ----------
-        context : `Context`
-            The context to set for the object.
-        """
-        self._context = context
+from trade_flow.core.uuid import Identifiable
+from trade_flow.core.context import ContextualizedMixin, InitContextMeta
 
 
 class Component(ABC, ContextualizedMixin, Identifiable, metaclass=InitContextMeta):
@@ -126,3 +62,56 @@ class Component(ABC, ContextualizedMixin, Identifiable, metaclass=InitContextMet
         if not kwargs:
             return self.context.get(key, None) or value
         return self.context.get(key, None) or kwargs.get(key, value)
+
+
+class Observable:
+    """An object with some value that can be observed.
+
+    An object to which a `listener` can be attached to and be alerted about on
+    an event happening.
+
+    Attributes
+    ----------
+    listeners : list of listeners
+        A list of listeners that the object will alert on events occurring.
+
+    Methods
+    -------
+    attach(listener)
+        Adds a listener to receive alerts.
+    detach(listener)
+        Removes a listener from receiving alerts.
+    """
+
+    def __init__(self):
+        self.listeners = []
+
+    def attach(self, listener) -> "Observable":
+        """Adds a listener to receive alerts.
+
+        Parameters
+        ----------
+        listener : a listener object
+
+        Returns
+        -------
+        `Observable` :
+            The observable being called.
+        """
+        self.listeners += [listener]
+        return self
+
+    def detach(self, listener) -> "Observable":
+        """Removes a listener from receiving alerts.
+
+        Parameters
+        ----------
+        listener : a listener object
+
+        Returns
+        -------
+        `Observable`
+            The observable being called.
+        """
+        self.listeners.remove(listener)
+        return self

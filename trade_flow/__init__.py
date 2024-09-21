@@ -5,7 +5,7 @@ The top-level package contains all sub-packages needed for TradeFlow.
 from . import core
 from . import adapters
 from . import feed
-from trade_flow.oms import orders, wallets, instruments, exchanges, services
+from . import model
 from . import environments
 from . import stochastic
 from . import agents

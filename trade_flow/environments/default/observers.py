@@ -9,8 +9,8 @@ from gymnasium.spaces import Box, Space
 from random import randrange
 
 
-from trade_flow.feed.core import Stream, NameSpace, DataFeed
-from trade_flow.oms.wallets import Wallet
+from trade_flow.feed import Stream, NameSpace, DataFeed
+from trade_flow.model.wallets import Wallet
 from trade_flow.environments.generic import Observer
 from collections import OrderedDict
 

@@ -381,3 +381,8 @@ cython_debug/
 docs/
 tests/
 !docs/tutorials
+
+
+# micell.
+research/*
+add_stage.sh

@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
 
-class BaseAgent:
+class Agent:
     def __init__(self, env_name: str, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the base agent.

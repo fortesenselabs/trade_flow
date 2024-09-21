@@ -1,0 +1,6 @@
+[environment]
+name = "default"
+version = "0.1.0"
+description = "Default Environment"
+type = "train"
+engine = "gym"

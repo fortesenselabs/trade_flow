@@ -1,0 +1,6 @@
+[environment]
+name = "gym_anytrading"
+version = "0.1.0"
+description = "A collection of OpenAI Gym environments for reinforcement learning-based trading algorithms."
+type = "train"
+engine = "gym"
