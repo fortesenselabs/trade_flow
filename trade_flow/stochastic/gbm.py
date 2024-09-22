@@ -1,35 +1,20 @@
-# Copyright 2020 The TensorTrade Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
-
 import numpy as np
 import pandas as pd
 
-from trade_flow.stochastic.noise import GaussianNoise
-
+from trade_flow.stochastic.processes.noise import GaussianNoise
 from trade_flow.stochastic.brownian_motion import brownian_motion_log_returns
-from trade_flow.utils.helpers import (
+from trade_flow.stochastic.helpers import (
     get_delta,
     scale_times_to_generate,
     convert_to_prices,
 )
-from trade_flow.utils.parameters import ModelParameters, default
+from trade_flow.stochastic.parameters import ModelParameters, default
 
 
 def geometric_brownian_motion_log_returns(params: "ModelParameters") -> "np.array":
     """Constructs a sequence of log returns.
 
-    When log returns are exponentiated, it produces a random Geometric
+    When log returns are exponential, it produces a random Geometric
     Brownian Motion (GBM). The GBM is the stochastic process underlying
     the Black-Scholes options pricing formula.
 

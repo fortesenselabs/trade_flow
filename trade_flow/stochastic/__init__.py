@@ -1,6 +1,4 @@
-# import importlib
-
-# if importlib.util.find_spec("stochastic") is not None:
+# from https://github.com/crflynn/stochastic
 
 from .cox import cox
 from .fbm import fbm
