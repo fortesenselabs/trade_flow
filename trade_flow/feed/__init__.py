@@ -6,6 +6,7 @@ from .string import *
 from .base import Stream, NameSpace
 from .feed import DataFeed
 from .operators import Apply
+from .cdd import *
 
 # from .utils import load_dataset as _load_dataset
 import os
