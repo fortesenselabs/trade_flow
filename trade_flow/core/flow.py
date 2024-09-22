@@ -1,13 +1,11 @@
 from typing import Optional
-from trade_flow.common import Logger, EnvironmentMode, gen_config_dir
-from trade_flow.daemon.kubernetes_backend import KubernetesBackend
+from trade_flow.common import Logger, gen_config_dir
 
 
 class Flow:
 
     def __init__(self, name: str) -> None:
         self.logger = Logger(name=__class__.__name__)
-        self.container_interface = KubernetesBackend()
         self.namespace = "trade_flow"
 
         # Initialize VenueManager
