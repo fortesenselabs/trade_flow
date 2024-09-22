@@ -3,7 +3,7 @@ from functools import partial
 from typing import Optional
 
 import pandas as pd
-from trade_flow.environments.nautilus_trader.model import ModelUpdate, Prediction
+from trade_flow.environments.nt_backtest.model import ModelUpdate, Prediction
 from nautilus_trader.common.enums import LogColor
 from nautilus_trader.config import StrategyConfig
 from nautilus_trader.core.data import Data
@@ -23,7 +23,7 @@ from nautilus_trader.model.objects import Price, Quantity
 from nautilus_trader.model.position import Position
 from nautilus_trader.trading.strategy import Strategy
 from nautilus_trader.model.functions import order_side_to_str
-from trade_flow.utils import human_readable_duration, make_bar_type
+from trade_flow.environments.nt_backtest.utils import human_readable_duration, make_bar_type
 
 
 class RepeatedEventComplete(Exception):

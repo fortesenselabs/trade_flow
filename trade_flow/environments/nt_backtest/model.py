@@ -15,11 +15,10 @@ from nautilus_trader.common.enums import LogColor
 from nautilus_trader.core.data import Data
 from nautilus_trader.core.datetime import secs_to_nanos, unix_nanos_to_dt
 
-from sklearn.base import r2_score
+from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
 
-from trade_flow.utils.nautilus_trader_helpers import bars_to_dataframe, make_bar_type
-
+from trade_flow.environments.nt_backtest.utils import bars_to_dataframe, make_bar_type
 
 # from nautilus_trader.persistence.catalog import ParquetDataCatalog as DataCatalog
 
