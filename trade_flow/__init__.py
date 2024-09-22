@@ -2,13 +2,13 @@
 The top-level package contains all sub-packages needed for TradeFlow.
 """
 
-from . import core
-from . import adapters
-from . import feed
-from . import model
-from . import environments
-from . import stochastic
-from . import agents
+from .core import *
+from .adapters import *
+from .feed import *
+from .model import *
+from .environments import *
+from .stochastic import *
+from .agents import *
 
 
 from importlib import resources

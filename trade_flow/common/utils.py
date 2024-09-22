@@ -1,10 +1,7 @@
 import os
 import stat
-from pathlib import Path
 import subprocess
-from trade_flow.common.logging import Logger
-
-logger = Logger(name="utils")
+from pathlib import Path
 
 
 def get_architecture():
