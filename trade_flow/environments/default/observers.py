@@ -31,7 +31,7 @@ def _create_wallet_source(wallet: "Wallet", include_worth: bool = True) -> "List
     `List[Stream[float]]`
         A list of streams to describe the `wallet`.
     """
-    venue_name = wallet.venue.name
+    venue_name = wallet.exchange.name
     symbol = wallet.instrument.symbol
 
     streams = []
@@ -50,7 +50,9 @@ def _create_wallet_source(wallet: "Wallet", include_worth: bool = True) -> "List
         streams += [free_balance, locked_balance, total_balance]
 
         if include_worth:
-            price = Stream.select(wallet.venue.streams(), lambda node: node.name.endswith(symbol))
+            price = Stream.select(
+                wallet.exchange.streams(), lambda node: node.name.endswith(symbol)
+            )
             worth = price.mul(total_balance).rename("worth")
             streams += [worth]
 
@@ -75,7 +77,7 @@ def _create_internal_streams(portfolio: "Portfolio") -> "List[Stream[float]]":
 
     for wallet in portfolio.wallets:
         symbol = wallet.instrument.symbol
-        sources += wallet.venue.streams()
+        sources += wallet.exchange.streams()
         sources += _create_wallet_source(wallet, include_worth=(symbol != base_symbol))
 
     worth_streams = []
