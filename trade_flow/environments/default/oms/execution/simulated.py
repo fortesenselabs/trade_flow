@@ -2,9 +2,9 @@ import logging
 from decimal import Decimal
 
 from trade_flow.core import Clock
-from trade_flow.model.wallets import Wallet
-from trade_flow.model.venues import VenueOptions
-from trade_flow.model.orders import Order, Trade, TradeType, TradeSide
+from trade_flow.environments.default.oms.wallet import Wallet
+from trade_flow.environments.default.oms.exchanges import ExchangeOptions
+from trade_flow.environments.default.oms.orders import Order, Trade, TradeType, TradeSide
 
 from typing import Union
 
@@ -14,7 +14,7 @@ def execute_buy_order(
     base_wallet: "Wallet",
     quote_wallet: "Wallet",
     current_price: float,
-    options: "VenueOptions",
+    options: "ExchangeOptions",
     clock: "Clock",
 ) -> Union[None, "Trade"]:
     """Executes a buy order on the exchange.
@@ -29,7 +29,7 @@ def execute_buy_order(
         The wallet of the quote instrument.
     current_price : float
         The current price of the exchange pair.
-    options : `VenueOptions`
+    options : `ExchangeOptions`
         The exchange options.
     clock : `Clock`
         The clock for the trading process..
@@ -91,7 +91,7 @@ def execute_sell_order(
     base_wallet: "Wallet",
     quote_wallet: "Wallet",
     current_price: float,
-    options: "VenueOptions",
+    options: "ExchangeOptions",
     clock: "Clock",
 ) -> Union[None, "Trade"]:
     """Executes a sell order on the exchange.
@@ -106,7 +106,7 @@ def execute_sell_order(
         The wallet of the quote instrument.
     current_price : float
         The current price of the exchange pair.
-    options : `VenueOptions`
+    options : `ExchangeOptions`
         The exchange options.
     clock : `Clock`
         The clock for the trading process..
@@ -180,7 +180,7 @@ def execute_order(
         The wallet of the quote instrument.
     current_price : float
         The current price of the exchange pair.
-    options : `VenueOptions`
+    options : `ExchangeOptions`
         The exchange options.
     clock : `Clock`
         The clock for the trading process..

@@ -5,7 +5,6 @@ import pandas as pd
 
 from trade_flow.environments.generic import RewardScheme, TradingEnvironment
 from trade_flow.feed import Stream, DataFeed
-import math
 
 
 class TradeFlowRewardScheme(RewardScheme):

@@ -7,8 +7,8 @@ from gymnasium.spaces import Space, Discrete
 
 from trade_flow.core import Clock
 from trade_flow.environments.generic import ActionScheme, TradingEnvironment
-from trade_flow.model.instruments import ExchangePair
-from trade_flow.model.orders import (
+
+from trade_flow.environments.default.oms.orders import (
     Broker,
     Order,
     OrderListener,
@@ -18,7 +18,7 @@ from trade_flow.model.orders import (
     TradeSide,
     TradeType,
 )
-from trade_flow.model.wallets import Portfolio
+from trade_flow.environments.default.oms.portfolio import Portfolio
 
 
 class TradeFlowActionScheme(ActionScheme):

@@ -10,7 +10,8 @@ from random import randrange
 
 
 from trade_flow.feed import Stream, NameSpace, DataFeed
-from trade_flow.model.wallets import Wallet
+from trade_flow.environments.default.oms.wallet import Wallet
+from trade_flow.environments.default.oms.portfolio import Portfolio
 from trade_flow.environments.generic import Observer
 from collections import OrderedDict
 
@@ -30,12 +31,12 @@ def _create_wallet_source(wallet: "Wallet", include_worth: bool = True) -> "List
     `List[Stream[float]]`
         A list of streams to describe the `wallet`.
     """
-    exchange_name = wallet.exchange.name
+    venue_name = wallet.venue.name
     symbol = wallet.instrument.symbol
 
     streams = []
 
-    with NameSpace(exchange_name + ":/" + symbol):
+    with NameSpace(venue_name + ":/" + symbol):
         free_balance = Stream.sensor(wallet, lambda w: w.balance.as_float(), dtype="float").rename(
             "free"
         )
@@ -49,9 +50,7 @@ def _create_wallet_source(wallet: "Wallet", include_worth: bool = True) -> "List
         streams += [free_balance, locked_balance, total_balance]
 
         if include_worth:
-            price = Stream.select(
-                wallet.exchange.streams(), lambda node: node.name.endswith(symbol)
-            )
+            price = Stream.select(wallet.venue.streams(), lambda node: node.name.endswith(symbol))
             worth = price.mul(total_balance).rename("worth")
             streams += [worth]
 
@@ -76,7 +75,7 @@ def _create_internal_streams(portfolio: "Portfolio") -> "List[Stream[float]]":
 
     for wallet in portfolio.wallets:
         symbol = wallet.instrument.symbol
-        sources += wallet.exchange.streams()
+        sources += wallet.venue.streams()
         sources += _create_wallet_source(wallet, include_worth=(symbol != base_symbol))
 
     worth_streams = []
