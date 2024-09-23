@@ -4,7 +4,7 @@ from trade_flow.feed.base import Stream, T, Placeholder, IterableStream
 
 
 class DataFeed(Stream[dict]):
-    """A stream the compiles together streams to be run in an organized manner.
+    """A stream that compiles together streams to be run in an organized manner.
 
     Parameters
     ----------
