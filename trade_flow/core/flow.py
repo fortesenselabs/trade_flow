@@ -49,6 +49,7 @@ class Flow:
     if it is a str, it would check pre-defined objective functions 
 """
 
+# objective_function is the same as reward_function
 # This can also be thought of as a strategy the agent needs to optimize for
 #
 # Also add task_manager to this
