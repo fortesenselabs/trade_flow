@@ -115,6 +115,7 @@ tensorboard = "^2.17.1"
 nautilus-trader = { extras = ["ib"], version = "^1.201.0" }
 scipy = "^1.14.1"
 invoke = "^2.2.0"
+xgboost = "^2.1.1"
 
 [tool.poetry.extras]
 docker = ["docker"]

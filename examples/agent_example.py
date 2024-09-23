@@ -1,5 +1,6 @@
-from trade_flow.agents.dqn import DqnAgent
+import gymnasium as gym
 import ray
+from trade_flow.agents import SB3Agent
 
 
 if __name__ == "__main__":
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     }
 
     # Create and train the agent
-    agent = DqnAgent(env_name=env_name, config=config)
+    agent = SB3Agent(env_name=env_name, config=config)
     for _ in range(10):  # Train for 10 iterations
         agent.train()
 
