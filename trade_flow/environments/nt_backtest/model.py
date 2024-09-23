@@ -15,6 +15,8 @@ from nautilus_trader.common.enums import LogColor
 from nautilus_trader.core.data import Data
 from nautilus_trader.core.datetime import secs_to_nanos, unix_nanos_to_dt
 
+from nautilus_trader.model.identifiers import TraderId # gym needed for the environment
+
 from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
 

@@ -14,7 +14,7 @@ import toml
 import jsonschema
 from trade_flow.environments import generic
 from trade_flow.environments import default
-from trade_flow.environments import nautilus_trader
+from trade_flow.environments import nt_backtest
 from trade_flow.environments import __path__ as environments_path
 
 

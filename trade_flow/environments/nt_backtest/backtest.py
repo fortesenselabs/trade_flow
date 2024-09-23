@@ -34,8 +34,8 @@ def main(
 ):
     # Create model prediction actor
     prediction = ImportableActorConfig(
-        actor_path="model:PredictedPriceActor",
-        config_path="model:PredictedPriceConfig",
+        actor_path="model:DRLAgentActor",
+        config_path="model:DRLAgentConfig",
         config=dict(
             source_symbol=instrument_ids[0],
             target_symbol=instrument_ids[1],
