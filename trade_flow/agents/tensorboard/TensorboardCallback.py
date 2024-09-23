@@ -60,28 +60,3 @@ class TensorboardCallback(BaseCallback):
                 self.logger.record(f"{category}/{metric}", tensorboard_metrics[category][metric])
 
         return True
-
-
-# ProgressBarCallback for model.learn()
-class ProgressBarCallback(BaseCallback):
-
-    def __init__(self, check_freq: int, verbose: int = 1):
-        super().__init__(verbose)
-        self.check_freq = check_freq
-
-    def _on_training_start(self) -> None:
-        """
-        This method is called before the first rollout starts.
-        """
-        self.progress_bar = tqdm(total=self.model._total_timesteps, desc="model.learn()")
-
-    def _on_step(self) -> bool:
-        if self.n_calls % self.check_freq == 0:
-            self.progress_bar.update(self.check_freq)
-        return True
-
-    def _on_training_end(self) -> None:
-        """
-        This event is triggered before exiting the `learn()` method.
-        """
-        self.progress_bar.close()
