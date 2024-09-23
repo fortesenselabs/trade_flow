@@ -90,20 +90,24 @@ class SB3Agent(Agent):
 
     def train(
         self,
-        total_timesteps: int = 5000,
-        tb_log_name: str = "run",
+        n_episodes: int = 5,
+        n_steps: int = 1000,
+        tb_log_name: str = "run_sb3_agent",
         callbacks: Optional[List[BaseCallback]] = None,
     ) -> Any:
         """
         Train the agent using the specified environment.
 
+        Agent's total_timesteps = n_episodes * n_steps
+
         Args:
-        - total_timesteps (int): The total number of timesteps for training.
-        - tb_log_name (str, optional): The name for the TensorBoard log. Defaults to 'run'.
-        - callbacks (optional): A list of callbacks to pass to the training process.
+            n_episodes (int): The number of episodes to train for.
+            n_steps (int): The number of steps per episode.
+            tb_log_name (str, optional): The name for the TensorBoard log. Defaults to 'run_sb3_agent'.
+            callbacks (optional): A list of callbacks to pass to the training process.
 
         Returns:
-        - Any: The trained model.
+            Any: The trained model.
         """
         if self.model is None:
             raise ValueError("Model not initialized. Cannot start training.")
@@ -111,6 +115,8 @@ class SB3Agent(Agent):
         if callbacks is None:
             # Use a default TensorboardCallback if no custom callbacks are provided
             callbacks = [TensorboardCallback()]
+
+        total_timesteps = n_episodes * n_steps
 
         try:
             # Start training the model with the provided timesteps, logging, and callbacks
