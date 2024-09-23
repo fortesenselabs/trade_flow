@@ -28,7 +28,7 @@ class SB3Agent(Agent):
 
         # Configuration for each model type from the user-provided config
         self.model_kwargs = {
-            model_name: config.get(f"{model_name.upper()}_PARAMS", {})
+            model_name: self.config.get(f"{model_name.upper()}_PARAMS", {})
             for model_name in self.models.keys()
         }
 

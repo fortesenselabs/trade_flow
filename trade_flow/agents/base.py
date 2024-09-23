@@ -15,7 +15,7 @@ class Agent(ABC):
 
     def __init__(self, env: TradingEnvironment, config: Optional[Dict[str, Any]] = None) -> None:
         self.env = env
-        self.config = config or {}
+        self.config = config if config is not None else {}
         self.model = None
         self.continual_learning: bool = False
         self.seed = 42  # Default seed for reproducibility
