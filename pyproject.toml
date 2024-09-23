@@ -7,11 +7,13 @@ readme = "README.md"
 keywords = [
     "algo",
     "trading",
+    "finance",
+    "nautilus_trader",
+    "tensortrade",
+    "ai",
     "deep learning",
     "machine learning",
-    "ai",
-    "Reinforcement Learning",
-    "Finance",
+    "reinforcement learning",
 ]
 classifiers = [
     "Programming Language :: Python",
@@ -32,28 +34,12 @@ classifiers = [
     "Intended Audience :: Science/Research",
 ]
 
-# include = [
-#     # Rust source must be included in the source distributions
-#     { path = "nautilus_core/*", format = "sdist" },
-#     { path = "nautilus_core/*[!target]*/*", format = "sdist" },
-#     # Compiled extensions must be included in the wheel distributions
-#     { path = "nautilus_trader/**/*.so", format = "wheel" },
-#     { path = "nautilus_trader/**/*.pyd", format = "wheel" },
-#     # Include the py.typed file for type checking support
-#     { path = "nautilus_trader/py.typed", format = "sdist" },
-#     { path = "nautilus_trader/py.typed", format = "wheel" },
-#     # Include Python interface files for type checking support
-#     { path = "nautilus_trader/**/*.pyi", format = "sdist" },
-#     { path = "nautilus_trader/**/*.pyi", format = "wheel" },
-# ]
-
-
 [build-system]
 requires = [
     "setuptools>=64",
     "poetry-core>=1.9.0",
     # "numpy>=2.0.1",
-    # "Cython==3.0.11",
+    "Cython==3.0.11",
     "toml>=0.10.2",
 ]
 build-backend = "poetry.core.masonry.api"
@@ -68,10 +54,6 @@ packages = [
 [tool.poetry.scripts]
 flow = "trade_flow.daemon.server:run"
 flowcli = "trade_flow.cli.main:cli"
-
-# [tool.poetry.build]
-# script = "build.py"
-# generate-setup-file = false
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
@@ -152,7 +134,9 @@ types-pytz = "^2024.1"
 types-requests = "^2.32"
 types-toml = "^0.10.2"
 hvplot = "^0.10.0"
-yfinance = {extras = ["optional"], version = "^0.2.43"}
+yfinance = { extras = ["optional"], version = "^0.2.43" }
+nbformat = "^5.10.4"
+plotly = "^5.24.1"
 
 [tool.poetry.group.mt5]
 optional = true
