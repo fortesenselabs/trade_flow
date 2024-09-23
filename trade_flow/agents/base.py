@@ -1,102 +1,112 @@
+from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
-
+from trade_flow.agents.tensorboard import TensorboardCallback
 from trade_flow.environments.generic.environment import TradingEnvironment
 
 
-class Agent:
+class Agent(ABC):
+    """
+    Base agent class for training, evaluating, and interacting with the environment.
+
+    Args:
+    - env (TradingEnvironment): The environment to trade in.
+    - config (Optional[Dict[str, Any]]): Optional configuration for the agent.
+    """
+
     def __init__(self, env: TradingEnvironment, config: Optional[Dict[str, Any]] = None) -> None:
-        """
-        Initialize the base agent.
-
-        Args:
-        - env (TradingEnvironment): The environment to trading in.
-        - config (Optional[Dict[str, Any]]): Optional configuration for the agent.
-        """
-
         self.env = env
         self.config = config or {}
-        self.trainer = None
+        self.model = None
         self.continual_learning: bool = False
-        self.tensorboard_callback: TensorboardCallback = TensorboardCallback(
-            verbose=1, actions=BaseActions
-        )
+        self.seed = 42  # Default seed for reproducibility
 
-    def get_env(self) -> None:
+        self.train_env: Optional[TradingEnvironment] = None
+        self.test_env: Optional[TradingEnvironment] = None
+
+        self.tensorboard_callback: Optional[TensorboardCallback] = None
+
+    def get_env(self) -> TradingEnvironment:
         """
-        return environment
+        Return the environment instance.
+
+        Returns:
+        - TradingEnvironment: The environment instance.
         """
         return self.env
 
-    def get_model(self) -> None:
+    @abstractmethod
+    def get_model(self, model_name: str, model_kwargs: Optional[Dict[str, Any]] = None) -> Any:
         """
-        return selected model
+        Initialize and return the specified RL model.
+
+        Args:
+        - model_name (str): The name of the model to use (e.g., 'a2c', 'ppo').
+        - model_kwargs (Optional[Dict[str, Any]]): Optional keyword arguments to pass to the model.
+
+        Returns:
+        - Any: The model instance.
         """
         pass
 
-    def train_test_split_env(self) -> None:
+    @abstractmethod
+    def train(self) -> Any:
         """
-        https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
+        Train the agent using the environment.
+
+        Returns:
+        - Any: The trained model.
         """
         pass
 
-    def train(self, env: Any) -> None:
+    @abstractmethod
+    def evaluate(self) -> Dict[str, Any]:
         """
-        Train the agent.
-        """
-        raise NotImplementedError
-
-    def evaluate(self, env: Any) -> Dict[str, Any]:
-        """
-        Evaluate the agent.
+        Evaluate the agent using the given environment.
 
         Returns:
-        - Dict[str, Any]: Evaluation results.
+        - Dict[str, Any]: The evaluation results.
         """
-        raise NotImplementedError
+        pass
 
-    def predict(self, state: Any) -> None:
+    @abstractmethod
+    def predict(self, state: Any) -> Dict[str, Any]:
         """
-        Agent prediction.
+        Make a prediction based on the current state.
+
+        Args:
+        - state (Any): The current state of the environment.
 
         Returns:
-        - Dict[str, Any]: Action.
+        - Dict[str, Any]: The action predicted by the agent.
         """
         pass
 
     def save(self, checkpoint_path: str) -> None:
         """
-        Save the agent's state to disk .
+        Save the agent's model and state to a file.
 
         Args:
-        - checkpoint_path (str): Path to save the checkpoint.
+        - checkpoint_path (str): The path to save the checkpoint.
         """
-        if self.trainer:
-            self.trainer.save(checkpoint_path)
-        else:
-            raise RuntimeError("Trainer not initialized.")
+        if self.model is None:
+            raise ValueError("Model is not initialized. Cannot save the model.")
+
+        try:
+            self.model.save(checkpoint_path)
+        except Exception as e:
+            raise RuntimeError(f"Failed to save the model: {e}")
 
     def load(self, checkpoint_path: str) -> None:
         """
-        Load the agent's state from disk.
+        Load the agent's model and state from a file.
 
         Args:
-        - checkpoint_path (str): Path to load the checkpoint from.
+        - checkpoint_path (str): The path to load the checkpoint from.
         """
-        if self.trainer:
-            self.trainer.restore(checkpoint_path)
-        else:
-            raise RuntimeError("Trainer not initialized.")
+        if self.model is None:
+            raise ValueError("Model is not initialized. Cannot load the model.")
 
-
-"""
-Agent Interface:
-__init__(env, **kwargs):
-self.continual_learning: bool
-
-train_test_split_env() -> train_env, test_env
-https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
-
-train(train env) -> model // trained model
-evaluate(validation or test env) -> list[score] // list of evaluation metrics
-predict(state) -> action 
-"""
+        try:
+            self.model.load(checkpoint_path)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load the model from {checkpoint_path}: {e}")
