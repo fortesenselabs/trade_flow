@@ -5,7 +5,7 @@ from typing import Any
 from torch.utils.tensorboard import SummaryWriter
 from xgboost import callback
 
-from trade_flow.environments.generic.tensorboard.base_tensorboard import (
+from trade_flow.agents.tensorboard.base_tensorboard import (
     BaseTensorBoardCallback,
     BaseTensorboardLogger,
 )
