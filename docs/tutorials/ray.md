@@ -194,7 +194,7 @@ from ray.tune.registry import register_env
 import trade_flow.environments.default as default
 
 from trade_flow.core.feed import DataFeed, Stream
-from trade_flow.model.venues import Venue
+from trade_flow.model.exchanges import Exchange
 from trade_flow.model.services.execution.simulated import execute_order
 from trade_flow.model.wallets import Wallet, Portfolio
 
