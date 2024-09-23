@@ -15,7 +15,7 @@ import ta
 import pandas as pd
 
 from trade_flow.core.feed import Stream, DataFeed, NameSpace
-from trade_flow.model.exchanges import Exchange
+from trade_flow.model.venues import Venue
 from trade_flow.model.services.execution.simulated import execute_order
 from trade_flow.model.instruments import USD, BTC
 from trade_flow.model.wallets import Wallet, Portfolio

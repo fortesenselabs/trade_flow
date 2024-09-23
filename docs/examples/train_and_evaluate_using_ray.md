@@ -98,7 +98,7 @@ Here we are using the `config` dictionary to store the CSV filename that we need
 import pandas as pd
 from trade_flow.core.feed import DataFeed, Stream
 from trade_flow.model.instruments import Instrument
-from trade_flow.model.exchanges import Exchange, VenueOptions
+from trade_flow.model.venues import Venue, VenueOptions
 from trade_flow.model.services.execution.simulated import execute_order
 from trade_flow.model.wallets import Wallet, Portfolio
 import trade_flow.environments.default as default
