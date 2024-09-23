@@ -4,7 +4,7 @@ from trade_flow.feed import DataFeed
 from trade_flow.environments.generic import TradingEnvironment
 from trade_flow.environments.generic.components.renderer import AggregateRenderer
 
-from .oms.portfolio import Portfolio
+from trade_flow.environments.default.oms.portfolio import Portfolio
 
 
 def create(
