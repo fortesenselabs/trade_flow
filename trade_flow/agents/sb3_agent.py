@@ -44,9 +44,9 @@ class SB3Agent(Agent):
         """
         Add action noise to the agent if needed (for continuous action spaces).
 
-        Args:
-        - noise_type (str): The type of noise to apply ('normal' or 'ornstein_uhlenbeck').
-        - noise_params (Optional[Dict[str, Any]]): Parameters for the noise model.
+        Parameters:
+        - :param noise_type (str): The type of noise to apply ('normal' or 'ornstein_uhlenbeck').
+        - :param noise_params (Optional[Dict[str, Any]]): Parameters for the noise model.
 
         Returns:
         - action_noise: An instance of the action noise to be used in training.
@@ -63,12 +63,14 @@ class SB3Agent(Agent):
 
         return noise_class(**noise_params)
 
-    def get_model(self, model_name: str, model_kwargs: Optional[Dict[str, Any]] = None) -> Any:
+    def get_model(
+        self, model_name: str = "ppo", model_kwargs: Optional[Dict[str, Any]] = None
+    ) -> Any:
         """
         Initialize and return the specified RL model.
 
-        Args:
-        - model_name (str): The name of the model to use (e.g., 'a2c', 'ppo').
+        Parameters:
+        - model_name (str): The name of the model to use (e.g., 'a2c', 'ppo'). Defaults to `ppo`
         - model_kwargs (Optional[Dict[str, Any]]): Optional keyword arguments to pass to the model.
 
         Returns:
@@ -84,8 +86,10 @@ class SB3Agent(Agent):
             noise_type = model_kwargs["action_noise"]
             model_kwargs["action_noise"] = self._add_action_noise(noise_type)
 
-        model_class = self.models[model_name]
-        self.model = model_class(env=self.env, seed=self.seed, **model_kwargs)
+        if "policy" not in model_kwargs:
+            model_kwargs["policy"] = "MlpPolicy"
+
+        self.model = self.models[model_name](env=self.env, seed=self.seed, **model_kwargs)
         return self.model
 
     def train(
@@ -93,7 +97,8 @@ class SB3Agent(Agent):
         n_episodes: int = 5,
         n_steps: int = 1000,
         tb_log_name: str = "run_sb3_agent",
-        callbacks: Optional[List[BaseCallback]] = None,
+        callback: Optional[BaseCallback] = None,
+        **kwargs,
     ) -> Any:
         """
         Train the agent using the specified environment.
@@ -104,7 +109,7 @@ class SB3Agent(Agent):
             n_episodes (int): The number of episodes to train for.
             n_steps (int): The number of steps per episode.
             tb_log_name (str, optional): The name for the TensorBoard log. Defaults to 'run_sb3_agent'.
-            callbacks (optional): A list of callbacks to pass to the training process.
+            callback (optional): A callback to pass to the training process.
 
         Returns:
             Any: The trained model.
@@ -112,18 +117,13 @@ class SB3Agent(Agent):
         if self.model is None:
             raise ValueError("Model not initialized. Cannot start training.")
 
-        if callbacks is None:
-            # Use a default TensorboardCallback if no custom callbacks are provided
-            callbacks = [TensorboardCallback()]
-
-        total_timesteps = n_episodes * n_steps
-
         try:
             # Start training the model with the provided timesteps, logging, and callbacks
             self.model.learn(
-                total_timesteps=total_timesteps,
+                total_timesteps=n_episodes * n_steps,
                 tb_log_name=tb_log_name,
-                callback=callbacks,
+                callback=callback,
+                **kwargs,
             )
         except Exception as e:
             raise RuntimeError(f"Error during training: {str(e)}")
@@ -159,7 +159,7 @@ class SB3Agent(Agent):
             state = np.array(state)
 
         try:
-            action, _states = self.model.predict(state)
+            action, _states = self.model.predict(state, deterministic=True)
             return {"action": action}
         except Exception as e:
             raise RuntimeError(f"Error during prediction: {str(e)}")
