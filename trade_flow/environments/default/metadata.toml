@@ -1,0 +1,6 @@
+[environment]
+name = "default"
+version = "0.1.0"
+description = "A Default Gym Training Environment using predefined cyptocurrency market models"
+type = "train"
+engine = "gym"

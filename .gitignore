@@ -274,4 +274,6 @@ tests/unit_tests/persistence/catalog/
 # don't track data in notebooks
 rl_fts/notebooks/data/*
 
+# micell.
 research/*
+add_stage.sh

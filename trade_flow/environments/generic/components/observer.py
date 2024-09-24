@@ -7,7 +7,7 @@ from gymnasium.spaces import Space
 
 
 from trade_flow.core.component import Component
-from trade_flow.core.base import TimeIndexed
+from trade_flow.core import TimeIndexed
 
 
 class Observer(Component, TimeIndexed):

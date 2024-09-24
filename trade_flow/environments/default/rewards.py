@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 
 from trade_flow.environments.generic import RewardScheme, TradingEnvironment
-from trade_flow.feed.core import Stream, DataFeed
-import math
+from trade_flow.feed import Stream, DataFeed
 
 
 class TradeFlowRewardScheme(RewardScheme):

@@ -9,8 +9,9 @@ from gymnasium.spaces import Box, Space
 from random import randrange
 
 
-from trade_flow.feed.core import Stream, NameSpace, DataFeed
-from trade_flow.oms.wallets import Wallet
+from trade_flow.feed import Stream, NameSpace, DataFeed
+from trade_flow.environments.default.oms.wallet import Wallet
+from trade_flow.environments.default.oms.portfolio import Portfolio
 from trade_flow.environments.generic import Observer
 from collections import OrderedDict
 
@@ -30,12 +31,12 @@ def _create_wallet_source(wallet: "Wallet", include_worth: bool = True) -> "List
     `List[Stream[float]]`
         A list of streams to describe the `wallet`.
     """
-    exchange_name = wallet.exchange.name
+    venue_name = wallet.exchange.name
     symbol = wallet.instrument.symbol
 
     streams = []
 
-    with NameSpace(exchange_name + ":/" + symbol):
+    with NameSpace(venue_name + ":/" + symbol):
         free_balance = Stream.sensor(wallet, lambda w: w.balance.as_float(), dtype="float").rename(
             "free"
         )

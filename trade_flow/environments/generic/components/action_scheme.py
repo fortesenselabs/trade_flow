@@ -4,7 +4,7 @@ from typing import Any
 from gymnasium.spaces import Space
 
 from trade_flow.core.component import Component
-from trade_flow.core.base import TimeIndexed
+from trade_flow.core import TimeIndexed
 
 
 class ActionScheme(Component, TimeIndexed, metaclass=ABCMeta):

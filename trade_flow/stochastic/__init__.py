@@ -1,12 +1,8 @@
-import importlib
+# from https://github.com/crflynn/stochastic
 
-if importlib.util.find_spec("stochastic") is not None:
-    
-    from .utils import *
-
-    from .processes.cox import cox
-    from .processes.fbm import fbm
-    from .processes.gbm import gbm
-    from .processes.heston import heston
-    from .processes.merton import merton
-    from .processes.ornstein_uhlenbeck import ornstein
+from .cox import cox
+from .fbm import fbm
+from .gbm import gbm
+from .heston import heston
+from .merton import merton
+from .ornstein_uhlenbeck import ornstein

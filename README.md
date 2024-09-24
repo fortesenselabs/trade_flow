@@ -1,8 +1,8 @@
 # TradeFlow
 
-**TradeFlow** is a robust framework designed to streamline the creation and management of intelligent trading bots. It provides a comprehensive tool set for deploying, scaling, and optimizing your automated trading strategies.
+**TradeFlow** is a toolkit designed to streamline the creation and management of intelligent trading bots. It provides a comprehensive tool set for deploying, scaling, and optimizing your automated trading strategies.
 
-The framework is exclusively designed to manage and optimize **self-learning** trading bots. By leveraging **reinforcement learning**, TradeFlow's bots autonomously learn to make optimal trading decisions through continuous interaction with the market. This approach enables traders to enhance their performance and adapt more effectively to evolving market conditions.
+The toolkit is exclusively designed to manage and optimize **self-learning** trading bots. By leveraging **reinforcement learning**, TradeFlow's bots autonomously learn to make optimal trading decisions through continuous interaction with the market. This approach enables traders to enhance their performance and adapt more effectively to evolving market conditions.
 
 <div align="center">
 <img align="center" src=docs/images/overview.png>
@@ -64,6 +64,11 @@ TradeFlow currently focuses on the following markets:
 - [] Crypto
 - [] Stocks
 
+## TODOs
+
+- Fix Environment Rendering including the one for Multiple Rendering
+- Create a basic nautilus backtest environment for testing the trained Agent
+
 ## Disclaimer
 
 Before deciding to trade in a financial instrument you should be fully informed of the risks and costs associated with trading the financial markets, carefully consider your investment objectives, level of experience, and risk appetite, and seek professional advice where needed.
@@ -74,54 +79,15 @@ TradeFlow and any provider of the data contained in this website will not accept
 
 All names, logos, and brands of third parties that may be referenced in our sites, products or documentation are trademarks of their respective owners. Unless otherwise specified, TradeFlow and its products and services are not endorsed by, sponsored by, or affiliated with these third parties. Our use of these names, logos, and brands is for identification purposes only, and does not imply any such endorsement, sponsorship, or affiliation.
 
-## Project Roadmap
-
-### **Phase 1: Foundation and Training Node**
-
-1. **Node Development:**
-   - Inherit from NautilusTrader's TradingNode to provide a robust foundation for real-time trading(called `LiveNode`).
-   - Integrate the Nautilus backtest engine and RL gymnasium environment to create a comprehensive training environment(called `TrainingNode`, look at the backtest Node for reference).
-   - Implement necessary features for data handling, market simulation, and agent interaction.
-
-### **Phase 2: Agent Development**
-
-1. **Agent Design:**
-   - Define the agent's architecture, including its decision-making process and learning mechanisms.
-   - Inherit from Nautilus trader's Actor and a defined Agent Interface to ensure compatibility and leverage existing functionalities.
-2. **Agent Training:**
-   - Train the agent using the TrainingNode environment and appropriate reinforcement learning algorithms.
-   - Experiment with different hyperparameters and training strategies to optimize performance.
-
-### **Phase 3: Strategies and Adaptation**
-
-1. **Strategy Development:**
-   - Create or adapt strategies from Nautilus trader's library, incorporating ActionScheme and RewardScheme to align with the agent's decision-making process.
-   - Consider factors such as risk management, reward functions, and trading objectives.
-2. **Strategy Optimization:**
-   - Fine-tune strategies based on agent performance and market conditions.
-   - Explore techniques like backtesting and parameter tuning to improve strategy effectiveness.
-
-### **Phase 4: Integration and Testing**
-
-1. **MetaTrader 5 Adapter Integration:**
-   - Connect the Nautilus Trader framework to MetaTrader 5 using the adapter.
-   - Ensure seamless data exchange and execution of trades through the MetaTrader 5 platform.
-2. **Comprehensive Testing:**
-   - Conduct rigorous testing of the entire system, including agent performance, strategy effectiveness, and risk management.
-   - Simulate various market scenarios and evaluate the system's ability to adapt and respond to changing conditions.
-
-### **Phase 5: Deployment and Monitoring**
-
-1. **Deployment:**
-   - Deploy the trained agent and strategies to a production environment.
-   - Set up necessary infrastructure and configurations for real-time trading.
-2. **Monitoring and Maintenance:**
-   - Continuously monitor the agent's performance and system health.
-   - Implement mechanisms for risk management and early warning systems.
-   - Regularly update and maintain the system to adapt to evolving market conditions and technological advancements.
-
 ## References
 
+- https://github.com/tensortrade-org/tensortrade
 - https://github.com/nautechsystems/nautilus_trader/
 - https://github.com/AI4Finance-Foundation
 - https://github.com/OpenBB-finance
+
+**Note:** This project is built on top of the following libraries/frameworks, so most of the code and concepts are heavily borrowing from them.
+
+- https://github.com/nautechsystems/nautilus_trader
+- https://github.com/tensortrade-org/tensortrade
+- https://github.com/crflynn/stochastic

@@ -1,8 +1,16 @@
 """
 Provides a default environment, can also be used as specification for writing custom environments.
+
+Dependencies:
+    - Generic Environment
 """
 
 from typing import Union
+
+from trade_flow.feed import DataFeed
+from trade_flow.environments.generic import TradingEnvironment
+from trade_flow.environments.generic.components.renderer import AggregateRenderer
+from trade_flow.environments.default.oms.portfolio import Portfolio
 
 from . import actions
 from . import rewards
@@ -11,14 +19,9 @@ from . import stoppers
 from . import informers
 from . import renderers
 
-from trade_flow.environments.generic import TradingEnvironment
-from trade_flow.environments.generic.components.renderer import AggregateRenderer
-from trade_flow.feed.core import DataFeed
-from trade_flow.oms.wallets import Portfolio
-
 
 def create(
-    portfolio: "Portfolio",
+    portfolio: Portfolio,
     action_scheme: "Union[actions.TradeFlowActionScheme, str]",
     reward_scheme: "Union[rewards.TradeFlowRewardScheme, str]",
     feed: "DataFeed",

@@ -14,7 +14,7 @@ import pandas as pd
 from IPython.display import display, clear_output
 from pandas.plotting import register_matplotlib_converters
 
-from trade_flow.oms.orders import TradeSide
+from trade_flow.environments.default.oms.orders import TradeSide
 from trade_flow.environments.generic import Renderer, TradingEnvironment
 
 

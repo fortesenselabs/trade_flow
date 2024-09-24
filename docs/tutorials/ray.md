@@ -18,7 +18,7 @@ In this tutorial we will propose a new reward scheme and action scheme and show 
 We will begin by defining the two instruments we want to define our portfolio with. We will be using the U.S. dollar and fake coin called TradeFlow Coin.
 
 ```python
-from trade_flow.oms.instruments import Instrument
+from trade_flow.model.instruments import Instrument
 
 USD = Instrument("USD", 2, "U.S. Dollar")
 TTC = Instrument("TFC", 8, "TradeFlow Coin")
@@ -37,9 +37,9 @@ from trade_flow.environments.default.actions import TradeFlowActionScheme
 
 from trade_flow.environments.generic import ActionScheme, TradingEnv
 from trade_flow.core import Clock
-from trade_flow.oms.instruments import ExchangePair
-from trade_flow.oms.wallets import Portfolio
-from trade_flow.oms.orders import (
+from trade_flow.model.instruments import ExchangePair
+from trade_flow.model.wallets import Portfolio
+from trade_flow.model.orders import (
     Order,
     proportion_order,
     TradeSide,
@@ -97,7 +97,7 @@ The signs in the table show what we would like the sign of the rewards to be. Th
 
 ```python
 from trade_flow.environments.default.rewards import TradeFlowRewardScheme
-from trade_flow.feed.core import Stream, DataFeed
+from trade_flow.core.feed import Stream, DataFeed
 
 
 class PBR(TradeFlowRewardScheme):
@@ -193,10 +193,10 @@ from ray.tune.registry import register_env
 
 import trade_flow.environments.default as default
 
-from trade_flow.feed.core import DataFeed, Stream
-from trade_flow.oms.exchanges import Exchange
-from trade_flow.oms.services.execution.simulated import execute_order
-from trade_flow.oms.wallets import Wallet, Portfolio
+from trade_flow.core.feed import DataFeed, Stream
+from trade_flow.model.exchanges import Exchange
+from trade_flow.model.services.execution.simulated import execute_order
+from trade_flow.model.wallets import Wallet, Portfolio
 
 
 

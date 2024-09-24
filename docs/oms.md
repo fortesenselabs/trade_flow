@@ -18,7 +18,7 @@ The core idea surrounding a financial instrument is the idea of tradability. In 
 A `Quantity` of an instrument can be created with the following code
 
 ```python
-from trade_flow.oms.instruments import Quantity, USD, BTC
+from trade_flow.model.instruments import Quantity, USD, BTC
 
 q = 10000 * USD
 
@@ -31,8 +31,8 @@ A `Wallet` is specified by an `Exchange` and a `Quantity`. The financial instrum
 ```python
 # Suppose we have already defined an exchange that supports the financial instrument
 # we are creating.
-from trade_flow.oms.instruments import USD, BTC
-from trade_flow.oms.wallets import Wallet
+from trade_flow.model.instruments import USD, BTC
+from trade_flow.model.wallets import Wallet
 
 w1 = Wallet(exchange, 10000 * USD)
 w2 = Wallet(exchange, 0 * BTC)
@@ -44,8 +44,8 @@ A `Portfolio` in the library is defined to be a set of wallets. This makes build
 ```python
 # Suppose we have already defined two exchange `e1` and `e2`.
 
-from trade_flow.oms.instruments import USD, BTC, ETH, LTC
-from trade_flow.oms.wallets import Wallet, Portfolio
+from trade_flow.model.instruments import USD, BTC, ETH, LTC
+from trade_flow.model.wallets import Wallet, Portfolio
 
 portfolio = Portfolio(
     base_instrument=USD,
