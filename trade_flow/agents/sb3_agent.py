@@ -54,6 +54,9 @@ class SB3Agent(Agent):
         if noise_type not in self.noise:
             raise ValueError(f"Noise type '{noise_type}' is not supported.")
 
+        # TODO: Fix IndexError: tuple index out of range
+        # self.env.action_space.shape:  ()
+        print("self.env.action_space.shape: ", self.env.action_space.shape)
         n_actions = self.env.action_space.shape[-1]
         default_noise_params = {"mean": np.zeros(n_actions), "sigma": 0.1 * np.ones(n_actions)}
 
