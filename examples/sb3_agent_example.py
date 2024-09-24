@@ -41,27 +41,6 @@ class ProgressBarCallback(BaseCallback):
         self.progress_bar.close()
 
 
-def load_csv(filename):
-    df = pd.read_csv("../data/" + filename, skiprows=1)
-    df.drop(columns=["symbol", "volume_btc"], inplace=True)
-
-    # Fix timestamp form "2019-10-17 09-AM" to "2019-10-17 09-00-00 AM"
-    df["date"] = df["date"].str[:14] + "00-00 " + df["date"].str[-2:]
-
-    # Convert the date column type from string to datetime for proper sorting.
-    df["date"] = pd.to_datetime(df["date"])
-
-    # Make sure historical prices are sorted chronologically, oldest first.
-    df.sort_values(by="date", ascending=True, inplace=True)
-
-    df.reset_index(drop=True, inplace=True)
-
-    # Format timestamps as you want them to appear on the chart buy/sell marks.
-    df["date"] = df["date"].dt.strftime("%Y-%m-%d %I:%M %p")
-
-    return df
-
-
 def encode_symbols(data):
     """Encodes the currency symbols in the data using one-hot or label encoding.
 
@@ -220,11 +199,16 @@ if __name__ == "__main__":
     agent.get_model("a2c", {"policy": "MlpPolicy"})
     print("agent: ", agent)
     agent.train(
-        n_episodes=2, n_steps=1000, progress_bar=True
-    )  # callbacks=[ProgressBarCallback(100)]
+        n_episodes=2,
+        n_steps=1000,
+        progress_bar=True,
+        # callbacks=[ProgressBarCallback(100)]
+    )
 
     performance = pd.DataFrame.from_dict(env.action_scheme.portfolio.performance, orient="index")
     print(performance)
+
+    performance.plot()
 
     print("\n\n---------Environment with Multiple Renderers-------------\n\n")
 
@@ -232,13 +216,20 @@ if __name__ == "__main__":
         Coinbase_BTCUSD_1h
     )  # df = Coinbase_BTCUSD_d  | Coinbase_BTCUSD_1h
     agent = SB3Agent(env_multiple)
-    agent.get_model("ppo", {"policy": "MlpPolicy"})
+    agent.get_model("dqn", {"policy": "MlpPolicy"})
     print("agent: ", agent)
     agent.train(
-        n_episodes=2, n_steps=1000, progress_bar=True
-    )  # callbacks=[ProgressBarCallback(100)]
+        n_episodes=10,
+        n_steps=1000,
+        progress_bar=True,
+        # callbacks=[ProgressBarCallback(100)]
+    )
 
     performance = pd.DataFrame.from_dict(
         env_multiple.action_scheme.portfolio.performance, orient="index"
     )
     print(performance)
+
+    performance.plot()
+
+    performance.net_worth.plot()
