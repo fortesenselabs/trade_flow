@@ -64,6 +64,11 @@ TradeFlow currently focuses on the following markets:
 - [] Crypto
 - [] Stocks
 
+## TODOs
+
+- Fix Environment Rendering including the one for Multiple Rendering
+- Create a basic nautilus backtest environment for testing the trained Agent
+
 ## Disclaimer
 
 Before deciding to trade in a financial instrument you should be fully informed of the risks and costs associated with trading the financial markets, carefully consider your investment objectives, level of experience, and risk appetite, and seek professional advice where needed.
