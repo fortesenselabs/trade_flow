@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional, List
 import numpy as np
-from stable_baselines3 import A2C, DDPG, PPO, SAC, TD3
+from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.callbacks import BaseCallback
 from trade_flow.agents.tensorboard import TensorboardCallback
@@ -24,7 +24,7 @@ class SB3Agent(Agent):
         super().__init__(env, config)
 
         # Supported models and their corresponding classes
-        self.models = {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO}
+        self.models = {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO, "dqn": DQN}
 
         # Configuration for each model type from the user-provided config
         self.model_kwargs = {
