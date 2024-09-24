@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 from trade_flow.agents.tensorboard import TensorboardCallback
 from trade_flow.environments.generic.environment import TradingEnvironment
 
@@ -16,7 +16,7 @@ class Agent(ABC):
     def __init__(self, env: TradingEnvironment, config: Optional[Dict[str, Any]] = None) -> None:
         self.env = env
         self.config = config if config is not None else {}
-        self.model = None
+        self.model: Optional[Callable] = None
         self.continual_learning: bool = False
         self.seed = 42  # Default seed for reproducibility
 
