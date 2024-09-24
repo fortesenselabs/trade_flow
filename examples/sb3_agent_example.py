@@ -10,6 +10,7 @@ from trade_flow.environments.default.oms.execution.simulated import execute_orde
 from trade_flow.environments.default.oms.instruments import USD, BTC
 from trade_flow.environments.default.oms.wallet import Wallet
 from trade_flow.environments.default.oms.portfolio import Portfolio
+from trade_flow.environments.default.renderers import PlotlyTradingChart, FileLogger
 import trade_flow.environments.default as default
 from trade_flow.agents import SB3Agent
 from stable_baselines3.common.callbacks import BaseCallback
@@ -85,7 +86,7 @@ def encode_symbols(data):
     return data, vocabulary
 
 
-def get_env(df=Coinbase_BTCUSD_d):
+def get_env(df: pd.DataFrame = Coinbase_BTCUSD_d):
     print("df.head(): ", df.head())
 
     dataset = df.reset_index()
@@ -114,8 +115,8 @@ def get_env(df=Coinbase_BTCUSD_d):
     portfolio = Portfolio(
         USD,
         [
-            Wallet(coinbase, 10000 * USD),
-            Wallet(coinbase, 10 * BTC),
+            Wallet(coinbase, 1000 * USD),
+            Wallet(coinbase, 1 * BTC),
         ],
     )
 
@@ -139,15 +140,105 @@ def get_env(df=Coinbase_BTCUSD_d):
     return env
 
 
+def get_env_with_multiple_renderers(df: pd.DataFrame = Coinbase_BTCUSD_d):
+    print("df.head(): ", df.head())
+
+    dataset = df.reset_index()
+    print("dataset.head(3): ", dataset.head(3))
+
+    price_history = dataset[["date", "open", "high", "low", "close", "volume"]]  # chart data
+    print("price_history: ", price_history.head(3))
+
+    dataset.drop(columns=["date", "volume"], inplace=True)
+    print("dataset: ", dataset)
+
+    dataset_encoded, vocabulary = encode_symbols(dataset)
+    print("vocabulary: ", vocabulary)
+    print("dataset_encoded: ", dataset_encoded)
+
+    dataset_encoded = dataset_encoded[
+        ["symbol_encoded", "open", "high", "low", "close", "volume_btc"]
+    ]
+    print("dataset_encoded: ", dataset_encoded)
+
+    selected_dataset = dataset_encoded
+    print("selected_dataset: ", selected_dataset)
+
+    coinbase = Exchange("coinbase", service=execute_order)(
+        Stream.source(price_history["close"].tolist(), dtype="float").rename("USD-BTC")
+    )  # TODO: fix Exception: No stream satisfies selector condition. for `multiple stream sources`
+
+    portfolio = Portfolio(
+        USD,
+        [
+            Wallet(coinbase, 1000 * USD),
+            Wallet(coinbase, 1 * BTC),
+        ],
+    )
+
+    with NameSpace("coinbase"):
+        streams = [
+            Stream.source(selected_dataset[c].tolist(), dtype="float").rename(c)
+            for c in selected_dataset.columns
+        ]
+
+    feed = DataFeed(streams)
+    print("feed.next(): ", feed.next())
+
+    renderer_feed = DataFeed(
+        [Stream.source(price_history[c].tolist(), dtype="float").rename(c) for c in price_history]
+    )
+
+    chart_renderer = PlotlyTradingChart(
+        display=True,  # show the chart on screen (default)
+        height=800,  # affects both displayed and saved file height. None for 100% height.
+        save_format="html",  # save the chart to an HTML file
+        auto_open_html=True,  # open the saved HTML chart in a new browser tab
+    )
+
+    file_logger = FileLogger(
+        filename="coinbase.log",  # omit or None for automatic file name
+        path="training_logs",  # create a new directory if doesn't exist, None for no directory
+    )
+
+    env = default.create(
+        portfolio=portfolio,
+        action_scheme="managed-risk",
+        reward_scheme="risk-adjusted",
+        feed=feed,
+        window_size=5,
+        renderer_feed=renderer_feed,
+        renderer=[chart_renderer, file_logger],
+    )
+    return env
+
+
 if __name__ == "__main__":
     env = get_env(Coinbase_BTCUSD_1h)  # df = Coinbase_BTCUSD_d  | Coinbase_BTCUSD_1h
 
     agent = SB3Agent(env)
-    agent.get_model("ppo", {"policy": "MlpPolicy"})
+    agent.get_model("a2c", {"policy": "MlpPolicy"})
     print("agent: ", agent)
     agent.train(
-        n_episodes=2, n_steps=100, progress_bar=True
+        n_episodes=2, n_steps=1000, progress_bar=True
     )  # callbacks=[ProgressBarCallback(100)]
 
     performance = pd.DataFrame.from_dict(env.action_scheme.portfolio.performance, orient="index")
+    print(performance)
+
+    print("\n\n---------Environment with Multiple Renderers-------------\n\n")
+
+    env_multiple = get_env_with_multiple_renderers(
+        Coinbase_BTCUSD_1h
+    )  # df = Coinbase_BTCUSD_d  | Coinbase_BTCUSD_1h
+    agent = SB3Agent(env_multiple)
+    agent.get_model("ppo", {"policy": "MlpPolicy"})
+    print("agent: ", agent)
+    agent.train(
+        n_episodes=2, n_steps=1000, progress_bar=True
+    )  # callbacks=[ProgressBarCallback(100)]
+
+    performance = pd.DataFrame.from_dict(
+        env_multiple.action_scheme.portfolio.performance, orient="index"
+    )
     print(performance)
