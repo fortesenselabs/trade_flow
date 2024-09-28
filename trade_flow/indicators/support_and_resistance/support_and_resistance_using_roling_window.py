@@ -6,7 +6,7 @@ import pandas as pd
 def detect_local_min_max(df, window_size=5):
     
     if not isinstance(df, pd.DataFrame):
-        raise ValueError("Data is a DataFrame")
+        raise ValueError("Data is not a DataFrame")
     else:
         support_levels = []
         resistance_levels = []

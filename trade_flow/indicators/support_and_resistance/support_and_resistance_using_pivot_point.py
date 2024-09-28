@@ -3,7 +3,7 @@ import pandas as pd
 def calculate_pivot_points(df):
     # Check if data is a DataFrame
     if not isinstance(df, pd.DataFrame):
-        raise ValueError("Data is a DataFrame")
+        raise ValueError("Data is not a DataFrame")
     else: 
     
         pivot_points = []
