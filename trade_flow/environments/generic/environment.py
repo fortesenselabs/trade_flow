@@ -52,14 +52,13 @@ class TradingEnvironment(gymnasium.Env, TimeIndexed):
         stopper: Stopper,
         informer: Informer,
         renderer: Renderer,
-        min_periods: int = None,
-        max_episode_steps: int = None,
+        min_periods: Optional[int] = None,
+        max_episode_steps: Optional[int] = None,
         random_start_pct: float = 0.00,
         **kwargs,
     ) -> None:
         super().__init__()
         self.clock = Clock()
-        # self.asset_class = asset_class #  TODO: include asset_class: AssetClass,
 
         self.action_scheme = action_scheme
         self.reward_scheme = reward_scheme
@@ -69,6 +68,8 @@ class TradingEnvironment(gymnasium.Env, TimeIndexed):
         self.renderer = renderer
         self.min_periods = min_periods
         self.random_start_pct = random_start_pct
+
+        self.asset_class: Optional[str] = kwargs.get("asset_class", None)
 
         for c in self.components.values():
             c.clock = self.clock
