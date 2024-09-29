@@ -1,24 +1,26 @@
-import pandas as pd
-from trade_flow.indicators.support_and_resistance import support_and_resistance_using_roling_window, support_and_resistance_using_pivot_point
-from trade_flow.feed import Coinbase_BTCUSD_d, data # Import the correct feed
+from trade_flow.indicators.support_and_resistance import (
+    OptimizedSupportResistanceIndicator,
+    SupportResistanceIndicator,
+)
+from trade_flow.feed import Coinbase_BTCUSD_d
 
-def main():
-    # Step 1: Convert the Coinbase data to a DataFrame
-    df = pd.read_csv('../trade_flow/feed/data/Coinbase_BTCUSD_d.csv')  
+df = Coinbase_BTCUSD_d.copy()
+df.index = df.index.set_names("timestamp")
 
-  
-    #support_levels, resistance_levels = support_and_resistance_using_roling_window.detect_local_min_max(df)
-    # print("Support Levels:", support_levels)
-    # print("Resistance Levels:", resistance_levels)
-    
-    support_resistance =  support_and_resistance_using_pivot_point.calculate_pivot_points(df)
-    print(support_resistance)
-    
-    
-    
+print("Dataset:", df, "\n")
 
-    
+# Create an instance of SupportResistanceIndicator or OptimizedSupportResistanceIndicator
+indicator = SupportResistanceIndicator(df)
 
-# Run the main function
-if __name__ == "__main__":
-    main()
+# Calculate Pivot Points
+pivot_points_df = indicator.calculate_pivot_points()
+print("Pivot Points and Support/Resistance Levels:\n", pivot_points_df)
+
+# Detect Local Min/Max
+support, resistance = indicator.detect_local_min_max(window_size=2)
+print("\nDetected Support Levels:", support)
+print("Detected Resistance Levels:", resistance)
+
+# Get all indicators
+support_resistance_indicator = indicator.get_all_indicators(window_size=20)
+print("\nSupport-Resistance Levels:", support_resistance_indicator)
