@@ -81,13 +81,10 @@ All names, logos, and brands of third parties that may be referenced in our site
 
 ## References
 
+**Note:** This project is built on top of the following libraries/frameworks, so most of the code and concepts are heavily borrowed from them.
+
 - https://github.com/tensortrade-org/tensortrade
 - https://github.com/nautechsystems/nautilus_trader/
 - https://github.com/AI4Finance-Foundation
 - https://github.com/OpenBB-finance
-
-**Note:** This project is built on top of the following libraries/frameworks, so most of the code and concepts are heavily borrowing from them.
-
-- https://github.com/nautechsystems/nautilus_trader
-- https://github.com/tensortrade-org/tensortrade
 - https://github.com/crflynn/stochastic

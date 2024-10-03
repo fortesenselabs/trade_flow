@@ -277,3 +277,4 @@ rl_fts/notebooks/data/*
 # micell.
 research/*
 add_stage.sh
+catalog/
