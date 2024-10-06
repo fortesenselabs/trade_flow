@@ -81,7 +81,7 @@ All names, logos, and brands of third parties that may be referenced in our site
 
 ## References
 
-**Note:** This project is built on top of the following libraries/frameworks, so most of the code and concepts are heavily borrowed from them.
+**Note:** This project is built on top of the following papers, libraries, and frameworks, so most of the code and concepts are heavily borrowed from them.
 
 - [Core paper](https://github.com/fortesenselabs/trade_flow/blob/main/docs/books/1911.10107v1.pdf)
 - https://github.com/tensortrade-org/tensortrade
