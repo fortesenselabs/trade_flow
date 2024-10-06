@@ -89,4 +89,3 @@ All names, logos, and brands of third parties that may be referenced in our site
 - https://github.com/AI4Finance-Foundation
 - https://github.com/OpenBB-finance
 - https://github.com/crflynn/stochastic
-- [Core paper](https://github.com/fortesenselabs/trade_flow/blob/main/docs/books/1911.10107v1.pdf)
