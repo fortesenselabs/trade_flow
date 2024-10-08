@@ -4,6 +4,8 @@ import pandas as pd
 # import pandas_ta as ta
 
 # import trade_flow
+from trade_flow.agents.base import Agent
+from trade_flow.environments.generic.environment import TradingEnvironment
 from trade_flow.feed import Stream, DataFeed, NameSpace, Coinbase_BTCUSD_1h, Coinbase_BTCUSD_d
 from trade_flow.environments.default.oms.exchanges import Exchange
 from trade_flow.environments.default.oms.execution.simulated import execute_order
@@ -101,7 +103,7 @@ def get_env(df: pd.DataFrame = Coinbase_BTCUSD_d):
 
     with NameSpace("coinbase"):
         streams = [
-            Stream.source(selected_dataset[c].tolist(), dtype="float").rename(c)
+            Stream.source(selected_dataset[c].tolist(), dtype=selected_dataset[c].dtype).rename(c)
             for c in selected_dataset.columns
         ]
 
@@ -192,6 +194,26 @@ def get_env_with_multiple_renderers(df: pd.DataFrame = Coinbase_BTCUSD_d):
     return env
 
 
+def evaluate_model(env: TradingEnvironment, agent: Agent):
+    """
+    Evaluate the model
+    """
+    obs = env.reset()
+    for i in range(100):
+        print(obs)
+        # action, _states = agent.predict(obs[0])
+
+        # Take a random action
+        action = env.action_space.sample()
+
+        obs, reward, done, _, info = env.step(action)
+        env.render()
+
+        if done:
+            print(f"Episode finished after {i + 1} steps")
+            break
+
+
 if __name__ == "__main__":
     env = get_env(Coinbase_BTCUSD_1h)  # df = Coinbase_BTCUSD_d  | Coinbase_BTCUSD_1h
 
@@ -209,6 +231,8 @@ if __name__ == "__main__":
     print(performance)
 
     performance.plot()
+
+    # evaluate_model(env, agent)
 
     print("\n\n---------Environment with Multiple Renderers-------------\n\n")
 
@@ -233,3 +257,5 @@ if __name__ == "__main__":
     performance.plot()
 
     performance.net_worth.plot()
+
+    # evaluate_model(env, agent)
