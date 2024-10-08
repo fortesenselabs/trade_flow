@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional, List, Tuple
 import numpy as np
 from stable_baselines3 import A2C, DDPG, DQN, PPO, SAC, TD3
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
@@ -145,7 +145,7 @@ class SB3Agent(Agent):
         """
         raise NotImplementedError
 
-    def predict(self, state: Any) -> Dict[str, Any]:
+    def predict(self, state: Any, **kwargs) -> Tuple[Any, Any]:
         """
         Predict the next action based on the current state.
 
@@ -162,7 +162,7 @@ class SB3Agent(Agent):
             state = np.array(state)
 
         try:
-            action, _states = self.model.predict(state, deterministic=True)
-            return {"action": action}
+            action, _states = self.model.predict(state, deterministic=True, **kwargs)
+            return action, _states
         except Exception as e:
             raise RuntimeError(f"Error during prediction: {str(e)}")

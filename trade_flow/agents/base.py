@@ -81,6 +81,7 @@ class Agent(ABC):
         """
         pass
 
+    @staticmethod
     def save(self, checkpoint_path: str) -> None:
         """
         Save the agent's model and state to a file.
@@ -96,6 +97,7 @@ class Agent(ABC):
         except Exception as e:
             raise RuntimeError(f"Failed to save the model: {e}")
 
+    @staticmethod
     def load(self, checkpoint_path: str) -> None:
         """
         Load the agent's model and state from a file.
