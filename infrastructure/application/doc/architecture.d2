@@ -1,0 +1,90 @@
+# This diagram file (.d2) represents the architecture of a web application.
+
+# Define the frontend section with its components.
+frontend: Frontend {
+  grid-rows: 2  
+  # Defines the grid rows for the frontend.
+
+  pages: Pages {  
+    # Define the pages component.
+    login: Login Form  
+    # Represents the login page.
+    
+    dashboard: Dashboard  
+    # Represents the dashboard page.
+    
+    company_view: Company View  
+    # Represents the company view page.
+    
+    chatbot: ChatBot  
+    # Represents the chatbot page.
+  }
+  
+  subsystems: Tech Stack {  
+    # Define the subsystems component.
+    nextjs: Next.JS  
+    # Represents Next.JS framework.
+    
+    shadcnui: Shadcn-UI  
+    # Represents Shadcn-UI framework.
+    
+    chartjs: Chart.JS  
+    # Represents Chart.JS library.
+    
+    clerk: Clerk  
+    # Represents Clerk library.
+  }
+}
+
+# Define the backend section with its components.
+backend: Backend {
+  vercel: Vercel  
+  # Represents the Vercel hosting service.
+  
+  nodejs: Node.js  
+  # Represents Node.js runtime environment.
+  
+  prisma: Prisma  
+  # Represents the Prisma ORM.
+}
+
+# Define the API provider section with its components.
+api_provider: API Provider {
+  yahoo: Yahoo Finance  
+  # Represents the Yahoo Finance API.
+}
+
+# Define the database section with its components.
+database: Cloud Database {
+  supabase: Supabase (PostgreSQL) {  
+    # Represents Supabase with PostgreSQL.
+    grid-rows: 2  
+    # Defines the grid rows for the database.
+    
+    account: Account  
+    # Represents the account table.
+    
+    company: Company  
+    # Represents the company table.
+    
+    ticker: Ticker  
+    # Represents the ticker table.
+    
+    card: Card  
+    # Represents the card table.
+    
+    chatbot: ChatBot  
+    # Represents the chatbot table.
+    
+    message: Message  
+    # Represents the message table.
+  }
+}
+
+# Define the connections between components.
+frontend <-> backend  
+# Represents the connection between frontend and backend.
+backend <-> api_provider  
+# Represents the connection between backend and API provider.
+backend <-> database  
+# Represents the connection between backend and database.

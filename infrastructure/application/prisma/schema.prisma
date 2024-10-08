@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// One account has only one portfolio, one watchlist, many bank cards, and many transactions
+model Account{
+  id String @id @default(uuid())
+  accountBalance Float
+  accountValue Float
+
+  portfolio Portfolio?
+  watchlist Watchlist?
+  cards Card[]
+  transactions Transaction[]
+}
+
+// A Portfolio can have many companies, 
+model Portfolio {
+  id String @id @default(uuid())
+  portfolioVal Float 
+
+  companies Portfolio_Company[]
+
+  account Account @relation(fields: [accountId], references: [id],onDelete:  Cascade)
+  accountId String @unique
+}
+
+// A watchlist can have many companies
+model Watchlist {
+  id String @id @default(uuid())
+  name String
+
+  companies Watchlist_Company[]
+
+  account Account @relation(fields: [accountId], references: [id])
+  accountId String @unique
+ 
+}
+
+// watchlist_companies: many-to-many relation
+model Watchlist_Company {
+  watchlist Watchlist @relation(fields: [watchlistId],references: [id])
+  watchlistId String
+  company  Company @relation(fields: [companyId], references:[id],onDelete: Cascade)
+  companyId String
+  symbol String
+  @@id([watchlistId,companyId])
+}
+
+// card entity: belongs to only one user's account. 
+model Card {
+  id String @id @default(uuid())
+  value Float
+  holderName String
+  expiration String
+  cardDigits String @unique
+  type String
+  color String
+  
+  account Account @relation(fields: [accountId],references: [id])
+  accountId String
+}
+
+// portfolio_company: many-to-many relation
+model Portfolio_Company {
+  portfolio Portfolio @relation(fields: [portfolioId],references: [id])
+  portfolioId String
+  company  Company @relation(fields: [companyId], references:[id],onDelete:  Cascade)
+  companyId String
+  symbol String
+  shares Float
+  @@id([portfolioId,companyId])
+} 
+
+// Company model that holds all data for stock information
+model Company {
+  id String @id @default(uuid())
+  symbol String @unique
+  price Float 
+  logoSrc String?
+  productSrc String?
+  yahooStockV2Summary Json
+  
+  watchlists Watchlist_Company[]
+  portfolios  Portfolio_Company[]
+}
+
+// transaction entity: belongs to only one user's account
+model Transaction {
+  id String @id @default(uuid())
+  status String
+  type String
+  amount Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account Account @relation(fields: [accountId],references: [id])
+  accountId  String
+}
+
+model Ticker {
+  id String @id @default(uuid())
+  symbol String @unique
+}
+
+
+// Chatbot models
+model ChatBot {
+  id String @id @default(uuid())
+  messages Message[]
+}
+
+enum Role {
+  system
+  user
+}
+model Message {
+  id String @id @default(uuid())
+  role Role
+  content String @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  chatBot  ChatBot @relation(fields: [id], references: [id])
+}
+
+
