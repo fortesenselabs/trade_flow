@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 import os
 import pkgutil
 import toml
@@ -12,17 +12,28 @@ from trade_flow.environments.generic.components.action_scheme import ActionSchem
 from trade_flow.environments.generic.components.observer import Observer
 from trade_flow.environments.generic.components.renderer import AggregateRenderer
 from trade_flow.environments.generic.components.reward_scheme import RewardScheme
+from trade_flow.environments.generic.components.stopper import Stopper
 from trade_flow.environments.generic.environment import TradingEnvironment
 from trade_flow.feed import Stream, DataFeed, NameSpace
 
 
 def get_available_environments() -> list[tuple]:
     """
-        List available environments in Trade Flow, using environment.toml files for information.
+    List available environments in Trade Flow using environment metadata files.
 
-    Returns:
-        A list of tuples, where each tuple contains the environment name, version, and description.
+    This function scans through the modules in the `trade_flow.environments` path,
+    reads the `metadata.toml` files, and extracts relevant details like environment name,
+    version, and description based on the expected schema.
+
+    Returns
+    -------
+    list[tuple]
+        A list of tuples, where each tuple contains:
+        - `environment_name`: Name of the environment.
+        - `environment_description`: Short description of the environment.
+        - `environment_version`: Version of the environment.
     """
+
     schema = {
         "type": "object",
         "required": ["environment"],
@@ -79,49 +90,61 @@ def get_available_environments() -> list[tuple]:
 def create_env_from_dataframe(
     name: str,
     dataset: pd.DataFrame,
-    portfolio: Component,
     action_scheme: ActionScheme,
     reward_scheme: RewardScheme,
     window_size: int = 1,
     min_periods: Optional[int] = 100,
     random_start_pct: float = 0.00,
     observer: Optional[Observer] = None,
+    stopper: Optional[Stopper] = None,
     **kwargs,
 ) -> TradingEnvironment:
-    """Creates a `TradingEnvironment` from a dataframe.
+    """
+    Creates a `TradingEnvironment` instance from a given DataFrame.
+
+    This function initializes a trading environment using a provided dataset, portfolio,
+    action scheme, and other configurable components.
 
     Parameters
     ----------
-    name : `str`
-        The name to be used by the environment.
-    dataset : `pd.DataFrame`
-        The dataset to be used by the environment.
-    portfolio : `Component`
-        The portfolio component to be used by the environment.
-    action_scheme : `ActionScheme`
-        The action scheme for computing actions at every step of an episode.
-    reward_scheme : `RewardScheme`
-        The reward scheme for computing rewards at every step of an episode.
-    window_size : int
-        The size of the look back window to use for the observation space.
-    min_periods : int, optional
-        The minimum number of steps to warm up the `feed`.
-    random_start_pct : float, optional
-        Whether to randomize the starting point within the environment at each
-        observer reset, starting in the first X percentage of the sample
-    **kwargs : keyword arguments
-        Extra keyword arguments needed to build the environment.
+    name : str
+        The name of the environment instance.
+    dataset : pd.DataFrame
+        The input dataset containing historical market data.
+    action_scheme : ActionScheme
+        The scheme for possible trading actions.
+    reward_scheme : RewardScheme
+        The reward scheme used to compute rewards.
+    window_size : int, default=1
+        The observation window size for the environment.
+    min_periods : Optional[int], default=100
+        Minimum number of observations required before trading.
+    random_start_pct : float, default=0.00
+        Percentage of the dataset for a randomized starting point.
+    observer : Optional[Observer], default=None
+        Custom observer, if not provided, the default is used.
+    stopper : Optional[Stopper], default=None
+        Custom stopper. If not provided, a `MaxLossStopper` is used with a loss threshold.
+    **kwargs : Additional keyword arguments for other components.
 
     Returns
     -------
-    `TradingEnvironment`
+    TradingEnvironment
+        A trading environment configured with the specified dataset, action scheme,
+        reward scheme, observer, and other components.
 
-        The default trading environment.
+    Raises
+    ------
+    AttributeError
+        If the specified action scheme does not have a `portfolio` attribute.
+
     """
+    # Check for the portfolio in the action scheme
+    if not hasattr(action_scheme, "portfolio"):
+        raise AttributeError("action scheme no attribute named portfolio.")
 
-    # Create a namespace for the environment
+    # If split is not enabled, create a single environment
     with NameSpace(name):
-        # Create streams from the dataset columns
         streams = [
             Stream.source(dataset[c].tolist(), dtype=dataset[c].dtype).rename(c)
             for c in dataset.columns
@@ -130,23 +153,21 @@ def create_env_from_dataframe(
     # Create a data feed from the streams
     feed = DataFeed(streams)
 
-    # Set the portfolio in the action scheme
-    action_scheme.portfolio = portfolio
-
-    # Create an observer with the portfolio, feed, and other parameters
+    # Create the observer if not provided
     if observer is None:
         observer = observers.TradeFlowObserver(
-            portfolio=portfolio,
+            portfolio=kwargs.get("portfolio", None),
             feed=feed,
             renderer_feed=kwargs.get("renderer_feed", None),
             window_size=window_size,
             min_periods=min_periods,
         )
 
-    # Create a stopper with the maximum allowed loss
-    stopper = stoppers.MaxLossStopper(max_allowed_loss=kwargs.get("max_allowed_loss", 0.5))
+    # Create the stopper if not provided
+    if stopper is None:
+        stopper = stoppers.MaxLossStopper(max_allowed_loss=kwargs.get("max_allowed_loss", 0.5))
 
-    # Create a renderer based on the provided renderer options
+    # Create the renderer based on the provided renderer options
     renderer_list = kwargs.get("renderer", renderers.EmptyRenderer())
 
     if isinstance(renderer_list, list):
@@ -175,31 +196,3 @@ def create_env_from_dataframe(
     )
 
     return env
-
-
-def train_test_split_env(
-    dataset: pd.DataFrame, test_size: float = 0.2, seed: int = 42
-) -> Tuple[TradingEnvironment, TradingEnvironment]:
-    """
-    Splits the environment into training and testing environments by
-    splitting the underlying data it uses.
-
-    This function assumes the TradingEnvironment has a method to reset
-    with different data subsets.
-
-    Args:
-        dataset: The DataFrame to split.
-        test_size: The proportion of data to allocate to the testing environment (default: 0.2).
-        seed: Random seed for splitting the data (default: 42).
-
-    Returns:
-        Tuple[TradingEnvironment, TradingEnvironment]: The training and testing environments.
-    """
-    # Split the data using train_test_split
-    train_data, test_data = train_test_split(dataset, test_size=test_size, random_state=seed)
-
-    # Create new environments with the split data (assuming a reset_with_data method)
-    train_env = create_env_from_dataframe(dataset=train_data)
-    test_env = create_env_from_dataframe(dataset=test_data)
-
-    return train_env, test_env
