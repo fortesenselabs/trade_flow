@@ -60,5 +60,6 @@ This script is for educational purposes only. It is recommended to back-test any
 
 ## Credits
 
+- https://github.com/asavinov/intelligent-trading-bot/
 - https://github.com/fpierrem/telegram-aggregator/
 - https://github.com/nsniteshsahni/telegram-channel-listener/
