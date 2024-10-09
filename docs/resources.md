@@ -6,7 +6,7 @@ This section provides a curated list of resources for building a trading platfor
 
 - https://youtu.be/BRUlSm4gdQ4?si=gI9e4PcNiPkDbtcJ
 - https://youtu.be/pRurbL9-Lus?si=f4LPI17CbRLuQENO
-- [Books](./books/): Contains books about algorithmic trading.
+- [Books](./books/): Contains papers about algorithmic trading.
 
 **Open-Source Frameworks and Libraries**
 
