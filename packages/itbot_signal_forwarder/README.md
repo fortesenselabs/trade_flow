@@ -4,14 +4,14 @@ This Python script forwards trading signals from the [intelligent-trading-bot](h
 
 **Features:**
 
-- Subscribes to the `intelligent-trading-bot` Telegram channel using aiogram.
+- Subscribes to the `intelligent-trading-bot` Telegram channel using telethon.
 - Parses incoming messages for trading signals.
-- Forwards parsed signals to a WhatsApp group or individual contact.
-- Sends the signals to MetaTrader 5 for potential execution (configuration required).
+- Forwards parsed signals to a WhatsApp group or individual contact. [Not done]
+- Sends the signals to MetaTrader 5 for potential execution (configuration required). [Currently in Progress]
 
 **Requirements:**
 
-- Python 3.x
+- Python 3.8+
 - `aiogram` library for Telegram integration (see installation instructions: [invalid URL removed])
 - `twilio` library for WhatsApp integration (see installation instructions: [https://www.twilio.com/docs/whatsapp/quickstart](https://www.twilio.com/docs/whatsapp/quickstart))
 - MetaTrader 5 API (see installation instructions: [https://www.mql5.com/en/docs/integration](https://www.mql5.com/en/docs/integration))
@@ -57,3 +57,8 @@ This Python script forwards trading signals from the [intelligent-trading-bot](h
 **Disclaimer:**
 
 This script is for educational purposes only. It is recommended to back-test any strategies before using them with real capital. You are solely responsible for any financial losses incurred while using this script.
+
+## Credits
+
+- https://github.com/fpierrem/telegram-aggregator/
+- https://github.com/nsniteshsahni/telegram-channel-listener/
