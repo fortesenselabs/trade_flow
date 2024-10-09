@@ -28,7 +28,7 @@ class ITBot:
         self.mt5_server = os.getenv("MT5_SERVER")
 
         # Default Telegram chat channels to listen to
-        self.default_chats = ["intelligent_trading_signals", "uniswapinstant", "G_ojies"]
+        self.default_chats = ["intelligent_trading_signals"]
 
         # Set up logging
         self.logger = Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
