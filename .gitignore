@@ -278,3 +278,5 @@ rl_fts/notebooks/data/*
 research/*
 add_stage.sh
 catalog/
+*.session*
+trades.db
