@@ -279,4 +279,4 @@ research/*
 add_stage.sh
 catalog/
 *.session*
-trades.db
+*trades.db

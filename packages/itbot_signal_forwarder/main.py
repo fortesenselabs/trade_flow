@@ -4,6 +4,7 @@ import random
 import re
 from typing import Dict, List
 from telethon import TelegramClient, events
+from packages.itbot_signal_forwarder.risk_management import Database, RiskManagement
 from trade_flow.common.logging import Logger
 from packages.itbot_signal_forwarder.MetaTrader5 import MetaTrader5
 from packages.itbot_signal_forwarder.terminal import (
@@ -27,7 +28,7 @@ class ITBot:
         self.mt5_server = os.getenv("MT5_SERVER")
 
         # Default Telegram chat channels to listen to
-        self.default_chats = ["intelligent_trading_signals"]
+        self.default_chats = ["intelligent_trading_signals", "uniswapinstant", "G_ojies"]
 
         # Set up logging
         self.logger = Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
@@ -51,6 +52,25 @@ class ITBot:
         self.mt5 = MetaTrader5()
         self.mt5.initialize()
         self.mt5.login(self.mt5_account_number, self.mt5_password, self.mt5_server)
+
+        self.account_info = self.mt5.account_info()._asdict()
+
+        self.db = Database(db_name="it_bot_trades.db")
+        self.return_rates, self.total_periods = RiskManagement.generate_return_rates(
+            target_returns=[3, 1, 2, 1, 1.5, 1, 1.2, 1, 1.2, 1],
+            period_per_return=3,
+            total_periods=30,
+        )
+
+        self.initial_balance = self.account_info["balance"]
+        self.risk_management = RiskManagement(
+            initial_balance=self.initial_balance,
+            contract_size=1,  # BTCUSD is 1
+            return_rates=self.return_rates,
+        )
+
+        self.logger.debug(f"Account Info: {self.account_info}")
+        self.logger.info(f"Initial Account Balance: {self.initial_balance}")
 
     def parse_trading_data(self, data: str) -> List[Dict[str, str]]:
         """
@@ -111,12 +131,18 @@ class ITBot:
                     raise ValueError(f"symbol_select({symbol}) failed, exit")
 
             trade_type = (
-                self.mt5.ORDER_TYPE_BUY if "BUY" in signal_data["type"] else self.mt5.ORDER_TYPE_BUY
+                self.mt5.ORDER_TYPE_BUY
+                if "BUY" in signal_data["type"]
+                else self.mt5.ORDER_TYPE_SELL
             )
             lot = 0.01  # Managed by risk manager
-            point = self.mt5.symbol_info(symbol).point
-            price = self.mt5.symbol_info_tick(symbol).ask
             deviation = 20
+            point = self.mt5.symbol_info(symbol).point
+            price = (
+                self.mt5.symbol_info_tick(symbol).ask
+                if trade_type == self.mt5.ORDER_TYPE_BUY
+                else self.mt5.symbol_info_tick(symbol).bid
+            )
 
             request = {
                 "action": self.mt5.TRADE_ACTION_DEAL,
@@ -166,12 +192,12 @@ class ITBot:
             except AttributeError:
                 entity = await self.client.get_entity(message.peer_id)
 
-            self.logger.info(f"Received event from {entity.username} with message:\n" + text)
+            self.logger.debug(f"Received event from {entity.username} with message:\n" + text)
 
             if "ZONE" in text:
                 # Parse the message text for trading signals
                 signals = self.parse_trading_data(text)
-                self.logger.info(f"Processed signals: {signals}")
+                self.logger.debug(f"Processed signals: {signals}")
                 for signal in signals:
                     await self.forward_signal_to_mt5(signal)
 
@@ -180,15 +206,12 @@ class ITBot:
             self.client.run_until_disconnected()
 
     def run(self):
-        self.logger.info("Starting the listener")
         self.client.start(phone=self.phone_number)
+
+        self.logger.info("Listening for Signals...")
         self.start_listener()
 
 
 if __name__ == "__main__":
     it_bot = ITBot()
     it_bot.run()
-
-
-# https://github.com/fpierrem/telegram-aggregator/blob/main/aggregator.py
-# https://github.com/nsniteshsahni/telegram-channel-listener/blob/main/bot.py
