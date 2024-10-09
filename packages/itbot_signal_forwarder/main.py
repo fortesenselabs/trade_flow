@@ -184,7 +184,7 @@ class ITBot:
         async def new_message_listener(event):
             # Extract the message text
             message = event.message
-            text = message.message
+            text = f"{message.message}"
 
             # Extract channel information
             try:
