@@ -1,0 +1,177 @@
+# Classes.
+
+# Define the Account class.
+account: Account {
+  shape: class  
+  # Specifies the shape of the class.
+
+  -firstName: string  
+  # Private attribute representing the first name of the account holder.
+
+  -lastName: string  
+  # Private attribute representing the last name of the account holder.
+
+  -cards: "[]Card"  
+  # Private attribute representing an array of cards associated with the account.
+
+  -chatbot: ChatBot  
+  # Private attribute representing the associated chatbot.
+  
+  getName(): (string, string)  
+  # Method to get the full name of the account holder.
+
+  setName(first, last string)  
+  # Method to set the first and last name of the account holder.
+
+  getCurCard(): Card  
+  # Method to get the current card associated with the account.
+
+  askQuestion(msg Message)  
+  # Method to ask a question to the chatbot.
+}
+
+# Define the Card class.
+card: Card {
+  shape: class  
+  # Specifies the shape of the class.
+
+  -number: "[]uint"  
+  # Private attribute representing the card number.
+
+  -balance: int  
+  # Private attribute representing the card balance.
+
+  -history: "[]Company"  
+  # Private attribute representing the transaction history.
+  
+  getNumber(): "[]uint"  
+  # Method to get the card number.
+
+  "setNumber(num []uint)"  
+  # Method to set the card number.
+
+  getBalance(): int  
+  # Method to get the card balance.
+
+  purchaseStock(com Company): error  
+  # Method to purchase stock.
+}
+
+# Define the Company class.
+company: Company {
+  shape: class  
+  # Specifies the shape of the class.
+
+  -name: string  
+  # Private attribute representing the name of the company.
+
+  -stockPrices: "[]int"  
+  # Private attribute representing the stock prices.
+  
+  getName(): string  
+  # Method to get the name of the company.
+
+  getStockPrice(): int  
+  # Method to get the stock price of the company.
+
+  addStockPrice(price: int)  
+  # Method to add a stock price.
+}
+
+# Define the ChatBot class.
+chatbot: ChatBot {
+  shape: class  
+  # Specifies the shape of the class.
+
+  -msgs: "[]Message"  
+  # Private attribute representing the messages.
+  
+  +askQuestion(msg Message)  
+  # Public method to ask a question.
+
+  +getMessages(): "[]Message"  
+  # Public method to get messages.
+}
+
+# Define the Message class.
+message: Message {
+  shape: class  
+  # Specifies the shape of the class.
+
+  time: Time  
+  # Attribute representing the time of the message.
+
+  content: string  
+  # Attribute representing the content of the message.
+
+  isUser: bool  
+  # Attribute representing if the message is from a user or not.
+}
+
+# Connections.
+
+# Connect the ChatBot to the Account.
+chatbot -> account: {
+  source-arrowhead: *  
+  # Specifies the arrowhead style for the source.
+
+  target-arrowhead: 1 {  
+    # Specifies the arrowhead style for the target.
+
+    shape: diamond  
+    # Specifies the shape of the arrowhead.
+  }
+}
+
+# Connect the Account and Company.
+account -- company: {
+  source-arrowhead: *  
+  # Specifies the arrowhead style for the source.
+
+  target-arrowhead: *  
+  # Specifies the arrowhead style for the target.
+}
+
+# Connect the Message to the ChatBot.
+message -> chatbot: {
+  source-arrowhead: *  
+  # Specifies the arrowhead style for the source.
+
+  target-arrowhead: 1 {  
+    # Specifies the arrowhead style for the target.
+
+    shape: diamond  
+    # Specifies the shape of the arrowhead.
+  }
+}
+
+# Connect the Card to the Account.
+card -> account: {
+  source-arrowhead: *  
+  # Specifies the arrowhead style for the source.
+
+  target-arrowhead: 1 {  
+    # Specifies the arrowhead style for the target.
+
+    shape: diamond  
+    # Specifies the shape of the arrowhead.
+  }
+}
+
+# Connect the Account and Message.
+account -- message: {
+  source-arrowhead: 1  
+  # Specifies the arrowhead style for the source.
+
+  target-arrowhead: *  
+  # Specifies the arrowhead style for the target.
+}
+
+# Connect the Company and Card.
+company -- card: {
+  source-arrowhead: *  
+  # Specifies the arrowhead style for the source.
+
+  target-arrowhead: *  
+  # Specifies the arrowhead style for the target.
+}

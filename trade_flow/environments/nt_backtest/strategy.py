@@ -3,14 +3,12 @@ from functools import partial
 from typing import Optional
 
 import pandas as pd
-from trade_flow.environments.nt_backtest.model import ModelUpdate, Prediction
 from nautilus_trader.common.enums import LogColor
 from nautilus_trader.config import StrategyConfig
 from nautilus_trader.core.data import Data
-from nautilus_trader.core.datetime import unix_nanos_to_dt
 from nautilus_trader.core.message import Event
-from nautilus_trader.model.data.bar import Bar, BarSpecification
-from nautilus_trader.model.data.base import DataType
+from nautilus_trader.core.datetime import unix_nanos_to_dt
+from nautilus_trader.model.data import Bar, BarSpecification, DataType
 from nautilus_trader.model.enums import OrderSide, PositionSide, TimeInForce
 from nautilus_trader.model.events.position import (
     PositionChanged,
@@ -23,16 +21,13 @@ from nautilus_trader.model.objects import Price, Quantity
 from nautilus_trader.model.position import Position
 from nautilus_trader.trading.strategy import Strategy
 from nautilus_trader.model.functions import order_side_to_str
+from trade_flow.environments.nt_backtest.agent import ModelUpdate, Action
+from trade_flow.environments.nt_backtest.models import RepeatedEventComplete
 from trade_flow.environments.nt_backtest.utils import human_readable_duration, make_bar_type
 
 
-class RepeatedEventComplete(Exception):
-    pass
-
-
-class PairTraderConfig(StrategyConfig):
-    source_symbol: str
-    target_symbol: str
+class DRLAgentStrategyConfig(StrategyConfig):
+    symbol: str
     notional_trade_size_usd: int = 10_000
     min_model_timedelta: datetime.timedelta = datetime.timedelta(days=1)
     trade_width_std_dev: float = 2.5
@@ -40,11 +35,10 @@ class PairTraderConfig(StrategyConfig):
     ib_long_short_margin_requirement = (0.25 + 0.17) / 2.0
 
 
-class PairTrader(Strategy):
-    def __init__(self, config: PairTraderConfig):
+class DRLAgentStrategy(Strategy):
+    def __init__(self, config: DRLAgentStrategyConfig):
         super().__init__(config=config)
-        self.source_id = InstrumentId.from_str(config.source_symbol)
-        self.target_id = InstrumentId.from_str(config.target_symbol)
+        self.instrument_id = InstrumentId.from_str(config.symbol)
         self.model: Optional[ModelUpdate] = None
         self.hedge_ratio: Optional[float] = None
         self.std_pred: Optional[float] = None
@@ -57,19 +51,17 @@ class PairTrader(Strategy):
 
     def on_start(self):
         # Set instruments
-        self.source = self.cache.instrument(self.source_id)
-        self.target = self.cache.instrument(self.target_id)
+        self.instrument = self.cache.instrument(self.instrument_id)
 
         # Subscribe to bars
-        self.subscribe_bars(make_bar_type(instrument_id=self.source_id, bar_spec=self.bar_spec))
-        self.subscribe_bars(make_bar_type(instrument_id=self.target_id, bar_spec=self.bar_spec))
+        self.subscribe_bars(make_bar_type(instrument_id=self.instrument_id, bar_spec=self.bar_spec))
 
         # Subscribe to model and predictions
         self.subscribe_data(
-            data_type=DataType(ModelUpdate, metadata={"instrument_id": self.target_id.value})
+            data_type=DataType(ModelUpdate, metadata={"instrument_id": self.instrument_id.value})
         )
         self.subscribe_data(
-            data_type=DataType(Prediction, metadata={"instrument_id": self.target_id.value})
+            data_type=DataType(Action, metadata={"instrument_id": self.instrument_id.value})
         )
 
     def on_bar(self, bar: Bar):
@@ -80,7 +72,7 @@ class PairTrader(Strategy):
     def on_data(self, data: Data):
         if isinstance(data, ModelUpdate):
             self._on_model_update(data)
-        elif isinstance(data, Prediction):
+        elif isinstance(data, Action):
             self._on_prediction(data)
         else:
             raise TypeError()
@@ -90,14 +82,14 @@ class PairTrader(Strategy):
         if isinstance(event, (PositionOpened, PositionChanged)):
             position = self.cache.position(event.position_id)
             self._log.info(f"{position}", color=LogColor.YELLOW)
-            assert position.quantity < 200  # Runtime check for bug in code
+            assert position.quantity < 200  # TODO: Runtime check for bug in code
 
     def _on_model_update(self, model_update: ModelUpdate):
         self.model = model_update.model
         self.hedge_ratio = model_update.hedge_ratio
         self.std_pred = model_update.std_prediction
 
-    def _on_prediction(self, prediction: Prediction):
+    def _on_prediction(self, prediction: Action):
         self.prediction = prediction.prediction
         self._update_theoretical()
 
@@ -204,13 +196,13 @@ class PairTrader(Strategy):
             return
 
     def _hedge_position(self, event: PositionEvent):
-        # We've opened or changed position in our source instrument, we will likely need to hedge.
+        # We've opened or changed position in our instrument, we will likely need to hedge.
         target_position = self.cache.position(event.position_id)
         hedge_quantity = int(round(target_position.quantity * self.hedge_ratio, 0))
         quantity = 0
         if isinstance(event, PositionClosed):
             # (possibly) Reducing our position in the target instrument
-            source_position: Position = self.current_position(self.source_id)
+            source_position: Position = self.current_position(self.instrument_id)
             if source_position is not None and source_position.is_closed:
                 if source_position.id.value not in self._summarised:
                     self._summarise_position()
@@ -220,22 +212,26 @@ class PairTrader(Strategy):
         else:
             # (possibly) Increasing our position in hedge instrument
             side = self._opposite_side(target_position.side)
-            quantity = self._cap_volume(instrument_id=self.source_id, max_quantity=hedge_quantity)
+            quantity = self._cap_volume(
+                instrument_id=self.instrument_id, max_quantity=hedge_quantity
+            )
 
         if quantity == 0:
             # Fully hedged, cancel any existing orders
-            for order in self.cache.orders_open(instrument_id=self.source_id, strategy_id=self.id):
+            for order in self.cache.orders_open(
+                instrument_id=self.instrument_id, strategy_id=self.id
+            ):
                 self.cancel_order(order=order)
             raise RepeatedEventComplete
-        elif self.cache.orders_inflight(instrument_id=self.source_id, strategy_id=self.id):
+        elif self.cache.orders_inflight(instrument_id=self.instrument_id, strategy_id=self.id):
             # Don't send more orders if we have some currently in-flight
             return
 
         # Cancel any existing orders
-        for order in self.cache.orders_open(instrument_id=self.source_id, strategy_id=self.id):
+        for order in self.cache.orders_open(instrument_id=self.instrument_id, strategy_id=self.id):
             self.cancel_order(order=order)
         order = self.order_factory.market(
-            instrument_id=self.source_id,
+            instrument_id=self.instrument_id,
             order_side=side,
             quantity=Quantity.from_int(quantity),
         )
@@ -289,7 +285,7 @@ class PairTrader(Strategy):
 
     def current_position(self, instrument_id: InstrumentId) -> Optional[Position]:
         try:
-            side = {self.source_id: "source", self.target_id: "target"}[instrument_id]
+            side = {self.instrument_id: "target"}[instrument_id]
             return self.cache.position(PositionId(f"{side}-{self._position_id}"))
         except AssertionError:
             return None
@@ -345,5 +341,4 @@ class PairTrader(Strategy):
         self._summarised.add(src_pos.id.value)
 
     def on_stop(self):
-        self.close_all_positions(self.source_id)
-        self.close_all_positions(self.target_id)
+        self.close_all_positions(self.instrument_id)
