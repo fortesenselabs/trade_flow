@@ -82,6 +82,9 @@ class ITBot:
         Returns:
             List[Dict[str, str]]: Parsed trading data with fields such as price, score, trend, and zone.
         """
+        if "₿" not in data:
+            return []
+
         # Pattern to extract price, score, trend direction, and zone from each entry
         pattern = re.compile(
             r"₿ (?P<price>[\d,]+) Score: (?P<score>[-+]\d+\.\d{2})\s*(?P<trend>↑)?\s*(?P<zone>[\w\s]+)?"
@@ -197,9 +200,10 @@ class ITBot:
             if "ZONE" in text:
                 # Parse the message text for trading signals
                 signals = self.parse_trading_data(text)
-                self.logger.debug(f"Processed signals: {signals}")
-                for signal in signals:
-                    await self.forward_signal_to_mt5(signal)
+                if len(signals) > 0:
+                    self.logger.debug(f"Processed signals: {signals}")
+                    for signal in signals:
+                        await self.forward_signal_to_mt5(signal)
 
         # Start the client and listen for new messages
         with self.client:
