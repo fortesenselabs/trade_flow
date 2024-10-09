@@ -1,5 +1,6 @@
-import sqlite3
 from typing import List
+
+from packages.itbot_signal_forwarder.db import Database
 
 
 class LevelFailed(Exception):
@@ -14,7 +15,7 @@ class InsufficientBalance(LevelFailed):
     pass
 
 
-class RiskManagement:
+class RiskManagementSim:
     """
     This class represents a risk management system for a trading game.
     It calculates risk and reward based on initial balance, contract size, return rates,
@@ -216,57 +217,6 @@ class RiskManagement:
         self.current_level += 1  # Move to the next level in the game
 
 
-class Database:
-    def __init__(self, db_name="trades.db"):
-        self.connection = sqlite3.connect(db_name)
-        self.cursor = self.connection.cursor()
-        self.create_table()
-
-    def create_table(self):
-        self.cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS trades (
-                id INTEGER PRIMARY KEY,
-                trade_type TEXT,
-                entry_price REAL,
-                sl_price REAL,
-                tp_price REAL,
-                lot_size REAL,
-                stage TEXT
-            )
-        """
-        )
-        self.connection.commit()
-
-    def insert_trade(self, trade_type, entry_price, sl_price, tp_price, lot_size, stage):
-        self.cursor.execute(
-            """
-            INSERT INTO trades (trade_type, entry_price, sl_price, tp_price, lot_size, stage)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """,
-            (trade_type, entry_price, sl_price, tp_price, lot_size, stage),
-        )
-        self.connection.commit()
-
-    def update_trade_status(self, trade_id, status):
-        self.cursor.execute(
-            """
-            UPDATE trades
-            SET stage = ?
-            WHERE id = ?
-        """,
-            (status, trade_id),
-        )
-        self.connection.commit()
-
-    def fetch_trades(self):
-        self.cursor.execute("SELECT * FROM trades")
-        return self.cursor.fetchall()
-
-    def close(self):
-        self.connection.close()
-
-
 def simulate_trades(
     initial_balance: float,
     contract_size: float,
@@ -274,7 +224,7 @@ def simulate_trades(
     num_trades: int,
 ):
     db = Database()
-    risk_management = RiskManagement(
+    risk_management = RiskManagementSim(
         initial_balance=initial_balance,
         contract_size=contract_size,
         return_rates=return_rates,
@@ -298,7 +248,7 @@ def simulate_trades(
 if __name__ == "__main__":
     initial_balance = 20
     contract_size = 1
-    return_rates, total_periods = RiskManagement.generate_return_rates(
+    return_rates, total_periods = RiskManagementSim.generate_return_rates(
         target_returns=[3, 1, 2, 1, 1.5, 1, 1.2, 1, 1.2, 1],
         period_per_return=3,
         total_periods=30,
