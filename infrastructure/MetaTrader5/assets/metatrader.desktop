@@ -2,7 +2,7 @@
 Type=Application
 Name=Metatrader5
 Comment=Trading platform
-Exec=wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable
+Exec=/root/start_metatrader5.sh
 Icon=terminal
 Terminal=false
 Categories=Finance

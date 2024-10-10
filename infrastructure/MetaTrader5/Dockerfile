@@ -13,10 +13,7 @@ LABEL org.opencontainers.image.source=https://github.com/FortesenseLabs/metatrad
 LABEL org.opencontainers.image.description="Metatrader 5 Terminal (with RPYC API)"
 # ----------------------------------------------------------------------------------------------
 
-# USER root
-ENV DISPLAY :0
-# ENV USER=root
-# ENV PASSWORD=root
+ENV DISPLAY=:0
 ENV HOME=/root
 ENV SERVER_HOST='0.0.0.0'
 ENV SERVER_PORT=18812
@@ -42,22 +39,22 @@ RUN apt-get update -y && \
 COPY assets/menu.xml /etc/xdg/openbox/
 COPY assets/supervisord.conf /etc/
 
-
 WORKDIR /$HOME/
 COPY assets .
 
-RUN tar -xzf Metatrader-5.tar.gz -C "$DRIVE_C/" \
-    && mv metatrader.desktop /usr/share/applications/ \
-    && rm menu.xml supervisord.conf Metatrader-5.tar.gz 
+# Install MT5
+RUN chmod +x xtigervnc.sh easy-novnc.sh run_server.sh \
+    install_metatrader5.sh start_metatrader5.sh && \
+    rm menu.xml supervisord.conf
 
-RUN wine pip install -r requirements.txt \
-    && chmod +x run_server.sh xtigervnc.sh easy-novnc.sh
+# RUN ./install_metatrader5.sh
+RUN tar -xzf Metatrader-5.tar.gz -C "$DRIVE_C/Program Files/" && \
+    mv "$DRIVE_C/Program Files/Metatrader-5/" "$DRIVE_C/Program Files/MetaTrader 5/" && \
+    mv metatrader.desktop /usr/share/applications/ && \
+    rm Metatrader-5.tar.gz 
+
+RUN wine pip install -r requirements.txt
 
 EXPOSE 5900 18812 
-# Used for debugs:
-# - tiger vnc server => 5900
-# - easy-novnc => 8000
 
-CMD ["supervisord"]
-
-# TODO: upgrade to wine >= 8 as wine 7 is unstable and unsupported by MT5  
+CMD ["supervisord"] 

@@ -21,9 +21,9 @@ from nautilus_trader.model.objects import Price, Quantity
 from nautilus_trader.model.position import Position
 from nautilus_trader.trading.strategy import Strategy
 from nautilus_trader.model.functions import order_side_to_str
-from trade_flow.environments.nt_backtest.agent import ModelUpdate, Action
-from trade_flow.environments.nt_backtest.models import RepeatedEventComplete
-from trade_flow.environments.nt_backtest.utils import human_readable_duration, make_bar_type
+from packages.nt_backtest.agent import ModelUpdate, Action
+from packages.nt_backtest.models import RepeatedEventComplete
+from packages.nt_backtest.utils import human_readable_duration, make_bar_type
 
 
 class DRLAgentStrategyConfig(StrategyConfig):

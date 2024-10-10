@@ -11,7 +11,7 @@ class RiskManager:
     def __init__(
         self,
         initial_balance: float,
-        risk_percentage: float = 2.0,
+        risk_percentage: float = 1.0,
         contract_size: float = 1.0,
         drawdown_factor: float = 0.5,  # Risk reduction during drawdown
         profit_factor: float = 1.5,  # Risk increment during profit

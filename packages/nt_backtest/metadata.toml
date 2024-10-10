@@ -1,5 +1,5 @@
 [environment]
-name = "nautilus_trader"
+name = "nautilus_trader_backtest"
 version = "0.1.0"
 description = "Nautilus Trader Backtest Environment"
 type = "backtest"

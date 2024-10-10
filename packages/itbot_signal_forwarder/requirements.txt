@@ -1,4 +1,0 @@
-telethon
-python-dotenv
-colorlog
-docker
