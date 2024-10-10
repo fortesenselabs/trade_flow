@@ -4,8 +4,9 @@ import random
 import re
 from typing import Dict, List
 from telethon import events
-from packages.itbot_signal_forwarder.lib.mt5_trader import MT5Trader
-from packages.itbot_signal_forwarder.lib.notifications import TelegramListener
+from packages.itbot.itbot import Signal
+from packages.itbot.itbot.mt5_trader import MT5Trader
+from packages.itbot.itbot.interfaces import TelegramInterface
 from trade_flow.common.logging import Logger
 from dotenv import load_dotenv
 
@@ -27,7 +28,7 @@ class ITBot:
         mt5_server (str): MetaTrader 5 server address.
         trader (MT5Trader): MetaTrader 5 trader instance.
         logger (Logger): Logger instance.
-        telegram_listener (TelegramListener): Instance of the Telegram listener.
+        telegram (TelegramListener): Instance of the Telegram listener.
     """
 
     def __init__(self):
@@ -52,51 +53,49 @@ class ITBot:
             logger=self.logger,
         )
 
-        # Initialize Telegram listener
-        self.telegram_listener = TelegramListener(
+        # Initialize Telegram bot
+        self.telegram = TelegramInterface(
             phone_number=self.phone_number,
             api_id=self.api_id,
             api_hash=self.api_hash,
             logger=self.logger,
         )
 
-    def parse_trading_data(self, data: str) -> List[Dict[str, str]]:
+    def parse_signals_from_telegram(self, data: str) -> List[Signal]:
         """
-        Parse trading data to extract price, score, trend direction, and zone classification.
+        Parse signals (trading data) from telegram to extract price, score, trend direction, and zone classification.
 
         Args:
             data (str): Raw trading data as a string.
 
         Returns:
-            List[Dict[str, str]]: Parsed trading data with fields such as price, score, trend, and zone.
+            List[Signal]: Parsed trading data as a list of Signal objects.
         """
         if "₿" not in data:
             return []
 
-        # Pattern to extract price, score, trend direction, and zone from each entry
         pattern = re.compile(
             r"₿ (?P<price>[\d,]+) Score: (?P<score>[-+]\d+\.\d{2})\s*(?P<trend>↑)?\s*(?P<zone>[\w\s]+)?"
         )
 
-        parsed_data = []
-        # Find all matches in the data string
+        signals = []
         for match in pattern.finditer(data):
-            entry = {
-                "symbol": "BTCUSD",
-                "price": match.group("price").replace(",", "")
-                or "None",  # Remove commas from price
-                "score": match.group("score") or "None",
-                "trend": match.group("trend") or "None",  # Default to "None" if trend not found
-                "zone": match.group("zone") or "None",  # Default to "None" if zone not found
-                "type": (
+            # Create a Signal object using the parsed data
+            signal = Signal(
+                symbol="BTCUSD",
+                price=float(match.group("price").replace(",", "")) if match.group("price") else 0.0,
+                score=float(match.group("score")) if match.group("score") else 0.0,
+                trend=match.group("trend") or "None",
+                zone=match.group("zone") or "None",
+                trade_type=(
                     match.group("zone").upper().split("ZONE")[0].strip()
-                    if match.group("zone") is not None
+                    if match.group("zone")
                     else "None"
                 ),
-            }
-            parsed_data.append(entry)
+            )
+            signals.append(signal)
 
-        return parsed_data
+        return signals
 
     async def handle_new_message(self, event: events.NewMessage) -> None:
         """
@@ -111,15 +110,15 @@ class ITBot:
 
         # Extract channel information
         try:
-            entity = await self.telegram_listener.client.get_entity(message.peer_id.channel_id)
+            entity = await self.telegram.client.get_entity(message.peer_id.channel_id)
         except AttributeError:
-            entity = await self.telegram_listener.client.get_entity(message.peer_id)
+            entity = await self.telegram.client.get_entity(message.peer_id)
 
         self.logger.debug(f"Received event from {entity.username} with message:\n" + text)
 
         if "ZONE" in text:
             # Parse the message text for trading signals
-            signals = self.parse_trading_data(text)
+            signals = self.parse_signals_from_telegram(text)
             self.logger.debug(f"Processed signals: {signals}")
             if len(signals) > 0:
                 for signal in signals:
@@ -127,20 +126,20 @@ class ITBot:
 
     def run(self):
         """
-        Start the ITBot by initializing the Telegram listener and running it.
+        Start the bot
         """
         # Start Telegram client
-        self.telegram_listener.start_client()
+        self.telegram.start_client()
 
         # Add message handler to the listener
         channel_entities = [
             f"https://t.me/{chat}" for chat in self.default_chats if "@" not in chat
         ]
-        self.telegram_listener.add_message_handler(channel_entities, self.handle_new_message)
+        self.telegram.add_message_handler(channel_entities, self.handle_new_message)
 
         # Run Telegram listener
         self.logger.info("Listening for Signals...")
-        self.telegram_listener.run()
+        self.telegram.run()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 from typing import List
 
-from packages.itbot_signal_forwarder.lib.db import Database
+from packages.itbot.itbot.db import Database
 
 
 class LevelFailed(Exception):
