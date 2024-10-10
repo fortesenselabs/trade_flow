@@ -16,8 +16,8 @@ from nautilus_trader.core.datetime import secs_to_nanos, unix_nanos_to_dt
 
 from trade_flow.agents.base import Agent
 from trade_flow.agents.sb3_agent import SB3Agent
-from trade_flow.environments.nt_backtest.models import Action, ModelUpdate
-from trade_flow.environments.nt_backtest.utils import bars_to_dataframe, make_bar_type
+from packages.nt_backtest.models import Action, ModelUpdate
+from packages.nt_backtest.utils import bars_to_dataframe, make_bar_type
 from trade_flow.environments.utils import create_env_from_dataframe
 
 

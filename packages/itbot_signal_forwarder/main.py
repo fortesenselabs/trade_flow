@@ -3,8 +3,9 @@ import os
 import random
 import re
 from typing import Dict, List
-from telethon import TelegramClient, events
-from packages.itbot_signal_forwarder.mt5_trader import MT5Trader
+from telethon import events
+from packages.itbot_signal_forwarder.lib.mt5_trader import MT5Trader
+from packages.itbot_signal_forwarder.lib.notifications import TelegramListener
 from trade_flow.common.logging import Logger
 from dotenv import load_dotenv
 
@@ -14,6 +15,21 @@ random.seed(248)
 
 
 class ITBot:
+    """
+    ITBot Class for managing trading signals and executing trades using MetaTrader 5.
+
+    Attributes:
+        phone_number (str): Telegram account's phone number.
+        api_id (str): Telegram API ID.
+        api_hash (str): Telegram API Hash.
+        mt5_account_number (str): MetaTrader 5 account number.
+        mt5_password (str): MetaTrader 5 account password.
+        mt5_server (str): MetaTrader 5 server address.
+        trader (MT5Trader): MetaTrader 5 trader instance.
+        logger (Logger): Logger instance.
+        telegram_listener (TelegramListener): Instance of the Telegram listener.
+    """
+
     def __init__(self):
         self.phone_number = os.getenv("PHONE_NUMBER")
         self.api_id = os.getenv("API_ID")
@@ -28,14 +44,19 @@ class ITBot:
         # Set up logging
         self.logger = Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
 
-        # Initialize Telegram client
-        self.client = TelegramClient("it_bot_session", self.api_id, self.api_hash)
-
         # Set up MetaTrader 5 terminal trader
         self.trader = MT5Trader(
             account_number=self.mt5_account_number,
             password=self.mt5_password,
             server=self.mt5_server,
+            logger=self.logger,
+        )
+
+        # Initialize Telegram listener
+        self.telegram_listener = TelegramListener(
+            phone_number=self.phone_number,
+            api_id=self.api_id,
+            api_hash=self.api_hash,
             logger=self.logger,
         )
 
@@ -77,50 +98,49 @@ class ITBot:
 
         return parsed_data
 
-    def start_listener(self, chats: List[str] = None):
+    async def handle_new_message(self, event: events.NewMessage) -> None:
         """
-        Start the Telegram listener to listen for new messages in specified chat channels.
+        Handle new messages received from Telegram channels.
 
         Args:
-            chats (list): List of Telegram chat usernames to listen to.
+            event (events.NewMessage): The Telegram message event object.
         """
-        if chats is None:
-            chats = self.default_chats
+        # Extract the message text
+        message = event.message
+        text = f"{message.message}"
 
-        # Convert usernames into channel entities
-        channel_entities = [f"https://t.me/{chat}" for chat in chats if "@" not in chat]
+        # Extract channel information
+        try:
+            entity = await self.telegram_listener.client.get_entity(message.peer_id.channel_id)
+        except AttributeError:
+            entity = await self.telegram_listener.client.get_entity(message.peer_id)
 
-        @self.client.on(events.NewMessage(chats=channel_entities))
-        async def new_message_listener(event):
-            # Extract the message text
-            message = event.message
-            text = f"{message.message}"
+        self.logger.debug(f"Received event from {entity.username} with message:\n" + text)
 
-            # Extract channel information
-            try:
-                entity = await self.client.get_entity(message.peer_id.channel_id)
-            except AttributeError:
-                entity = await self.client.get_entity(message.peer_id)
-
-            self.logger.debug(f"Received event from {entity.username} with message:\n" + text)
-
-            if "ZONE" in text:
-                # Parse the message text for trading signals
-                signals = self.parse_trading_data(text)
-                self.logger.debug(f"Processed signals: {signals}")
-                if len(signals) > 0:
-                    for signal in signals:
-                        await self.trader.execute(signal)
-
-        # Start the client and listen for new messages
-        with self.client:
-            self.client.run_until_disconnected()
+        if "ZONE" in text:
+            # Parse the message text for trading signals
+            signals = self.parse_trading_data(text)
+            self.logger.debug(f"Processed signals: {signals}")
+            if len(signals) > 0:
+                for signal in signals:
+                    await self.trader.execute_trade(signal)
 
     def run(self):
-        self.client.start(phone=self.phone_number)
+        """
+        Start the ITBot by initializing the Telegram listener and running it.
+        """
+        # Start Telegram client
+        self.telegram_listener.start_client()
 
+        # Add message handler to the listener
+        channel_entities = [
+            f"https://t.me/{chat}" for chat in self.default_chats if "@" not in chat
+        ]
+        self.telegram_listener.add_message_handler(channel_entities, self.handle_new_message)
+
+        # Run Telegram listener
         self.logger.info("Listening for Signals...")
-        self.start_listener()
+        self.telegram_listener.run()
 
 
 if __name__ == "__main__":
