@@ -3,7 +3,7 @@
   <menu id="root-menu" label="Openbox 3">
     <item label="Metatrader5">
       <action name="Execute">
-        <execute>wine /opt/wineprefix/drive_c/Metatrader-5/terminal64.exe /portable</execute>
+        <execute>/root/start_metatrader5.sh</execute>
       </action>
     </item>
     <item label="Terminal">
