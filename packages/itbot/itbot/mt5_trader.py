@@ -1,6 +1,9 @@
 import asyncio
 import logging
 import random
+import time
+import pandas as pd
+from datetime import datetime
 from typing import Dict, Optional, List, Tuple
 from packages.itbot.itbot import Signal
 from packages.itbot.itbot.MetaTrader5 import MetaTrader5
@@ -96,6 +99,7 @@ class MT5Trader:
         # Risk Manager Setup
         self.risk_management = RiskManager(
             initial_balance=self.initial_balance,
+            risk_percentage=0.1,
             contract_size=contract_size,
             logger=self.logger,
         )
@@ -118,11 +122,141 @@ class MT5Trader:
         try:
             if not self.mt5.initialize():
                 raise RuntimeError("MetaTrader 5 initialization failed")
-            if not self.mt5.login(self.mt5_account_number, self.mt5_password, self.mt5_server):
-                raise RuntimeError("MetaTrader 5 login failed")
+
+            # self.logger.debug(
+            #     self.mt5.login(self.mt5_account_number, self.mt5_password, self.mt5_server)
+            # )
+            # if not self.mt5.login(self.mt5_account_number, self.mt5_password, self.mt5_server):
+            #     raise RuntimeError("MetaTrader 5 login failed")
         except Exception as e:
             self.logger.error(f"Error initializing MetaTrader 5: {e}")
             raise MT5TraderInitializationError("Failed to initialize MetaTrader 5")
+
+    def _prepare_trade_request(self, symbol: str, trade_type: str, **kwargs) -> Dict:
+        """Prepare a trade request based on the given symbol and trade type."""
+
+        def round_2_tick_size(price: float, trade_tick_size):
+            return round(price / trade_tick_size) * trade_tick_size
+
+        symbol_info = self.mt5.symbol_info(symbol)
+        point = symbol_info.point
+        trade_stops_level = symbol_info.trade_stops_level
+        trade_tick_size = symbol_info.trade_tick_size
+        price = (
+            self.mt5.symbol_info_tick(symbol).bid
+            if trade_type == "BUY"
+            else self.mt5.symbol_info_tick(symbol).ask
+        )
+
+        position_size = self.risk_management.calculate_position_size(**kwargs)
+
+        # Validate the position size before executing the trade
+        position_size = self.validate_position_size(symbol, position_size)
+
+        request = {
+            "action": self.mt5.TRADE_ACTION_DEAL,
+            "symbol": symbol,
+            "volume": position_size,
+            "type": self.mt5.ORDER_TYPE_BUY if trade_type == "BUY" else self.mt5.ORDER_TYPE_SELL,
+            "price": price,
+            # "sl": price - 1000 * point,
+            # "tp": price + (100 * 2) * point,  # RRR => 2:1
+            "deviation": 20,
+            "magic": random.randint(234000, 237000),
+            "comment": "ITBot",
+            # "type_time": self.mt5.ORDER_TIME_GTC,
+            # "type_filling": self.mt5.ORDER_FILLING_RETURN,
+        }
+        self.logger.debug(request)
+        return request
+
+    def validate_position_size(self, symbol: str, volume: float) -> bool:
+        """
+        Validate the position size for the specified symbol.
+
+        Args:
+            symbol (str): The trading symbol.
+            volume (float): The proposed position size.
+
+        Returns:
+            bool: True if the position size is valid, raises ValueError otherwise.
+        """
+        symbol_info = self.mt5.symbol_info(symbol)
+
+        if not symbol_info:
+            raise ValueError(f"Symbol {symbol} information is not available.")
+
+        self.logger.debug(symbol_info)
+
+        # Check minimum and maximum volume
+        min_volume = symbol_info.volume_min
+        max_volume = symbol_info.volume_max
+
+        if volume < min_volume:
+            self.logger.warning(
+                f"Volume {volume} is below the minimum volume of {min_volume} for {symbol}."
+            )
+            volume = min_volume
+        if volume > max_volume:
+            self.logger.warning(
+                f"Volume {volume} exceeds the maximum volume of {max_volume} for {symbol}."
+            )
+            volume = max_volume
+
+        self.logger.info(
+            f"Volume {volume} is valid for {symbol} (min: {min_volume}, max: {max_volume})."
+        )
+        return volume
+
+    def trail_sl(self, symbol, order_ticket, timeframe, stop_loss_dict):
+        while True:
+
+            bars = self.mt5.copy_rates_from_pos(symbol, timeframe, 0, 4)
+            bars_df = pd.DataFrame(bars)
+            bar1_high = bars_df["high"].iloc[0]
+            bar2_high = bars_df["high"].iloc[1]
+            bar3_high = bars_df["high"].iloc[2]
+            bar1_low = bars_df["low"].iloc[0]
+            bar2_low = bars_df["low"].iloc[1]
+            bar3_low = bars_df["low"].iloc[2]
+
+            if self.mt5.positions_get(ticket=order_ticket):
+                position_type = self.mt5.positions_get(ticket=order_ticket)[0].type
+                if position_type == self.mt5.ORDER_TYPE_SELL:
+                    stop_loss_value = max(bar1_high, bar2_high, bar3_high)  # Sell order S/L
+                else:
+                    stop_loss_value = min(bar1_low, bar2_low, bar3_low)  # Buy order S/L
+
+                tick_size = self.mt5.symbol_info(symbol).trade_tick_size
+                normalised_sl = round(stop_loss_value / tick_size) * tick_size
+
+                if normalised_sl != stop_loss_dict[symbol]:
+                    current_sl = self.mt5.positions_get(ticket=order_ticket)[0].sl
+                    if normalised_sl != current_sl:
+                        request = {
+                            "action": self.mt5.TRADE_ACTION_SLTP,
+                            "position": order_ticket,
+                            "symbol": symbol,
+                            "magic": 24001,
+                            "sl": normalised_sl,
+                        }
+                        result = self.mt5.order_send(request)
+                        if result.retcode == self.mt5.TRADE_RETCODE_DONE:
+                            print(
+                                f"[{datetime.now()}] Trailing Stop Loss for Order {order_ticket} updated. New S/L: {normalised_sl}"
+                            )
+                            print()
+                            stop_loss_dict[symbol] = normalised_sl
+                        elif result.retcode == 10025:  # Ignore error code 10025
+                            pass
+                        else:
+                            print(
+                                f"[{datetime.now()}] Failed to update Trailing Stop Loss for Order {order_ticket}: {result.comment}"
+                            )
+                            print(f"Error code: {result.retcode}")
+                            print()
+
+            time.sleep(1)  # Wait for 1 second before checking again
 
     async def execute_trade(
         self, signal: Signal, strategy_name: str = "fixed_percentage", **kwargs
@@ -165,6 +299,7 @@ class MT5Trader:
             result = await asyncio.get_running_loop().run_in_executor(
                 None, self.mt5.order_send, request
             )
+            # result = self.mt5.order_send(request)
 
             if result.retcode != self.mt5.TRADE_RETCODE_DONE:
                 raise ValueError(f"Order send failed with retcode={result.retcode}")
@@ -172,29 +307,3 @@ class MT5Trader:
             self.logger.info(f"MT5 order sent successfully: Order ID = {result.order}")
         except Exception as e:
             self.logger.error(f"Error executing MT5 order: {e}")
-
-    def _prepare_trade_request(self, symbol: str, trade_type: str, **kwargs) -> Dict:
-        """Prepare a trade request based on the given symbol and trade type."""
-        point = self.mt5.symbol_info(symbol).point
-        price = (
-            self.mt5.symbol_info_tick(symbol).ask
-            if trade_type == "BUY"
-            else self.mt5.symbol_info_tick(symbol).bid
-        )
-
-        position_size = self.risk_management.calculate_position_size(**kwargs)
-        request = {
-            "action": self.mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
-            "volume": position_size,
-            "type": self.mt5.ORDER_TYPE_BUY if trade_type == "BUY" else self.mt5.ORDER_TYPE_SELL,
-            "price": price,
-            "sl": price - 100 * point,
-            "tp": price + 100 * point,
-            "deviation": 20,
-            "magic": random.randint(234000, 237000),
-            "comment": "ITBot",
-            "type_time": self.mt5.ORDER_TIME_GTC,
-            "type_filling": self.mt5.ORDER_FILLING_RETURN,
-        }
-        return request

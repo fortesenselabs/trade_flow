@@ -123,6 +123,7 @@ class TelegramInterface:
         Raises:
             RuntimeError: If the client fails to run or disconnects unexpectedly.
         """
+        self.logger.debug("Listening for Signals...")
         try:
             with self.client:
                 self.logger.info("Telegram client is running and listening for messages...")
