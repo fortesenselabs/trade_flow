@@ -48,12 +48,12 @@ RUN chmod +x xtigervnc.sh easy-novnc.sh run_server.sh \
     rm menu.xml supervisord.conf
 
 # RUN ./install_metatrader5.sh
-RUN mkdir "$DRIVE_C/Program Files/MetaTrader 5/" && \
-    tar -xzf Metatrader-5.tar.gz -C "$DRIVE_C" && \
-    cp -r "$DRIVE_C/Metatrader-5/" "$DRIVE_C/Program Files/MetaTrader 5/" && \
+RUN tar -xzf Metatrader-5.tar.gz -C "$DRIVE_C/Program Files/" && \
+    mv "$DRIVE_C/Program Files/Metatrader-5/" "$DRIVE_C/Program Files/MetaTrader 5/" && \
     mv metatrader.desktop /usr/share/applications/ && \
-    rm -r "$DRIVE_C/Metatrader-5/" && \
     rm Metatrader-5.tar.gz 
+
+RUN wine pip install -r requirements.txt
 
 EXPOSE 5900 18812 
 
