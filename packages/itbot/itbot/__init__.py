@@ -1,5 +1,12 @@
 from dataclasses import dataclass
 from typing import Optional
+from enum import Enum
+
+
+class TradeType(Enum):
+    BUY = "BUY"
+    SELL = "SELL"
+    NEUTRAL = "NEUTRAL"
 
 
 @dataclass
@@ -9,16 +16,18 @@ class Signal:
 
     Attributes:
         symbol (str): The trading symbol (e.g., "BTCUSD").
-        price (str): The price of the trading signal.
-        score (str): The score of the signal.
+        price (float): The price of the trading signal.
+        score (float): The score of the signal.
         trend (Optional[str]): The trend direction (e.g., "↑").
         zone (Optional[str]): The zone classification.
-        trade_type (str): The type of trade signal (e.g., "BUY" or "SELL").
+        trade_type (TradeType): The type of trade signal (e.g., TradeType.BUY or TradeType.SELL).
+        position_size (float): The size of the position for the trade.
     """
 
     symbol: str
-    price: str
-    score: str
+    price: float
+    score: float
     trend: Optional[str] = None
     zone: Optional[str] = None
-    trade_type: str = "None"  # Default type is set to "None"
+    trade_type: TradeType = TradeType.NEUTRAL  # Default type set to TradeType.NEUTRAL
+    position_size: float = 0.01  # Default position size set to 0.01

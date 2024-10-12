@@ -120,13 +120,13 @@ class Portfolio:
 # portfolio = Portfolio(returns_df)
 
 # # Optimize the portfolio using the Sortino ratio criterion
-# optimal_weights_sor = portfolio.optimize_portfolio(portfolio.SOR_criterion)
+# optimal_weights_sor = portfolio.optimize_portfolio(Portfolio.sor_criterion)
 
 # # Optimize the portfolio using the Mean-Variance criterion
-# optimal_weights_mv = portfolio.optimize_portfolio(portfolio.MV_criterion)
+# optimal_weights_mv = portfolio.optimize_portfolio(Portfolio.mv_criterion)
 
 # # Optimize the portfolio using the Skewness-Kurtosis criterion
-# optimal_weights_sk = portfolio.optimize_portfolio(portfolio.SK_criterion)
+# optimal_weights_sk = portfolio.optimize_portfolio(Portfolio.sk_criterion)
 
 # print("Optimal Weights (Sortino):", optimal_weights_sor)
 # print("Optimal Weights (Mean-Variance):", optimal_weights_mv)
