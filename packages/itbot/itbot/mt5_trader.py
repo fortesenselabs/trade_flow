@@ -103,7 +103,7 @@ class MT5Trader:
         try:
             self.mt5_terminal.safe_start()
             time.sleep(5)
-            
+
             self.logger.info(f"MetaTrader 5 Terminal started for account {self.mt5_account_number}")
         except Exception as e:
             self.logger.error(f"Error initializing Dockerized MT5 Terminal: {e}")
@@ -176,17 +176,17 @@ class MT5Trader:
             If position_id is required for closing a trade and is not provided.
         """
 
-        # Validate the position size
-        position_size = await self.validate_position_size(symbol, position_size)
-
         # Fetch symbol info and validate
         symbol_info = self.mt5.symbol_info(symbol)
         if not symbol_info:
             raise ValueError(f"Symbol info for {symbol} not available")
 
+        # Validate the position size
+        position_size = await self.validate_position_size(symbol_info, position_size)
+
         # Get necessary symbol info and pricing data
         filling_mode = symbol_info.filling_mode - 1
-        tick_data = mt5.symbol_info_tick(symbol)
+        tick_data = self.mt5.symbol_info_tick(symbol)
         ask_price = tick_data.ask
         bid_price = tick_data.bid
         point = symbol_info.point
@@ -204,9 +204,9 @@ class MT5Trader:
                 trade_type_code = mt5.ORDER_TYPE_SELL
                 price = bid_price
 
-            # Calculate stop loss (sl) and take profit (tp)
-            sl = price * (1 - 0.01)
-            tp = price * (1 + 0.01)
+            # Calculate stop loss (sl) and take profit (tp) | TODO: fix SL and TP
+            sl = price * (1 - trade_tick_size)
+            tp = price + (1 * trade_stops_level * point)
 
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
@@ -214,10 +214,10 @@ class MT5Trader:
                 "volume": position_size,
                 "type": trade_type_code,
                 "price": price,
-                "sl": sl,
-                "tp": tp,
+                # "sl": sl,
+                # "tp": tp,
                 "deviation": deviation,
-                "magic": random.randint(234000, 237000),  # Random magic number
+                "magic": random.randint(234000, 237000),
                 "comment": "ITBot",
                 "type_time": mt5.ORDER_TIME_GTC,
                 "type_filling": filling_mode,
@@ -244,7 +244,7 @@ class MT5Trader:
                 "position": position_id,
                 "price": price,
                 "deviation": deviation,
-                "magic": kwargs.get("magic", 0),  # Default to 0 if not provided
+                # "magic": kwargs.get("magic", 0),  # Default to 0 if not provided
                 "comment": "ITBot",
                 "type_time": mt5.ORDER_TIME_GTC,
                 "type_filling": filling_mode,
@@ -337,13 +337,13 @@ class MT5Trader:
             the trading symbol.
         """
 
-        # Ensure symbol_info is available
+        # Ensure symbol_info is available | isinstance(symbol_info, SymbolInfo)
         if not symbol_info:
+            self.logger.warning("Symbol information is not available.")
             raise ValueError("Symbol information is not available.")
 
         # Extract the trading symbol
         symbol = symbol_info.name
-        self.logger.debug(f"Symbol Info: {symbol_info}")
 
         # Check and adjust the volume based on minimum and maximum allowed values
         min_volume = symbol_info.volume_min
@@ -408,9 +408,11 @@ class MT5Trader:
                 None, self.mt5.order_send, request
             )
 
+            self.logger.debug(f"result: {result}")
+
             # Check if the trade was successfully executed
-            if result.retcode != self.mt5.TRADE_RETCODE_DONE:
-                raise ValueError(f"Order send failed with retcode={result.retcode}")
+            if result.retcode != mt5.TRADE_RETCODE_DONE:
+                self.logger.error(f"Order send failed with retcode={result.retcode}")
 
             # Log success and return the result as a dictionary
             self.logger.info(f"MT5 order sent successfully: Order ID = {result.order}")
@@ -462,6 +464,7 @@ class MT5Trader:
                 position_id=position_id,
                 **kwargs,
             )
+            self.logger.debug(f"Trade Request: {request}")
 
             # Execute the trade request asynchronously
             result = await asyncio.get_running_loop().run_in_executor(

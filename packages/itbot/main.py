@@ -4,6 +4,7 @@ import os
 import random
 import re
 from typing import List, Optional
+import aiodbm
 from telethon import events
 from packages.itbot.agents import Agent, BasicMLAgent
 from packages.itbot.itbot import Signal, TradeType
@@ -63,6 +64,11 @@ class ITBot:
         # Change signals_queue to hold only Signal objects
         self.signals_queue: asyncio.Queue[Signal] = asyncio.Queue()
 
+        # # Initialize aiodbm for storing signals persistently
+        # self.signals_db = aiodbm.open(
+        #     "signals.dbm", "c"
+        # )  # 'c' mode opens for read/write, creates if not exists
+
     def _validate_signal(self, signal: Signal) -> bool:
         """
         Validate the signal to ensure it meets the required criteria.
@@ -104,17 +110,19 @@ class ITBot:
         signals = []
         for match in pattern.finditer(data):
             # Create a Signal object using the parsed data
+            trade_type = (
+                match.group("zone").upper().split("ZONE")[0].strip()
+                if match.group("zone")
+                else "None"
+            )
             signal = Signal(
                 symbol="BTCUSD",
                 price=float(match.group("price").replace(",", "")) if match.group("price") else 0.0,
                 score=float(match.group("score")) if match.group("score") else 0.0,
                 trend=match.group("trend") or "None",
                 zone=match.group("zone") or "None",
-                trade_type=(
-                    match.group("zone").upper().split("ZONE")[0].strip()
-                    if match.group("zone")
-                    else "None"
-                ),
+                trade_type=TradeType.BUY if "BUY" in trade_type else TradeType.SELL,
+                position_size=0.01,
             )
             # Validate the signal before adding it to the list
             if self._validate_signal(signal):
@@ -149,10 +157,12 @@ class ITBot:
             signals = self._parse_telegram_signals(text)
             self.logger.debug(f"Processed signals: {signals}")
 
-            self.logger.debug(f"Executing Telegram signals...")
+            # Process each signal and forward it to MT5 trader for execution
             if signals:
                 for signal in signals:
-                    await self.signals_queue.put(signal)
+                    if self._validate_signal(signal):
+                        self.logger.debug(f"Adding signal to queue: {signal}")
+                        await self.signals_queue.put(signal)
 
     async def run_agent(self):
         """
@@ -168,6 +178,7 @@ class ITBot:
 
             # Loop over selected symbols and create tasks to fetch data and generate signals concurrently
             for symbol in self.agent.selected_symbols:
+                self.logger.debug(symbol)
                 tasks.append(self.process_agent_symbol(symbol))
 
             # Run the tasks concurrently
@@ -179,12 +190,14 @@ class ITBot:
         """
         Process agent's trading signals for a specific symbol.
 
+        Timeframe: 1 min
+
         Args:
             symbol (str): The trading symbol to process.
         """
         # Fetch data for the symbol
         self.logger.info(f"Fetching data for {symbol}")
-        data = await self.trader.get_bar_data(symbol=symbol, timeframe=mt5.TIMEFRAME_D1, count=3500)
+        data = await self.trader.get_bar_data(symbol=symbol, timeframe=mt5.TIMEFRAME_M1, count=3500)
 
         # Generate signals from the agent
         self.logger.info(f"Generating signals for {symbol}")
@@ -194,46 +207,56 @@ class ITBot:
         if signals:
             for signal in signals:
                 if self._validate_signal(signal):
+                    self.logger.debug(f"Adding signal to queue: {signal}")
                     await self.signals_queue.put(signal)
 
     async def run_trader(self):
         """
         Run the trader.
         """
-        signal = await self.signals_queue.get()  # Get signal from the queue
-
-        # Get current open positions
-        self.current_open_positions = await self.trader.get_open_positions()
-        self.current_open_positions.to_csv("current_open_positions.csv")
-
-        # Close trade if applicable
         try:
-            # Filter the DataFrame for the specific symbol
-            position_info = self.current_open_positions.loc[
-                self.current_open_positions["symbol"] == signal.symbol
-            ].iloc[
-                0
-            ]  # Get the first matching row
+            while True:
+                self.logger.debug("Waiting for signal in queue...")
+                signal = await self.signals_queue.get()  # Get signal from the queue
+                self.logger.debug(f"Received Signal from queue: {signal}")
 
-            position = position_info["position_decoded"]  # Use column name directly
-            identifier = position_info["identifier"]  # Use column name directly
-        except IndexError:
-            position = None
-            identifier = None
-            self.logger.warning(f"No open position found for symbol: {signal.symbol}")
+                # Get current open positions
+                self.current_open_positions = await self.trader.get_open_positions()
+                self.current_open_positions.to_csv("current_open_positions.csv")
 
-        # Close trades based on position state and signal received
-        if position is not None and signal.trade_type in [TradeType.BUY, TradeType.SELL]:
-            self.logger.info(f"POSITION: {position} \t ID: {identifier}")
-            await self.trader.execute(signal, close_trade=True, position_id=identifier)
-        else:
-            self.logger.info("No open positions to close.")
+                # Close trade if applicable
+                try:
+                    # Filter the DataFrame for the specific symbol
+                    position_info = self.current_open_positions.loc[
+                        self.current_open_positions["symbol"] == signal.symbol
+                    ].iloc[
+                        0
+                    ]  # Get the first matching row
 
-        # Open new trades based on the signal
-        if position is None and signal.trade_type in [TradeType.BUY, TradeType.SELL]:
-            await self.trader.execute(signal)
+                    position = position_info["position_decoded"]  # Use column name directly
+                    identifier = position_info["ticket"]  # Use column name directly
+                except IndexError:
+                    position = None
+                    identifier = None
+                    self.logger.warning(f"No open position found for symbol: {signal.symbol}")
 
-        self.logger.info("------------------------------------------------------------------")
+                # Close trades based on position state and signal received
+                if position is not None and signal.trade_type in [TradeType.BUY, TradeType.SELL]:
+                    self.logger.info(f"POSITION: {position} \t ID: {identifier}")
+                    await self.trader.execute(signal, close_trade=True, position_id=identifier)
+                else:
+                    self.logger.info("No open positions to close.")
+
+                # Open new trades based on the signal
+                if position is None and signal.trade_type in [TradeType.BUY, TradeType.SELL]:
+                    await self.trader.execute(signal)
+
+                self.logger.info(
+                    "------------------------------------------------------------------"
+                )
+        except KeyboardInterrupt:
+            self.logger.info("Logging out...")
+            # await self.trader.execute(signal, close_trade=True, position_id=identifier)
 
     async def run(self):
         """

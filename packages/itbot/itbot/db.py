@@ -50,3 +50,6 @@ class Database:
 
     def close(self):
         self.connection.close()
+
+
+# https://github.com/ErikKalkoken/aiodbm

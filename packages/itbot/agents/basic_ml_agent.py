@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import Any, List, Optional, Tuple
 
@@ -13,6 +14,10 @@ class BasicMLAgent(Agent):
     """
     An agent that implements the Agent interface for loading a model, generating signals,
     and sending them to ITBot.
+
+    The book Python for finance and algorithmic trading (2nd edition)
+
+    https://github.com/Quantreo/2nd-edition-BOOK-AMAZON-Python-for-Finance-and-Algorithmic-Trading/
 
     Attributes:
         logger (Logger): Instance of Logger for logging activities and errors.
@@ -102,7 +107,7 @@ class BasicMLAgent(Agent):
               `model.predict_proba`; otherwise, a default score of 1.0 is returned.
         """
         # Create new variable
-        data.columns = ["returns"]
+        # data.columns = ["returns"]
 
         # Features engineering
         data["mean returns 15"] = data["returns"].rolling(15).mean()
@@ -172,7 +177,7 @@ class BasicMLAgent(Agent):
                 self.logger.info(f"Trading pair {symbol} during the weekend is allowed.")
             else:
                 self.logger.warning(f"Trading symbol {symbol} is not allowed during the weekend.")
-                raise RuntimeError(f"Trading {symbol} is restricted on weekends.")
+                return []
         else:
             # If not weekend, check trading window
             if current_time == self.start_time:
@@ -185,10 +190,10 @@ class BasicMLAgent(Agent):
                 )
 
         self.logger.debug(f"Processing data for {symbol}")
-        self.logger.debug(data)
 
         # Calculate returns
         data["returns"] = data["close"].pct_change(1)  # .dropna()
+        self.logger.debug(data)
 
         # Check if data is sufficient for processing
         if len(data) < 1:
@@ -196,7 +201,9 @@ class BasicMLAgent(Agent):
             return []
 
         # Create the signals
-        buy, sell, score = await self._generate_signal(data, self.models[symbol])
+        await asyncio.sleep(5)
+        buy, sell, score = True, False, 0.6
+        # buy, sell, score = await self._generate_signal(data, self.models[symbol])
         self.logger.debug(f"Signal => Buy: {buy} | Sell: {sell} => {score*100}%")
 
         price = data["close"].iloc[-1]  # Latest close price
