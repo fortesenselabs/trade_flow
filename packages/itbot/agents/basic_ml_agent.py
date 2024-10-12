@@ -201,9 +201,9 @@ class BasicMLAgent(Agent):
             return []
 
         # Create the signals
-        await asyncio.sleep(5)
-        buy, sell, score = True, False, 0.6
-        # buy, sell, score = await self._generate_signal(data, self.models[symbol])
+        # await asyncio.sleep(5)
+        # buy, sell, score = True, False, 0.6
+        buy, sell, score = await self._generate_signal(data, self.models[symbol])
         self.logger.debug(f"Signal => Buy: {buy} | Sell: {sell} => {score*100}%")
 
         price = data["close"].iloc[-1]  # Latest close price
