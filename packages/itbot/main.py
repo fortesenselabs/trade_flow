@@ -10,7 +10,6 @@ from packages.itbot.itbot import Signal, TradeType
 from packages.itbot.itbot.mt5_trader import MT5Trader
 from packages.itbot.itbot.MetaTrader5 import MetaTrader5 as mt5
 from packages.itbot.itbot.interfaces import TelegramInterface
-from packages.itbot.itbot.portfolio.risk_manager import RiskManager
 from trade_flow.common.logging import Logger
 from dotenv import load_dotenv
 
@@ -28,8 +27,6 @@ class ITBot:
         logger (Logger): Instance of Logger for logging activities and errors.
         notifications_handler (TelegramInterface): Instance of TelegramInterface for handling Telegram messages.
         db (str): Path to the database for storing trade logs.
-        risk_manager (RiskManager): Instance of RiskManager for managing trade risks.
-        position_size (float): Size of the trading position to be executed.
         default_chats (List[str]): List of default Telegram channels to listen for signals.
     """
 
@@ -38,7 +35,6 @@ class ITBot:
         agent: Agent,
         trader: MT5Trader,
         notifications_handler: TelegramInterface,
-        risk_manager: RiskManager,
         db: str = "it_bot_mt5_trades.db",
         logger: Optional[Logger] = None,
     ):
@@ -49,7 +45,6 @@ class ITBot:
             agent (Agent): An instance of an agent for generating trading signals.
             trader (MT5Trader): An instance of MT5Trader for executing trades.
             notifications_handler (TelegramInterface): An instance of TelegramInterface for handling messages.
-            risk_manager (RiskManager): An instance of RiskManager for trade risk management.
             db (str, optional): Path to the SQLite database for storing trade logs. Defaults to "it_bot_mt5_trades.db".
             logger (Optional[Logger], optional): A Logger instance for logging. If not provided, a default logger is created.
         """
@@ -63,9 +58,7 @@ class ITBot:
         self.trader = trader
         self.notifications_handler = notifications_handler
         self.agent = agent
-        self.risk_manager = risk_manager
         self.db = db
-        # self.position_size = 0  # Define a default position size
 
         # Change signals_queue to hold only Signal objects
         self.signals_queue: asyncio.Queue[Signal] = asyncio.Queue()
@@ -166,13 +159,9 @@ class ITBot:
         Continuously run the agent to generate trading signals for multiple symbols
         and send them to the ITBot for execution.
 
-        This method loads the agent's model and enters an infinite loop to generate
-        and process signals for each symbol.
+        This method generates and processes signals for each symbol selected by the agent symbol.
         """
-        self.logger.debug("Starting Agent")
-
-        # Load model for the agent (modify path as needed)
-        self.agent.load_model(f"{os.getcwd()}/models/001.model")
+        self.logger.debug("Starting Agent...")
 
         while True:
             tasks = []
@@ -195,7 +184,7 @@ class ITBot:
         """
         # Fetch data for the symbol
         self.logger.info(f"Fetching data for {symbol}")
-        data = await self.trader.get_bar_data(symbol=symbol, timeframe=mt5.TIMEFRAME_D1, count=10)
+        data = await self.trader.get_bar_data(symbol=symbol, timeframe=mt5.TIMEFRAME_D1, count=3500)
 
         # Generate signals from the agent
         self.logger.info(f"Generating signals for {symbol}")
@@ -207,22 +196,11 @@ class ITBot:
                 if self._validate_signal(signal):
                     await self.signals_queue.put(signal)
 
-    async def run_trader(self, strategy_name: str = "fixed_percentage"):
+    async def run_trader(self):
         """
-        Run the trader using the specified strategy for risk management.
-
-        Args:
-            strategy_name (str): The strategy to apply for risk management.
-                                 Options: ['fixed_percentage', 'kelly_criterion', 'martingale',
-                                 'mean_reversion', 'equity_curve', 'volatility_based'].
-                                 Defaults to 'fixed_percentage'.
+        Run the trader.
         """
         signal = await self.signals_queue.get()  # Get signal from the queue
-
-        self.risk_manager.select_strategy(strategy_name)
-        self.logger.info(
-            f"Executing trade with strategy '{strategy_name}' and position size: {signal.position_size}"
-        )
 
         # Get current open positions
         self.current_open_positions = await self.trader.get_open_positions()
@@ -312,22 +290,29 @@ def main():
     )
 
     # Initialize ML Agent instance
-    agent = BasicMLAgent(logger=logger)
-
-    # Risk Manager Setup
-    target_returns: Optional[List[float]] = None
-    period_per_return: int = 3
-    total_periods: int = 30
-    contract_size: float = 1.0
-    risk_manager = RiskManager(
+    agent = BasicMLAgent(
         initial_balance=trader.initial_balance,
-        risk_percentage=0.1,
-        contract_size=contract_size,
+        selected_symbols=[
+            "ETCUSD",
+            "IBM",
+            "Volatility 150 (1s) Index",
+            "Volatility 200 (1s) Index",
+            "Volatility 250 (1s) Index",
+        ],
+        whitelist_symbols=[
+            "ETCUSD",
+            "Volatility 150 (1s) Index",
+            "Volatility 200 (1s) Index",
+            "Volatility 250 (1s) Index",
+        ],
         logger=logger,
     )
 
+    # Load model for the agent (modify path as needed)
+    agent.load_models(f"{os.getcwd()}/models/")
+
     # Setup and Start ITBot
-    it_bot = ITBot(agent, trader, notifications_handler, risk_manager, logger=logger)
+    it_bot = ITBot(agent, trader, notifications_handler, logger=logger)
     asyncio.run(it_bot.run())
 
 

@@ -1,5 +1,7 @@
 import asyncio
 from abc import ABC, abstractmethod
+import os
+import joblib
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -15,25 +17,64 @@ class Agent(ABC):
     The agent continuously waits for data and sends signals asynchronously as an event-driven program.
     """
 
-    def __init__(self, logger: Optional[Logger] = None):
-        # Set up logging
-        self.logger = logger or Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
-
-        self.model = None
-        self.signals_queue = asyncio.Queue()
-        self.loop = None
-
-        self.selected_symbols = ["BTCUSD", "EURUSD", "XAUUSD"]  # List of symbols you want to trade
-
-    @abstractmethod
-    def load_model(self, model_path: str) -> None:
-        """
-        Load the trained model from the specified path.
+    def __init__(
+        self,
+        selected_symbols: List[str] = ["EURUSD", "BTCUSD", "XAUUSD"],
+        logger: Optional[Logger] = None,
+    ):
+        """Initialize the trading bot with logging and a list of trading symbols.
 
         Args:
-            model_path (str): The file path of the trained model.
+            selected_symbols (List[str]): List of symbols to trade. Default is ["EURUSD", "BTCUSD","XAUUSD"].
+            logger (Optional[Logger]): An optional logger instance. If not provided, a default logger will be created.
         """
-        pass
+        # Set up logging
+        self.logger = logger or Logger(name="it_bot", level=logging.DEBUG, filename="ITBot.log")
+
+        # Initialize the signal queue for asynchronous handling
+        self.signals_queue = asyncio.Queue()
+
+        # Initialize the event loop
+        self.loop = asyncio.get_event_loop()  # Use the current event loop
+
+        # Store the selected symbols for trading
+        self.selected_symbols = selected_symbols
+        self.models = {
+            symbol: None for symbol in self.selected_symbols
+        }  # Initialize models for symbols
+
+        # Log the initialized symbols
+        self.logger.debug(f"Initialized with symbols: {self.selected_symbols}")
+
+    def load_models(self, model_path: str) -> None:
+        """
+        Load the trained models from the specified path.
+
+        Args:
+            model_path (str): The directory path where the trained models are stored.
+
+        Raises:
+            ValueError: If the provided path is not a directory or if the model file is not found.
+        """
+        # Check if the provided path is a valid directory
+        if not os.path.isdir(model_path):
+            raise ValueError(f"The provided path '{model_path}' is not a valid directory.")
+
+        # Load models for each symbol from the specified directory
+        for symbol in self.selected_symbols:
+            model_file = os.path.join(
+                model_path, f"{symbol}_voting.joblib"
+            )  # Adjust the file naming as needed
+
+            # Check if the model file exists
+            if os.path.isfile(model_file):
+                try:
+                    self.models[symbol] = joblib.load(model_file)
+                    self.logger.info(f"Model for {symbol} loaded successfully from {model_file}.")
+                except Exception as e:
+                    self.logger.error(f"Error loading model for {symbol}: {e}")
+            else:
+                self.logger.warning(f"No model file found for {symbol} at {model_file}.")
 
     @abstractmethod
     async def generate_signals(self, symbol: str, data: pd.DataFrame) -> List[Signal]:
