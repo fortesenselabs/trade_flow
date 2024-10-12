@@ -3,11 +3,12 @@ import logging
 import os
 import random
 import re
-from typing import Dict, List, Optional
+from typing import List, Optional
 from telethon import events
 from packages.itbot.agents import Agent, BasicMLAgent
 from packages.itbot.itbot import Signal, TradeType
 from packages.itbot.itbot.mt5_trader import MT5Trader
+from packages.itbot.itbot.MetaTrader5 import MetaTrader5 as mt5
 from packages.itbot.itbot.interfaces import TelegramInterface
 from packages.itbot.itbot.portfolio.risk_manager import RiskManager
 from trade_flow.common.logging import Logger
@@ -162,27 +163,49 @@ class ITBot:
 
     async def run_agent(self):
         """
-        Continuously run the agent to generate trading signals and send them to the ITBot for execution.
+        Continuously run the agent to generate trading signals for multiple symbols
+        and send them to the ITBot for execution.
 
-        This method loads the agent's model and enters an infinite loop to generate and process signals.
+        This method loads the agent's model and enters an infinite loop to generate
+        and process signals for each symbol.
         """
         self.logger.debug("Starting Agent")
+
         # Load model for the agent (modify path as needed)
         self.agent.load_model(f"{os.getcwd()}/models/001.model")
 
         while True:
-            # Dummy data passed to agent for signal generation
-            data = {"price": 50000, "score": 0.4}
-            # await self.trader.get_bar_data()
+            tasks = []
 
-            # Generate signals from the agent
-            signals = await self.agent.generate_signals(data)
+            # Loop over selected symbols and create tasks to fetch data and generate signals concurrently
+            for symbol in self.agent.selected_symbols:
+                tasks.append(self.process_agent_symbol(symbol))
 
-            # Process each signal and forward it to MT5 for execution
+            # Run the tasks concurrently
+            await asyncio.gather(*tasks)
+
+            await asyncio.sleep(5)  # Add delay between iterations
+
+    async def process_agent_symbol(self, symbol: str):
+        """
+        Process agent's trading signals for a specific symbol.
+
+        Args:
+            symbol (str): The trading symbol to process.
+        """
+        # Fetch data for the symbol
+        self.logger.info(f"Fetching data for {symbol}")
+        data = await self.trader.get_bar_data(symbol=symbol, timeframe=mt5.TIMEFRAME_D1, count=10)
+
+        # Generate signals from the agent
+        self.logger.info(f"Generating signals for {symbol}")
+        signals = await self.agent.generate_signals(symbol, data)
+
+        # Process each signal and forward it to MT5 trader for execution
+        if signals:
             for signal in signals:
                 if self._validate_signal(signal):
                     await self.signals_queue.put(signal)
-                await asyncio.sleep(5)
 
     async def run_trader(self, strategy_name: str = "fixed_percentage"):
         """
