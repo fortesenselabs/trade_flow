@@ -3,11 +3,13 @@ import logging
 import os
 import random
 import re
-from typing import Dict, List
+from typing import List, Optional
+import aiodbm
 from telethon import events
-from packages.itbot.agents.agent_001 import Agent001
-from packages.itbot.itbot import Signal
+from packages.itbot.agents import Agent, BasicMLAgent
+from packages.itbot.itbot import Signal, TradeType
 from packages.itbot.itbot.mt5_trader import MT5Trader
+from packages.itbot.itbot.MetaTrader5 import MetaTrader5 as mt5
 from packages.itbot.itbot.interfaces import TelegramInterface
 from trade_flow.common.logging import Logger
 from dotenv import load_dotenv
@@ -22,60 +24,82 @@ class ITBot:
     ITBot Class for managing trading signals and executing trades using MetaTrader 5.
 
     Attributes:
-        phone_number (str): Telegram account's phone number.
-        api_id (str): Telegram API ID.
-        api_hash (str): Telegram API Hash.
-        mt5_account_number (str): MetaTrader 5 account number.
-        mt5_password (str): MetaTrader 5 account password.
-        mt5_server (str): MetaTrader 5 server address.
-        trader (MT5Trader): MetaTrader 5 trader instance.
-        logger (Logger): Logger instance.
-        telegram (TelegramListener): Instance of the Telegram listener.
+        trader (MT5Trader): Instance of MT5Trader to interact with the MetaTrader 5 platform.
+        logger (Logger): Instance of Logger for logging activities and errors.
+        notifications_handler (TelegramInterface): Instance of TelegramInterface for handling Telegram messages.
+        db (str): Path to the database for storing trade logs.
+        default_chats (List[str]): List of default Telegram channels to listen for signals.
     """
 
-    def __init__(self):
-        self.phone_number = os.getenv("PHONE_NUMBER")
-        self.api_id = os.getenv("API_ID")
-        self.api_hash = os.getenv("API_HASH")
-        self.mt5_account_number = os.getenv("MT5_ACCOUNT_NUMBER")
-        self.mt5_password = os.getenv("MT5_PASSWORD")
-        self.mt5_server = os.getenv("MT5_SERVER")
+    def __init__(
+        self,
+        agent: Agent,
+        trader: MT5Trader,
+        notifications_handler: TelegramInterface,
+        db: str = "it_bot_mt5_trades.db",
+        logger: Optional[Logger] = None,
+    ):
+        """
+        Initializes the ITBot instance with the given parameters.
+
+        Args:
+            agent (Agent): An instance of an agent for generating trading signals.
+            trader (MT5Trader): An instance of MT5Trader for executing trades.
+            notifications_handler (TelegramInterface): An instance of TelegramInterface for handling messages.
+            db (str, optional): Path to the SQLite database for storing trade logs. Defaults to "it_bot_mt5_trades.db".
+            logger (Optional[Logger], optional): A Logger instance for logging. If not provided, a default logger is created.
+        """
 
         # Default Telegram chat channels to listen to
         self.default_chats = ["intelligent_trading_signals"]
 
         # Set up logging
-        self.logger = Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
+        self.logger = logger or Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
 
-        # Set up MetaTrader 5 terminal trader
-        self.trader = MT5Trader(
-            account_number=self.mt5_account_number,
-            password=self.mt5_password,
-            server=self.mt5_server,
-            logger=self.logger,
-        )
+        self.trader = trader
+        self.notifications_handler = notifications_handler
+        self.agent = agent
+        self.db = db
 
-        # Initialize Telegram bot
-        self.telegram = TelegramInterface(
-            phone_number=self.phone_number,
-            api_id=self.api_id,
-            api_hash=self.api_hash,
-            logger=self.logger,
-        )
+        # Change signals_queue to hold only Signal objects
+        self.signals_queue: asyncio.Queue[Signal] = asyncio.Queue()
 
-        # Initialize Agent001 instance
-        self.agent = Agent001(logger=self.logger)
+        # # Initialize aiodbm for storing signals persistently
+        # self.signals_db = aiodbm.open(
+        #     "signals.dbm", "c"
+        # )  # 'c' mode opens for read/write, creates if not exists
+
+    def _validate_signal(self, signal: Signal) -> bool:
+        """
+        Validate the signal to ensure it meets the required criteria.
+
+        Args:
+            signal (Signal): The signal to validate.
+
+        Returns:
+            bool: True if the signal is valid, False otherwise.
+        """
+        if signal.price <= 0:
+            self.logger.warning("Invalid signal: Price must be greater than 0.")
+            return False
+        if signal.score < -1 or signal.score > 1:
+            self.logger.warning("Invalid signal: Score must be between -1 and 1.")
+            return False
+        # Add any additional validation criteria as needed
+
+        return True
 
     def _parse_telegram_signals(self, data: str) -> List[Signal]:
         """
-        Parse signals (trading data) from telegram to extract price, score, trend direction, and zone classification.
+        Parse signals (trading data) from a Telegram message to extract price, score, trend direction, and zone classification.
 
         Args:
-            data (str): Raw trading data as a string.
+            data (str): Raw trading data as a string received from Telegram.
 
         Returns:
-            List[Signal]: Parsed trading data as a list of Signal objects.
+            List[Signal]: A list of Signal objects parsed from the provided data.
         """
+
         if "₿" not in data:
             return []
 
@@ -86,38 +110,45 @@ class ITBot:
         signals = []
         for match in pattern.finditer(data):
             # Create a Signal object using the parsed data
+            trade_type = (
+                match.group("zone").upper().split("ZONE")[0].strip()
+                if match.group("zone")
+                else "None"
+            )
             signal = Signal(
                 symbol="BTCUSD",
                 price=float(match.group("price").replace(",", "")) if match.group("price") else 0.0,
                 score=float(match.group("score")) if match.group("score") else 0.0,
                 trend=match.group("trend") or "None",
                 zone=match.group("zone") or "None",
-                trade_type=(
-                    match.group("zone").upper().split("ZONE")[0].strip()
-                    if match.group("zone")
-                    else "None"
-                ),
+                trade_type=TradeType.BUY if "BUY" in trade_type else TradeType.SELL,
+                position_size=0.01,
             )
-            signals.append(signal)
+            # Validate the signal before adding it to the list
+            if self._validate_signal(signal):
+                signals.append(signal)
+            else:
+                self.logger.warning(f"Invalid signal detected: {signal}")
 
         return signals
 
     async def handle_new_message(self, event: events.NewMessage) -> None:
         """
-        Handle new messages received from Telegram channels.
+        Handle new messages received from Telegram channels and extract trading signals.
 
         Args:
-            event (events.NewMessage): The Telegram message event object.
+            event (events.NewMessage): The event object representing the new Telegram message.
         """
+
         # Extract the message text
         message = event.message
         text = f"{message.message}"
 
         # Extract channel information
         try:
-            entity = await self.telegram.client.get_entity(message.peer_id.channel_id)
+            entity = await self.notifications_handler.client.get_entity(message.peer_id.channel_id)
         except AttributeError:
-            entity = await self.telegram.client.get_entity(message.peer_id)
+            entity = await self.notifications_handler.client.get_entity(message.peer_id)
 
         self.logger.debug(f"Received event from {entity.username} with message:\n" + text)
 
@@ -125,66 +156,188 @@ class ITBot:
             # Parse the message text for trading signals
             signals = self._parse_telegram_signals(text)
             self.logger.debug(f"Processed signals: {signals}")
-            if len(signals) > 0:
+
+            # Process each signal and forward it to MT5 trader for execution
+            if signals:
                 for signal in signals:
-                    await self.trader.execute_trade(signal)
-
-    async def process_agent_signals(self, signal: Signal) -> None:
-        """
-        Process the signals generated by the agent and execute the trade in MetaTrader 5.
-
-        Args:
-            signal (Signal): Trading signal generated by the agent.
-        """
-        self.logger.debug(f"Processing signal: {signal}")
-        await self.trader.execute_trade(signal, "martingale")
+                    if self._validate_signal(signal):
+                        self.logger.debug(f"Adding signal to queue: {signal}")
+                        await self.signals_queue.put(signal)
 
     async def run_agent(self):
         """
-        Runs the agent in a loop, generating signals and sending them to ITBot.
+        Continuously run the agent to generate trading signals for multiple symbols
+        and send them to the ITBot for execution.
+
+        This method generates and processes signals for each symbol selected by the agent symbol.
         """
-        self.logger.debug("Starting Agent")
-        # Load model for the agent (modify path as needed)
-        self.agent.load_model(f"{os.getcwd()}/models/001.model")
+        self.logger.debug("Starting Agent...")
 
         while True:
-            # Dummy data passed to agent for signal generation
-            data = {"price": 50000, "score": 0.4}
+            tasks = []
 
-            # Generate signals from the agent
-            signals = await self.agent.generate_signals(data)
+            # Loop over selected symbols and create tasks to fetch data and generate signals concurrently
+            for symbol in self.agent.selected_symbols:
+                self.logger.debug(symbol)
+                tasks.append(self.process_agent_symbol(symbol))
 
-            # Process each signal and forward it to MT5 for execution
-            for signal in signals:
-                await self.process_agent_signals(signal)
-                # await self.telegram.send_message("@G_ojies", signal.__str__())
-                await asyncio.sleep(5)
+            # Run the tasks concurrently
+            await asyncio.gather(*tasks)
 
-    def run(self):
+            await asyncio.sleep(5)  # Add delay between iterations
+
+    async def process_agent_symbol(self, symbol: str):
         """
-        Start the bot
+        Process agent's trading signals for a specific symbol.
+
+        Timeframe: 1 min
+
+        Args:
+            symbol (str): The trading symbol to process.
+        """
+        # Fetch data for the symbol
+        self.logger.info(f"Fetching data for {symbol}")
+        data = await self.trader.get_bar_data(symbol=symbol, timeframe=mt5.TIMEFRAME_M1, count=3500)
+
+        # Generate signals from the agent
+        self.logger.info(f"Generating signals for {symbol}")
+        signals = await self.agent.generate_signals(symbol, data)
+
+        # Process each signal and forward it to MT5 trader for execution
+        if signals:
+            for signal in signals:
+                if self._validate_signal(signal):
+                    self.logger.debug(f"Adding signal to queue: {signal}")
+                    await self.signals_queue.put(signal)
+
+    async def run_trader(self):
+        """
+        Run the trader.
+        """
+        try:
+            while True:
+                self.logger.debug("Waiting for signal in queue...")
+                signal = await self.signals_queue.get()  # Get signal from the queue
+                self.logger.debug(f"Received Signal from queue: {signal}")
+
+                # Get current open positions
+                self.current_open_positions = await self.trader.get_open_positions()
+                self.current_open_positions.to_csv("current_open_positions.csv")
+
+                # Close trade if applicable
+                try:
+                    # Filter the DataFrame for the specific symbol
+                    position_info = self.current_open_positions.loc[
+                        self.current_open_positions["symbol"] == signal.symbol
+                    ].iloc[
+                        0
+                    ]  # Get the first matching row
+
+                    position = position_info["position_decoded"]  # Use column name directly
+                    identifier = position_info["ticket"]  # Use column name directly
+                except IndexError:
+                    position = None
+                    identifier = None
+                    self.logger.warning(f"No open position found for symbol: {signal.symbol}")
+
+                # Close trades based on position state and signal received
+                if position is not None and signal.trade_type in [TradeType.BUY, TradeType.SELL]:
+                    self.logger.info(f"POSITION: {position} \t ID: {identifier}")
+                    await self.trader.execute(signal, close_trade=True, position_id=identifier)
+                else:
+                    self.logger.info("No open positions to close.")
+
+                # Open new trades based on the signal
+                if position is None and signal.trade_type in [TradeType.BUY, TradeType.SELL]:
+                    await self.trader.execute(signal)
+
+                self.logger.info(
+                    "------------------------------------------------------------------"
+                )
+        except KeyboardInterrupt:
+            self.logger.info("Logging out...")
+            # await self.trader.execute(signal, close_trade=True, position_id=identifier)
+
+    async def run(self):
+        """
+        Start the ITBot.
+
+        This method initializes and starts the bot's functionality, including:
+        - Starting the Telegram client to listen for trading signals.
+        - Adding a message handler to process incoming messages from specified Telegram channels.
+        - Running the agent to generate trading signals in parallel with the Telegram listener.
+
+        It sets up the necessary asynchronous tasks to ensure both the Telegram listener and the trading agent run concurrently.
         """
         self.logger.info("Starting ITBot...")
-        # Start Telegram client
-        self.telegram.start_client()
 
-        # Add message handler to the listener
+        # Add message handler to the telegrams notifications listener
         channel_entities = [
             f"https://t.me/{chat}" for chat in self.default_chats if "@" not in chat
         ]
-        self.telegram.add_message_handler(channel_entities, self.handle_new_message)
+        self.notifications_handler.add_message_handler(channel_entities, self.handle_new_message)
 
-        # Run Telegram listener and agent
-        loop = asyncio.get_event_loop()
+        # Start tasks for the agent and the Telegram listener
+        await asyncio.gather(
+            self.notifications_handler.run(),  # Start the Telegram listener
+            self.run_agent(),  # Start the agent
+            self.run_trader(),  # Start the trader
+        )
 
-        # Create tasks for both the agent and the Telegram listener
-        loop.create_task(self.run_agent())  # Start the agent in the event loop
-        loop.create_task(self.telegram.run())  # Start the Telegram listener
 
-        # Keep the event loop running
-        loop.run_forever()
+def main():
+    # Set up logging
+    logger = Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
+
+    phone_number = os.getenv("PHONE_NUMBER")
+    api_id = os.getenv("API_ID")
+    api_hash = os.getenv("API_HASH")
+    mt5_account_number = os.getenv("MT5_ACCOUNT_NUMBER")
+    mt5_password = os.getenv("MT5_PASSWORD")
+    mt5_server = os.getenv("MT5_SERVER")
+
+    # Initialize Telegram bot
+    notifications_handler = TelegramInterface(
+        phone_number=phone_number,
+        api_id=api_id,
+        api_hash=api_hash,
+        logger=logger,
+    )
+
+    # Set up MetaTrader 5 terminal trader
+    trader = MT5Trader(
+        account_number=mt5_account_number,
+        password=mt5_password,
+        server=mt5_server,
+        logger=logger,
+    )
+
+    # Initialize ML Agent instance
+    agent = BasicMLAgent(
+        initial_balance=trader.initial_balance,
+        selected_symbols=[
+            "ETCUSD",
+            "IBM",
+            "Volatility 150 (1s) Index",
+            "Volatility 200 (1s) Index",
+            "Volatility 250 (1s) Index",
+        ],
+        whitelist_symbols=[
+            "ETCUSD",
+            "Volatility 150 (1s) Index",
+            "Volatility 200 (1s) Index",
+            "Volatility 250 (1s) Index",
+        ],
+        logger=logger,
+    )
+
+    # Load model for the agent (modify path as needed)
+    agent.load_models(f"{os.getcwd()}/models/")
+
+    # Setup and Start ITBot
+    it_bot = ITBot(agent, trader, notifications_handler, logger=logger)
+    asyncio.run(it_bot.run())
 
 
 if __name__ == "__main__":
-    it_bot = ITBot()
-    it_bot.run()
+    main()

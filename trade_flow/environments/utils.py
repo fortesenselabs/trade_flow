@@ -47,6 +47,7 @@ def get_available_environments() -> list[tuple]:
                     "description": {"type": "string"},
                     "type": {"type": "string"},
                     "engine": {"type": "string"},
+                    "url": {"type": "string"},
                 },
             },
         },
@@ -68,8 +69,18 @@ def get_available_environments() -> list[tuple]:
                         environment_name = environment_config["environment"]["name"]
                         environment_version = environment_config["environment"]["version"]
                         environment_description = environment_config["environment"]["description"]
+                        environment_type = environment_config["environment"]["type"]
+                        environment_engine = environment_config["environment"]["engine"]
+                        environment_url = environment_config["environment"]["url"]
                         environments.append(
-                            (environment_name, environment_description, environment_version)
+                            (
+                                environment_name,
+                                environment_description,
+                                environment_version,
+                                environment_type,
+                                environment_engine,
+                                environment_url,
+                            )
                         )
                 except FileNotFoundError as e:
                     raise ValueError(

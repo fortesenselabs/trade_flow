@@ -82,22 +82,40 @@ class RiskManager:
         self.equity_curve.append(new_balance)
         self.logger.info(f"Updated balance: {new_balance}")
 
-    def calculate_position_size(self, current_balance: Optional[float] = None, **kwargs) -> float:
+    def calculate_position_size(
+        self,
+        current_balance: Optional[float] = None,
+        min_position_size: float = 0.01,
+        max_position_size: float = 100.0,
+        **kwargs,
+    ) -> float:
         """
         Calculate the position size based on the currently selected strategy.
 
         Args:
-            current_balance (Optional[float]): Current account balance, defaults to initial balance.
-            **kwargs: Additional parameters for specific strategies.
+            current_balance (Optional[float]): The current account balance. If not provided, defaults to the current balance of the risk manager instance.
+            min_position_size (float): The minimum allowable position size based on broker or exchange restrictions. Default is 0.01.
+            max_position_size (float): The maximum allowable position size based on broker or exchange restrictions. Default is 100.0.
+            **kwargs: Additional parameters that can be passed to specific strategies.
 
         Returns:
-            float: Calculated position size.
+            float: The calculated position size, constrained by the minimum and maximum position size limits.
+
+        The function first calculates the position size based on the currently selected strategy (e.g., fixed percentage, Kelly criterion, etc.).
+        It then ensures that the position size is within the bounds of the specified minimum and maximum limits. If the calculated position size is
+        smaller than the minimum, it is adjusted up to the minimum. If it exceeds the maximum, it is adjusted down to the maximum. This ensures
+        compliance with broker or exchange restrictions, preventing invalid position sizes.
         """
         if current_balance is None:
             current_balance = self.current_balance
 
         # Use the selected strategy for position size calculation.
         position_size = self.current_strategy(current_balance=current_balance, **kwargs)
+
+        # Constrain position size within the broker's/exchange's min and max limits
+        position_size = max(min_position_size, min(position_size, max_position_size))
+
+        self.logger.info(f"Calculated position size: {position_size}")
         return position_size
 
     def fixed_percentage_strategy(self, current_balance: float, **kwargs) -> float:
