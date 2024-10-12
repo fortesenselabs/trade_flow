@@ -4,7 +4,7 @@ import random
 import time
 import pandas as pd
 from datetime import datetime
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional
 from packages.itbot.itbot import Signal
 from packages.itbot.itbot.MetaTrader5 import MetaTrader5 as mt5
 from packages.itbot.itbot.terminal import (

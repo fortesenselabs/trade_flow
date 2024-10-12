@@ -7,3 +7,7 @@ scipy
 stable-baselines3[extra]
 rpyc
 git+https://github.com/fortesenselabs/trade_flow.git
+
+# dev
+ta
+seaborn
