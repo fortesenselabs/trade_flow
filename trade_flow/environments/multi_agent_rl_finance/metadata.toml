@@ -1,0 +1,7 @@
+[environment]
+name = "multi_agent_rl_finance"
+version = "0.1.0"
+description = "Multi-Agent Environment with support for Shorting"
+type = "train"
+engine = "gym"
+url = "https://github.com/MrDaubinet/multi-agent-rl-finance"
