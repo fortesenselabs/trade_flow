@@ -280,3 +280,4 @@ add_stage.sh
 catalog/
 *.session*
 *trades.db
+current_open_positions.csv
