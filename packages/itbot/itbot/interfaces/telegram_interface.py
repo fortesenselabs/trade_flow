@@ -44,7 +44,7 @@ class TelegramInterface:
         # Initialize Telegram client with the given session name and credentials
         self.client = TelegramClient("it_bot_session", self.api_id, self.api_hash)
 
-    def start_client(self) -> None:
+    async def start_client(self) -> None:
         """
         Start the Telegram client session.
 
@@ -55,7 +55,7 @@ class TelegramInterface:
             ConnectionError: If the client fails to start or authenticate.
         """
         try:
-            self.client.start(phone=self.phone_number)
+            await self.client.start(phone=self.phone_number)
             self.logger.info("Telegram client started successfully.")
         except Exception as e:
             self.logger.error(f"Failed to start Telegram client: {e}")
@@ -113,7 +113,7 @@ class TelegramInterface:
             except Exception as e:
                 self.logger.error(f"Error handling message: {e}")
 
-    def run(self) -> None:
+    async def run(self) -> None:
         """
         Run the Telegram client and keep listening for new messages indefinitely.
 
@@ -125,9 +125,12 @@ class TelegramInterface:
         """
         self.logger.debug("Listening for Signals...")
         try:
-            with self.client:
+            async with self.client:
+                # Start the Telegram client
+                await self.start_client()
+
                 self.logger.info("Telegram client is running and listening for messages...")
-                self.client.run_until_disconnected()
+                await self.client.run_until_disconnected()
         except Exception as e:
             self.logger.error(f"Telegram client encountered an issue: {e}")
             raise RuntimeError(f"Client run error: {e}")
