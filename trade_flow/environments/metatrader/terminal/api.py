@@ -12,7 +12,7 @@ def retrieve_data(
     from_dt: datetime,
     to_dt: datetime,
     timeframe: mt.Timeframe,
-    shutdown_terminal: bool = True,
+    shutdown_terminal: bool = False,
 ) -> Tuple[SymbolInfo, pd.DataFrame]:
     """
     Retrieves historical data for a given symbol within a specified date range and timeframe.
@@ -22,7 +22,7 @@ def retrieve_data(
         from_dt (datetime): The start date for the data retrieval (in local timezone).
         to_dt (datetime): The end date for the data retrieval (in local timezone).
         timeframe (mt.Timeframe): The MetaTrader timeframe to use for data retrieval.
-        shutdown_terminal (bool): Whether to shutdown MetaTrader after retrieval. Default is True.
+        shutdown_terminal (bool): Whether to shutdown MetaTrader after retrieval. Default is False.
 
     Returns:
         Tuple[SymbolInfo, pd.DataFrame]: A tuple containing symbol information and the price data.

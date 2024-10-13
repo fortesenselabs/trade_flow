@@ -109,6 +109,8 @@ def copy_rates_range(
         OSError: If MetaTrader5 is not available on the current platform.
     """
     _check_mt5_available()
+    if not mt5.symbol_select(symbol, True):
+        print(f"Failed to enable symbol: {symbol}")
     return mt5.copy_rates_range(symbol, timeframe.value, date_from, date_to)
 
 
