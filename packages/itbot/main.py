@@ -4,13 +4,12 @@ import os
 import random
 import re
 from typing import List, Optional
-import aiodbm
 from telethon import events
 from packages.itbot.agents import Agent, BasicMLAgent
 from packages.itbot.itbot import Signal, TradeType
 from packages.itbot.itbot.mt5_trader import MT5Trader
-from packages.itbot.itbot.MetaTrader5 import MetaTrader5 as mt5
 from packages.itbot.itbot.interfaces import TelegramInterface
+from packages.mt5any import MetaTrader5 as mt5
 from trade_flow.common.logging import Logger
 from dotenv import load_dotenv
 
@@ -63,11 +62,6 @@ class ITBot:
 
         # Change signals_queue to hold only Signal objects
         self.signals_queue: asyncio.Queue[Signal] = asyncio.Queue()
-
-        # # Initialize aiodbm for storing signals persistently
-        # self.signals_db = aiodbm.open(
-        #     "signals.dbm", "c"
-        # )  # 'c' mode opens for read/write, creates if not exists
 
     def _validate_signal(self, signal: Signal) -> bool:
         """

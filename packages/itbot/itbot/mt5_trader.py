@@ -6,13 +6,13 @@ import pandas as pd
 from datetime import datetime
 from typing import Dict, Optional
 from packages.itbot.itbot import Signal
-from packages.itbot.itbot.MetaTrader5 import MetaTrader5 as mt5
-from packages.itbot.itbot.terminal import (
+from packages.itbot.itbot.portfolio import RiskManager
+from trade_flow.common.logging import Logger
+from packages.mt5any import (
     DockerizedMT5TerminalConfig,
     DockerizedMT5Terminal,
 )
-from packages.itbot.itbot.portfolio import RiskManager
-from trade_flow.common.logging import Logger
+from packages.mt5any import MetaTrader5 as mt5
 
 
 SymbolInfo = object

@@ -2,20 +2,20 @@
 
 This Python script forwards trading signals from the [intelligent-trading-bot](https://github.com/asavinov/intelligent-trading-bot) Telegram channel to both WhatsApp and MetaTrader 5.
 
-**Features:**
+## Features
 
 - Subscribes to the `intelligent-trading-bot` Telegram channel using telethon.
 - Parses incoming messages for trading signals.
 - Forwards parsed signals to a WhatsApp group or individual contact. [Not done]
 - Sends the signals to MetaTrader 5 for potential execution (configuration required).
 
-**Requirements:**
+## Requirements
 
 - Python 3.8+
 - `telethon` library for Telegram integration (see installation instructions)
 - MetaTrader 5 API (see installation instructions: [https://www.mql5.com/en/docs/integration](https://www.mql5.com/en/docs/integration))
 
-**Installation:**
+## Installation
 
 1. Clone this repository or download the script.
 2. Install required libraries:
@@ -24,7 +24,7 @@ This Python script forwards trading signals from the [intelligent-trading-bot](h
    ```
 3. Configure `.env` (see below for details).
 
-**Configuration:**
+## Configuration
 
 1. Create a `.env` file in the same directory as the script.
 2. Add the following configurations to `.env`:
@@ -44,16 +44,22 @@ This Python script forwards trading signals from the [intelligent-trading-bot](h
    - Replace placeholders with your actual credentials.
    - MetaTrader 5 details can be found in your trading platform settings (optional).
 
-**Usage:**
+## Usage
 
-1. Run the script: `python main.py`
+```bash
+$ python main.py
+```
 
-**Disclaimer:**
+## TODOs
 
-This script is for educational purposes only. It is recommended to back-test any strategies before using them with real capital. You are solely responsible for any financial losses incurred while using this script.
+- Train RL Agents for the top 5 assets from the Quantreo ML Project (data platform -> MT5)
 
 ## Credits
 
 - https://github.com/asavinov/intelligent-trading-bot/
 - https://github.com/fpierrem/telegram-aggregator/
 - https://github.com/nsniteshsahni/telegram-channel-listener/
+
+**Disclaimer:**
+
+This script is for educational purposes only. It is recommended to back-test any strategies before using them with real capital. You are solely responsible for any financial losses incurred while using this script.
