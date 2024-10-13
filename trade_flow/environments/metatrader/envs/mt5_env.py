@@ -15,16 +15,16 @@ import plotly.graph_objects as go
 import gymnasium as gym
 from gymnasium import spaces
 
-from ..simulator import MtSimulator, OrderType
+from trade_flow.environments.metatrader.simulator import OrderType, Simulator as MT5Simulator
 
 
-class MtEnv(gym.Env):
+class MT5Env(gym.Env):
 
-    metadata = {'render_modes': ['human', 'simple_figure', 'advanced_figure']}
+    metadata = {"render_modes": ["human", "simple_figure", "advanced_figure"]}
 
     def __init__(
         self,
-        original_simulator: MtSimulator,
+        original_simulator: MT5Simulator,
         trading_symbols: List[str],
         window_size: int,
         time_points: Optional[List[datetime]] = None,
@@ -39,7 +39,7 @@ class MtEnv(gym.Env):
         assert len(original_simulator.symbols_data) > 0, "no data available"
         assert len(original_simulator.symbols_info) > 0, "no data available"
         assert len(trading_symbols) > 0, "no trading symbols provided"
-        assert 0. <= hold_threshold <= 1., "'hold_threshold' must be in range [0., 1.]"
+        assert 0.0 <= hold_threshold <= 1.0, "'hold_threshold' must be in range [0., 1.]"
 
         if not original_simulator.hedge:
             symbol_max_orders = 1
@@ -47,11 +47,14 @@ class MtEnv(gym.Env):
         for symbol in trading_symbols:
             assert symbol in original_simulator.symbols_info, f"symbol '{symbol}' not found"
             currency_profit = original_simulator.symbols_info[symbol].currency_profit
-            assert original_simulator._get_unit_symbol_info(currency_profit) is not None, \
-                   f"unit symbol for '{currency_profit}' not found"
+            assert (
+                original_simulator._get_unit_symbol_info(currency_profit) is not None
+            ), f"unit symbol for '{currency_profit}' not found"
 
         if time_points is None:
-            time_points = original_simulator.symbols_data[trading_symbols[0]].index.to_pydatetime().tolist()
+            time_points = (
+                original_simulator.symbols_data[trading_symbols[0]].index.to_pydatetime().tolist()
+            )
         assert len(time_points) > window_size, "not enough time points provided"
 
         self.render_mode = render_mode
@@ -65,7 +68,9 @@ class MtEnv(gym.Env):
         self.close_threshold = close_threshold
         self.fee = fee
         self.symbol_max_orders = symbol_max_orders
-        self.multiprocessing_pool = Pool(multiprocessing_processes) if multiprocessing_processes else None
+        self.multiprocessing_pool = (
+            Pool(multiprocessing_processes) if multiprocessing_processes else None
+        )
 
         self.prices = self._get_prices()
         self.signal_features = self._process_data()
@@ -73,28 +78,36 @@ class MtEnv(gym.Env):
 
         # spaces
         self.action_space = spaces.Box(
-            low=-1e2, high=1e2, dtype=np.float64,
-            shape=(len(self.trading_symbols) * (self.symbol_max_orders + 2),)
+            low=-1e2,
+            high=1e2,
+            dtype=np.float64,
+            shape=(len(self.trading_symbols) * (self.symbol_max_orders + 2),),
         )  # symbol -> [close_order_i(logit), hold(logit), volume]
 
         INF = 1e10
-        self.observation_space = spaces.Dict({
-            'balance': spaces.Box(low=-INF, high=INF, shape=(1,), dtype=np.float64),
-            'equity': spaces.Box(low=-INF, high=INF, shape=(1,), dtype=np.float64),
-            'margin': spaces.Box(low=-INF, high=INF, shape=(1,), dtype=np.float64),
-            'features': spaces.Box(low=-INF, high=INF, shape=self.features_shape, dtype=np.float64),
-            'orders': spaces.Box(
-                low=-INF, high=INF, dtype=np.float64,
-                shape=(len(self.trading_symbols), self.symbol_max_orders, 3)
-            )  # symbol, order_i -> [entry_price, volume, profit]
-        })
+        self.observation_space = spaces.Dict(
+            {
+                "balance": spaces.Box(low=-INF, high=INF, shape=(1,), dtype=np.float64),
+                "equity": spaces.Box(low=-INF, high=INF, shape=(1,), dtype=np.float64),
+                "margin": spaces.Box(low=-INF, high=INF, shape=(1,), dtype=np.float64),
+                "features": spaces.Box(
+                    low=-INF, high=INF, shape=self.features_shape, dtype=np.float64
+                ),
+                "orders": spaces.Box(
+                    low=-INF,
+                    high=INF,
+                    dtype=np.float64,
+                    shape=(len(self.trading_symbols), self.symbol_max_orders, 3),
+                ),  # symbol, order_i -> [entry_price, volume, profit]
+            }
+        )
 
         # episode
         self._start_tick = self.window_size - 1
         self._end_tick = len(self.time_points) - 1
         self._truncated: bool = NotImplemented
         self._current_tick: int = NotImplemented
-        self.simulator: MtSimulator = NotImplemented
+        self.simulator: MT5Simulator = NotImplemented
         self.history: List[Dict[str, Any]] = NotImplemented
 
     def reset(self, seed=None, options=None) -> Dict[str, np.ndarray]:
@@ -138,7 +151,7 @@ class MtEnv(gym.Env):
         k = self.symbol_max_orders + 2
 
         for i, symbol in enumerate(self.trading_symbols):
-            symbol_action = action[k*i:k*(i+1)]
+            symbol_action = action[k * i : k * (i + 1)]
             close_orders_logit = symbol_action[:-2]
             hold_logit = symbol_action[-2]
             volume = symbol_action[-1]
@@ -150,40 +163,53 @@ class MtEnv(gym.Env):
 
             symbol_orders = self.simulator.symbol_orders(symbol)
             orders_to_close_index = np.where(
-                close_orders_probability[:len(symbol_orders)] > self.close_threshold
+                close_orders_probability[: len(symbol_orders)] > self.close_threshold
             )[0]
             orders_to_close = np.array(symbol_orders)[orders_to_close_index]
 
             for j, order in enumerate(orders_to_close):
                 self.simulator.close_order(order)
-                closed_orders_info[symbol].append(dict(
-                    order_id=order.id, symbol=order.symbol, order_type=order.type,
-                    volume=order.volume, fee=order.fee,
-                    margin=order.margin, profit=order.profit,
-                    close_probability=close_orders_probability[orders_to_close_index][j],
-                ))
+                closed_orders_info[symbol].append(
+                    dict(
+                        order_id=order.id,
+                        symbol=order.symbol,
+                        order_type=order.type,
+                        volume=order.volume,
+                        fee=order.fee,
+                        margin=order.margin,
+                        profit=order.profit,
+                        close_probability=close_orders_probability[orders_to_close_index][j],
+                    )
+                )
 
             orders_capacity = self.symbol_max_orders - (len(symbol_orders) - len(orders_to_close))
             orders_info[symbol] = dict(
-                order_id=None, symbol=symbol, hold_probability=hold_probability,
-                hold=hold, volume=volume, capacity=orders_capacity, order_type=None,
-                modified_volume=modified_volume, fee=float('nan'), margin=float('nan'),
-                error='',
+                order_id=None,
+                symbol=symbol,
+                hold_probability=hold_probability,
+                hold=hold,
+                volume=volume,
+                capacity=orders_capacity,
+                order_type=None,
+                modified_volume=modified_volume,
+                fee=float("nan"),
+                margin=float("nan"),
+                error="",
             )
 
             if self.simulator.hedge and orders_capacity == 0:
-                orders_info[symbol].update(dict(
-                    error="cannot add more orders"
-                ))
+                orders_info[symbol].update(dict(error="cannot add more orders"))
             elif not hold:
-                order_type = OrderType.Buy if volume > 0. else OrderType.Sell
+                order_type = OrderType.Buy if volume > 0.0 else OrderType.Sell
                 fee = self.fee if type(self.fee) is float else self.fee(symbol)
 
                 try:
                     order = self.simulator.create_order(order_type, symbol, modified_volume, fee)
                     new_info = dict(
-                        order_id=order.id, order_type=order_type,
-                        fee=fee, margin=order.margin,
+                        order_id=order.id,
+                        order_type=order_type,
+                        fee=fee,
+                        margin=order.margin,
                     )
                 except ValueError as e:
                     new_info = dict(error=str(e))
@@ -192,12 +218,11 @@ class MtEnv(gym.Env):
 
         return orders_info, closed_orders_info
 
-    def _get_prices(self, keys: List[str]=['Close', 'Open']) -> Dict[str, np.ndarray]:
+    def _get_prices(self, keys: List[str] = ["Close", "Open"]) -> Dict[str, np.ndarray]:
         prices = {}
 
         for symbol in self.trading_symbols:
-            get_price_at = lambda time: \
-                self.original_simulator.price_at(symbol, time)[keys]
+            get_price_at = lambda time: self.original_simulator.price_at(symbol, time)[keys]
 
             if self.multiprocessing_pool is None:
                 p = list(map(get_price_at, self.time_points))
@@ -214,36 +239,38 @@ class MtEnv(gym.Env):
         return signal_features
 
     def _get_observation(self) -> Dict[str, np.ndarray]:
-        features = self.signal_features[(self._current_tick-self.window_size+1):(self._current_tick+1)]
+        features = self.signal_features[
+            (self._current_tick - self.window_size + 1) : (self._current_tick + 1)
+        ]
 
-        orders = np.zeros(self.observation_space['orders'].shape)
+        orders = np.zeros(self.observation_space["orders"].shape)
         for i, symbol in enumerate(self.trading_symbols):
             symbol_orders = self.simulator.symbol_orders(symbol)
             for j, order in enumerate(symbol_orders):
                 orders[i, j] = [order.entry_price, order.volume, order.profit]
 
         observation = {
-            'balance': np.array([self.simulator.balance]),
-            'equity': np.array([self.simulator.equity]),
-            'margin': np.array([self.simulator.margin]),
-            'features': features,
-            'orders': orders,
+            "balance": np.array([self.simulator.balance]),
+            "equity": np.array([self.simulator.equity]),
+            "margin": np.array([self.simulator.margin]),
+            "features": features,
+            "orders": orders,
         }
         return observation
 
     def _calculate_reward(self) -> float:
-        prev_equity = self.history[-1]['equity']
+        prev_equity = self.history[-1]["equity"]
         current_equity = self.simulator.equity
         step_reward = current_equity - prev_equity
         return step_reward
 
     def _create_info(self, **kwargs: Any) -> Dict[str, Any]:
         info = {k: v for k, v in kwargs.items()}
-        info['balance'] = self.simulator.balance
-        info['equity'] = self.simulator.equity
-        info['margin'] = self.simulator.margin
-        info['free_margin'] = self.simulator.free_margin
-        info['margin_level'] = self.simulator.margin_level
+        info["balance"] = self.simulator.balance
+        info["equity"] = self.simulator.equity
+        info["margin"] = self.simulator.margin
+        info["free_margin"] = self.simulator.free_margin
+        info["margin_level"] = self.simulator.margin_level
         return info
 
     def _get_modified_volume(self, symbol: str, volume: float) -> float:
@@ -253,27 +280,27 @@ class MtEnv(gym.Env):
         v = round(v / si.volume_step) * si.volume_step
         return v
 
-    def render(self, mode: str='human', **kwargs: Any) -> Any:
-        if mode == 'simple_figure':
+    def render(self, mode: str = "human", **kwargs: Any) -> Any:
+        if mode == "simple_figure":
             return self._render_simple_figure(**kwargs)
-        if mode == 'advanced_figure':
+        if mode == "advanced_figure":
             return self._render_advanced_figure(**kwargs)
         return self.simulator.get_state(**kwargs)
 
     def _render_simple_figure(
-        self, figsize: Tuple[float, float]=(14, 6), return_figure: bool=False
+        self, figsize: Tuple[float, float] = (14, 6), return_figure: bool = False
     ) -> Any:
-        fig, ax = plt.subplots(figsize=figsize, facecolor='white')
+        fig, ax = plt.subplots(figsize=figsize, facecolor="white")
 
         cmap_colors = np.array(plt_cm.tab10.colors)[[0, 1, 4, 5, 6, 8]]
-        cmap = plt_colors.LinearSegmentedColormap.from_list('mtsim', cmap_colors)
+        cmap = plt_colors.LinearSegmentedColormap.from_list("mtsim", cmap_colors)
         symbol_colors = cmap(np.linspace(0, 1, len(self.trading_symbols)))
 
         for j, symbol in enumerate(self.trading_symbols):
             close_price = self.prices[symbol][:, 0]
             symbol_color = symbol_colors[j]
 
-            ax.plot(self.time_points, close_price, c=symbol_color, marker='.', label=symbol)
+            ax.plot(self.time_points, close_price, c=symbol_color, marker=".", label=symbol)
 
             buy_ticks = []
             buy_error_ticks = []
@@ -284,31 +311,31 @@ class MtEnv(gym.Env):
             for i in range(1, len(self.history)):
                 tick = self._start_tick + i - 1
 
-                order = self.history[i]['orders'].get(symbol, {})
-                if order and not order['hold']:
-                    if order['order_type'] == OrderType.Buy:
-                        if order['error']:
+                order = self.history[i]["orders"].get(symbol, {})
+                if order and not order["hold"]:
+                    if order["order_type"] == OrderType.Buy:
+                        if order["error"]:
                             buy_error_ticks.append(tick)
                         else:
                             buy_ticks.append(tick)
                     else:
-                        if order['error']:
+                        if order["error"]:
                             sell_error_ticks.append(tick)
                         else:
                             sell_ticks.append(tick)
 
-                closed_orders = self.history[i]['closed_orders'].get(symbol, [])
+                closed_orders = self.history[i]["closed_orders"].get(symbol, [])
                 if len(closed_orders) > 0:
                     close_ticks.append(tick)
 
             tp = np.array(self.time_points)
-            ax.plot(tp[buy_ticks], close_price[buy_ticks], '^', color='green')
-            ax.plot(tp[buy_error_ticks], close_price[buy_error_ticks], '^', color='gray')
-            ax.plot(tp[sell_ticks], close_price[sell_ticks], 'v', color='red')
-            ax.plot(tp[sell_error_ticks], close_price[sell_error_ticks], 'v', color='gray')
-            ax.plot(tp[close_ticks], close_price[close_ticks], '|', color='black')
+            ax.plot(tp[buy_ticks], close_price[buy_ticks], "^", color="green")
+            ax.plot(tp[buy_error_ticks], close_price[buy_error_ticks], "^", color="gray")
+            ax.plot(tp[sell_ticks], close_price[sell_ticks], "v", color="red")
+            ax.plot(tp[sell_error_ticks], close_price[sell_error_ticks], "v", color="gray")
+            ax.plot(tp[close_ticks], close_price[close_ticks], "|", color="black")
 
-            ax.tick_params(axis='y', labelcolor=symbol_color)
+            ax.tick_params(axis="y", labelcolor=symbol_color)
             ax.yaxis.tick_left()
             if j < len(self.trading_symbols) - 1:
                 ax = ax.twinx()
@@ -320,7 +347,7 @@ class MtEnv(gym.Env):
             f"Free Margin: {self.simulator.free_margin:.6f} ~ "
             f"Margin Level: {self.simulator.margin_level:.6f}"
         )
-        fig.legend(loc='right')
+        fig.legend(loc="right")
 
         if return_figure:
             return fig
@@ -336,7 +363,7 @@ class MtEnv(gym.Env):
         fig = go.Figure()
 
         cmap_colors = np.array(plt_cm.tab10.colors)[[0, 1, 4, 5, 6, 8]]
-        cmap = plt_colors.LinearSegmentedColormap.from_list('mtsim', cmap_colors)
+        cmap = plt_colors.LinearSegmentedColormap.from_list("mtsim", cmap_colors)
         symbol_colors = cmap(np.linspace(0, 1, len(self.trading_symbols)))
         get_color_string = lambda color: "rgba(%s, %s, %s, %s)" % tuple(color)
 
@@ -358,44 +385,48 @@ class MtEnv(gym.Env):
                 go.Scatter(
                     x=self.time_points,
                     y=close_price,
-                    mode='lines+markers',
+                    mode="lines+markers",
                     line_color=get_color_string(symbol_color),
                     opacity=1.0,
                     hovertext=extra_info,
                     name=symbol,
-                    yaxis=f'y{j+1}',
-                    legendgroup=f'g{j+1}',
+                    yaxis=f"y{j+1}",
+                    legendgroup=f"g{j+1}",
                 ),
             )
 
-            fig.update_layout(**{
-                f'yaxis{j+1}': dict(
-                    tickfont=dict(color=get_color_string(symbol_color * [1, 1, 1, 0.8])),
-                    overlaying='y' if j > 0 else None,
-                    # position=0.035*j
-                ),
-            })
+            fig.update_layout(
+                **{
+                    f"yaxis{j+1}": dict(
+                        tickfont=dict(color=get_color_string(symbol_color * [1, 1, 1, 0.8])),
+                        overlaying="y" if j > 0 else None,
+                        # position=0.035*j
+                    ),
+                }
+            )
 
             trade_ticks = []
             trade_markers = []
             trade_colors = []
             trade_sizes = []
             trade_extra_info = []
-            trade_max_volume = max([
-                h.get('orders', {}).get(symbol, {}).get('modified_volume') or 0
-                for h in self.history
-            ])
+            trade_max_volume = max(
+                [
+                    h.get("orders", {}).get(symbol, {}).get("modified_volume") or 0
+                    for h in self.history
+                ]
+            )
             close_ticks = []
             close_extra_info = []
 
             for i in range(1, len(self.history)):
                 tick = self._start_tick + i - 1
 
-                order = self.history[i]['orders'].get(symbol)
-                if order and not order['hold']:
+                order = self.history[i]["orders"].get(symbol)
+                if order and not order["hold"]:
                     marker = None
                     color = None
-                    size = 8 + 22 * (order['modified_volume'] / trade_max_volume)
+                    size = 8 + 22 * (order["modified_volume"] / trade_max_volume)
                     info = (
                         f"order id: {order['order_id'] or ''}<br>"
                         f"hold probability: {order['hold_probability']:.4f}<br>"
@@ -407,12 +438,12 @@ class MtEnv(gym.Env):
                         f"error: {order['error']}"
                     )
 
-                    if order['order_type'] == OrderType.Buy:
-                        marker = 'triangle-up'
-                        color = 'gray' if order['error'] else 'green'
+                    if order["order_type"] == OrderType.Buy:
+                        marker = "triangle-up"
+                        color = "gray" if order["error"] else "green"
                     else:
-                        marker = 'triangle-down'
-                        color = 'gray' if order['error'] else 'red'
+                        marker = "triangle-down"
+                        color = "gray" if order["error"] else "red"
 
                     trade_ticks.append(tick)
                     trade_markers.append(marker)
@@ -420,7 +451,7 @@ class MtEnv(gym.Env):
                     trade_sizes.append(size)
                     trade_extra_info.append(info)
 
-                closed_orders = self.history[i]['closed_orders'].get(symbol, [])
+                closed_orders = self.history[i]["closed_orders"].get(symbol, [])
                 if len(closed_orders) > 0:
                     info = []
                     for order in closed_orders:
@@ -432,7 +463,7 @@ class MtEnv(gym.Env):
                             f"profit: {order['profit']:.6f}"
                         )
                         info.append(info_i)
-                    info = '<br>---------------------------------<br>'.join(info)
+                    info = "<br>---------------------------------<br>".join(info)
 
                     close_ticks.append(tick)
                     close_extra_info.append(info)
@@ -441,15 +472,15 @@ class MtEnv(gym.Env):
                 go.Scatter(
                     x=np.array(self.time_points)[trade_ticks],
                     y=close_price[trade_ticks],
-                    mode='markers',
+                    mode="markers",
                     hovertext=trade_extra_info,
                     marker_symbol=trade_markers,
                     marker_color=trade_colors,
                     marker_size=trade_sizes,
                     name=symbol,
-                    yaxis=f'y{j+1}',
+                    yaxis=f"y{j+1}",
                     showlegend=False,
-                    legendgroup=f'g{j+1}',
+                    legendgroup=f"g{j+1}",
                 ),
             )
 
@@ -457,16 +488,16 @@ class MtEnv(gym.Env):
                 go.Scatter(
                     x=np.array(self.time_points)[close_ticks],
                     y=close_price[close_ticks],
-                    mode='markers',
+                    mode="markers",
                     hovertext=close_extra_info,
-                    marker_symbol='line-ns',
-                    marker_color='black',
+                    marker_symbol="line-ns",
+                    marker_color="black",
                     marker_size=7,
                     marker_line_width=1.5,
                     name=symbol,
-                    yaxis=f'y{j+1}',
+                    yaxis=f"y{j+1}",
                     showlegend=False,
-                    legendgroup=f'g{j+1}',
+                    legendgroup=f"g{j+1}",
                 ),
             )
 
