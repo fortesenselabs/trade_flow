@@ -8,8 +8,8 @@ from telethon import events
 from packages.itbot.agents import Agent, BasicMLAgent
 from packages.itbot.itbot import Signal, TradeType
 from packages.itbot.itbot.mt5_trader import MT5Trader
-from packages.itbot.itbot.MetaTrader5 import MetaTrader5 as mt5
 from packages.itbot.itbot.interfaces import TelegramInterface
+from packages.mt5any import MetaTrader5 as mt5
 from trade_flow.common.logging import Logger
 from dotenv import load_dotenv
 
