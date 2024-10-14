@@ -11,6 +11,11 @@ joblib
 aiodbm
 sqlalchemy
 
+
 # dev
 ta
 seaborn
+
+# 
+ccxt
+python-binance>=1.0
