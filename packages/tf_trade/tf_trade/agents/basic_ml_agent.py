@@ -1,13 +1,11 @@
-import asyncio
-from datetime import datetime
-from typing import Any, List, Optional, Tuple
-
 import numpy as np
 import pandas as pd
-from packages.itbot.itbot import Signal, TradeType
-from packages.itbot.agents.agent import Agent
-from packages.itbot.itbot.portfolio import RiskManager
+from datetime import datetime
+from typing import Any, List, Optional, Tuple
+from packages.tf_trade.tf_trade.types import Signal, TradeType
+from packages.tf_trade.tf_trade.portfolio import RiskManager
 from trade_flow.common.logging import Logger
+from .agent import Agent
 
 
 class BasicMLAgent(Agent):
@@ -29,8 +27,8 @@ class BasicMLAgent(Agent):
         self,
         initial_balance: float,
         strategy_name: str = "fixed_percentage",
-        selected_symbols: List[str] = ["EURUSD", "BTCUSD", "ETHUSD", "XAUUSD"],
-        whitelist_symbols: List[str] = ["BTCUSD", "ETHUSD"],
+        selected_instruments: List[str] = ["EURUSD", "BTCUSD", "ETHUSD", "XAUUSD"],
+        whitelist_instruments: List[str] = ["BTCUSD", "ETHUSD"],
         logger: Optional[Logger] = None,
     ):
         """
@@ -42,21 +40,23 @@ class BasicMLAgent(Agent):
                                  Options: ['fixed_percentage', 'kelly_criterion', 'martingale',
                                  'mean_reversion', 'equity_curve', 'volatility_based'].
                                  Defaults to 'fixed_percentage'.
-            selected_symbols (List[str]): A list of symbols to trade. Defaults to ["EURUSD", "BTCUSD", "XAUUSD"].
-            whitelist_symbols (List[str]): Symbols that can be traded during weekends (e.g., crypto pairs).
+            selected_instruments (List[str]): A list of instruments to trade. Defaults to ["EURUSD", "BTCUSD", "XAUUSD"].
+            whitelist_instruments (List[str]): Instruments that can be traded during weekends (e.g., crypto pairs).
             logger (Optional[Logger]): Instance of Logger for logging activities and errors.
         """
-        super().__init__(selected_symbols, logger)
-        self.whitelist_symbols = whitelist_symbols
+        super().__init__(selected_instruments, logger)
+        self.whitelist_instruments = whitelist_instruments
         self.start_time = datetime.now().strftime("%H:%M:%S")
         self.is_time = False
 
-        # Validate whitelist symbols are in selected symbols
-        invalid_symbols = [
-            symbol for symbol in self.whitelist_symbols if symbol not in self.selected_symbols
+        # Validate whitelist instruments are in selected instruments
+        invalid_instruments = [
+            symbol
+            for symbol in self.whitelist_instruments
+            if symbol not in self.selected_instruments
         ]
-        if invalid_symbols:
-            error_message = f"Invalid whitelist symbols: {invalid_symbols}. These symbols are not in selected symbols."
+        if invalid_instruments:
+            error_message = f"Invalid whitelist instruments: {invalid_instruments}. These instruments are not in selected instruments."
             self.logger.error(error_message)
             raise ValueError(error_message)
 
@@ -173,7 +173,7 @@ class BasicMLAgent(Agent):
 
         # Verification for launch
         if current_weekday in (5, 6):  # Weekend check
-            if symbol in self.whitelist_symbols:
+            if symbol in self.whitelist_instruments:
                 self.logger.info(f"Trading pair {symbol} during the weekend is allowed.")
             else:
                 self.logger.warning(f"Trading symbol {symbol} is not allowed during the weekend.")
@@ -252,7 +252,7 @@ class BasicMLAgent(Agent):
         Asynchronously send the generated signals to ITBot for further processing and forwarding to MT5.
 
         Notes:
-            - The method continuously listens for new data, generates signals for the selected symbols,
+            - The method continuously listens for new data, generates signals for the selected instruments,
               and logs the generated signals.
         """
         while True:
@@ -260,7 +260,7 @@ class BasicMLAgent(Agent):
             data = await self.signals_queue.get()
 
             # Generate signals based on new data
-            for symbol in self.selected_symbols:
+            for symbol in self.selected_instruments:
                 signals = await self.generate_signals(symbol, data[symbol])
                 # Logic to send signals to ITBot would go here
                 self.logger.info(f"Generated signals for {symbol}: {signals}")

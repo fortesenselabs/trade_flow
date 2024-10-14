@@ -1,29 +1,25 @@
 import asyncio
 import logging
-import os
 import random
 import re
 from typing import List, Optional
 from telethon import events
-from packages.itbot.agents import Agent, BasicMLAgent
-from packages.itbot.itbot import Signal, TradeType
-from packages.itbot.itbot.mt5_trader import MT5Trader
-from packages.itbot.itbot.interfaces import TelegramInterface
+from packages.tf_trade.tf_trade.agents import Agent
+from packages.tf_trade.tf_trade.types import Signal, TradeType
+from packages.tf_trade.tf_trade.venues import MT5
+from packages.tf_trade.tf_trade.interfaces import TelegramInterface
 from packages.mt5any import MetaTrader5 as mt5
 from trade_flow.common.logging import Logger
-from dotenv import load_dotenv
-
-load_dotenv()
 
 random.seed(248)
 
 
-class ITBot:
+class TFTrade:
     """
-    ITBot Class for managing trading signals and executing trades using MetaTrader 5.
+    TFTrade Class for managing trading signals and executing trades using MetaTrader 5.
 
     Attributes:
-        trader (MT5Trader): Instance of MT5Trader to interact with the MetaTrader 5 platform.
+        trader (MT5): Instance of MT5 to interact with the MetaTrader 5 platform.
         logger (Logger): Instance of Logger for logging activities and errors.
         notifications_handler (TelegramInterface): Instance of TelegramInterface for handling Telegram messages.
         db (str): Path to the database for storing trade logs.
@@ -33,19 +29,19 @@ class ITBot:
     def __init__(
         self,
         agent: Agent,
-        trader: MT5Trader,
+        trader: MT5,
         notifications_handler: TelegramInterface,
-        db: str = "it_bot_mt5_trades.db",
+        db: str = "tf_trade_mt5_trades.db",
         logger: Optional[Logger] = None,
     ):
         """
-        Initializes the ITBot instance with the given parameters.
+        Initializes the TFTrade instance with the given parameters.
 
         Args:
             agent (Agent): An instance of an agent for generating trading signals.
-            trader (MT5Trader): An instance of MT5Trader for executing trades.
+            trader (MT5): An instance of MT5 for executing trades.
             notifications_handler (TelegramInterface): An instance of TelegramInterface for handling messages.
-            db (str, optional): Path to the SQLite database for storing trade logs. Defaults to "it_bot_mt5_trades.db".
+            db (str, optional): Path to the SQLite database for storing trade logs. Defaults to "tf_trade_mt5_trades.db".
             logger (Optional[Logger], optional): A Logger instance for logging. If not provided, a default logger is created.
         """
 
@@ -53,7 +49,9 @@ class ITBot:
         self.default_chats = ["intelligent_trading_signals"]
 
         # Set up logging
-        self.logger = logger or Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
+        self.logger = logger or Logger(
+            name="tf_trade", log_level=logging.DEBUG, filename="TFTrade.log"
+        )
 
         self.trader = trader
         self.notifications_handler = notifications_handler
@@ -160,8 +158,8 @@ class ITBot:
 
     async def run_agent(self):
         """
-        Continuously run the agent to generate trading signals for multiple symbols
-        and send them to the ITBot for execution.
+        Continuously run the agent to generate trading signals for multiple instruments
+        and send them to the TFTrade for execution.
 
         This method generates and processes signals for each symbol selected by the agent symbol.
         """
@@ -170,8 +168,8 @@ class ITBot:
         while True:
             tasks = []
 
-            # Loop over selected symbols and create tasks to fetch data and generate signals concurrently
-            for symbol in self.agent.selected_symbols:
+            # Loop over selected instruments and create tasks to fetch data and generate signals concurrently
+            for symbol in self.agent.selected_instruments:
                 self.logger.debug(symbol)
                 tasks.append(self.process_agent_symbol(symbol))
 
@@ -254,7 +252,7 @@ class ITBot:
 
     async def run(self):
         """
-        Start the ITBot.
+        Start the TFTrade.
 
         This method initializes and starts the bot's functionality, including:
         - Starting the Telegram client to listen for trading signals.
@@ -263,7 +261,7 @@ class ITBot:
 
         It sets up the necessary asynchronous tasks to ensure both the Telegram listener and the trading agent run concurrently.
         """
-        self.logger.info("Starting ITBot...")
+        self.logger.info("Starting TFTrade...")
 
         # Add message handler to the telegrams notifications listener
         channel_entities = [
@@ -277,61 +275,3 @@ class ITBot:
             self.run_agent(),  # Start the agent
             self.run_trader(),  # Start the trader
         )
-
-
-def main():
-    # Set up logging
-    logger = Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
-
-    phone_number = os.getenv("PHONE_NUMBER")
-    api_id = os.getenv("API_ID")
-    api_hash = os.getenv("API_HASH")
-    mt5_account_number = os.getenv("MT5_ACCOUNT_NUMBER")
-    mt5_password = os.getenv("MT5_PASSWORD")
-    mt5_server = os.getenv("MT5_SERVER")
-
-    # Initialize Telegram bot
-    notifications_handler = TelegramInterface(
-        phone_number=phone_number,
-        api_id=api_id,
-        api_hash=api_hash,
-        logger=logger,
-    )
-
-    # Set up MetaTrader 5 terminal trader
-    trader = MT5Trader(
-        account_number=mt5_account_number,
-        password=mt5_password,
-        server=mt5_server,
-        logger=logger,
-    )
-
-    # Initialize ML Agent instance
-    agent = BasicMLAgent(
-        initial_balance=trader.initial_balance,
-        selected_symbols=[
-            "ETCUSD",
-            "IBM",
-            "Volatility 150 (1s) Index",
-            "Volatility 200 (1s) Index",
-            "Volatility 250 (1s) Index",
-        ],
-        whitelist_symbols=[
-            "ETCUSD",
-            "Volatility 150 (1s) Index",
-            "Volatility 200 (1s) Index",
-            "Volatility 250 (1s) Index",
-        ],
-        logger=logger,
-    )
-
-    # Load model for the agent (modify path as needed)
-    agent.load_models(f"{os.getcwd()}/models/")
-
-    # Setup and Start ITBot
-    it_bot = ITBot(agent, trader, notifications_handler, logger=logger)
-    asyncio.run(it_bot.run())
-
-
-if __name__ == "__main__":
-    main()

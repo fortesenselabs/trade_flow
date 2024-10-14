@@ -5,8 +5,7 @@ import time
 import pandas as pd
 from datetime import datetime
 from typing import Dict, Optional
-from packages.itbot.itbot import Signal
-from packages.itbot.itbot.portfolio import RiskManager
+from packages.tf_trade.tf_trade.types import Signal
 from trade_flow.common.logging import Logger
 from packages.mt5any import (
     DockerizedMT5TerminalConfig,
@@ -18,19 +17,19 @@ from packages.mt5any import MetaTrader5 as mt5
 SymbolInfo = object
 
 
-class MT5TraderException(Exception):
-    """Base exception class for MT5Trader errors."""
+class MT5Exception(Exception):
+    """Base exception class for MT5 errors."""
 
     pass
 
 
-class MT5TraderInitializationError(MT5TraderException):
+class MT5InitializationError(MT5Exception):
     """Raised when there is an error initializing MT5 Trader."""
 
     pass
 
 
-class MT5Trader:
+class MT5:
     """
     A class to interface with MetaTrader 5 for trading operations using Dockerized MT5 Terminals.
 
@@ -52,7 +51,7 @@ class MT5Trader:
         logger: Optional[Logger] = None,
     ) -> None:
         """
-        Initialize the MT5Trader class with account credentials and configurations.
+        Initialize the MT5 class with account credentials and configurations.
 
         Args:
             account_number (str): MetaTrader 5 account number.
@@ -107,7 +106,7 @@ class MT5Trader:
             self.logger.info(f"MetaTrader 5 Terminal started for account {self.mt5_account_number}")
         except Exception as e:
             self.logger.error(f"Error initializing Dockerized MT5 Terminal: {e}")
-            raise MT5TraderInitializationError("Failed to start Dockerized MT5 Terminal")
+            raise MT5InitializationError("Failed to start Dockerized MT5 Terminal")
 
     def _initialize_mt5(self) -> None:
         """Initialize the MetaTrader 5 client."""
@@ -119,7 +118,7 @@ class MT5Trader:
             #     raise RuntimeError("MetaTrader 5 login failed")
         except Exception as e:
             self.logger.error(f"Error initializing MetaTrader 5: {e}")
-            raise MT5TraderInitializationError("Failed to initialize MetaTrader 5")
+            raise MT5InitializationError("Failed to initialize MetaTrader 5")
 
     def round_2_tick_size(self, price: float, trade_tick_size: float) -> float:
         """

@@ -2,10 +2,10 @@ import asyncio
 from abc import ABC, abstractmethod
 import os
 import joblib
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import pandas as pd
-from packages.itbot.itbot import Signal
+from packages.tf_trade.tf_trade.types import Signal
 import threading
 import logging
 from trade_flow.common.logging import Logger
@@ -19,13 +19,13 @@ class Agent(ABC):
 
     def __init__(
         self,
-        selected_symbols: List[str] = ["EURUSD", "BTCUSD", "XAUUSD"],
+        selected_instruments: List[str] = ["EURUSD", "BTCUSD", "XAUUSD"],
         logger: Optional[Logger] = None,
     ):
-        """Initialize the trading bot with logging and a list of trading symbols.
+        """Initialize the trading bot with logging and a list of trading instruments.
 
         Args:
-            selected_symbols (List[str]): List of symbols to trade. Default is ["EURUSD", "BTCUSD","XAUUSD"].
+            selected_instruments (List[str]): List of instruments to trade. Default is ["EURUSD", "BTCUSD","XAUUSD"].
             logger (Optional[Logger]): An optional logger instance. If not provided, a default logger will be created.
         """
         # Set up logging
@@ -37,14 +37,14 @@ class Agent(ABC):
         # Initialize the event loop
         self.loop = asyncio.get_event_loop()  # Use the current event loop
 
-        # Store the selected symbols for trading
-        self.selected_symbols = selected_symbols
+        # Store the selected instruments for trading
+        self.selected_instruments = selected_instruments
         self.models = {
-            symbol: None for symbol in self.selected_symbols
-        }  # Initialize models for symbols
+            symbol: None for symbol in self.selected_instruments
+        }  # Initialize models for instruments
 
-        # Log the initialized symbols
-        self.logger.debug(f"Initialized with symbols: {self.selected_symbols}")
+        # Log the initialized instruments
+        self.logger.debug(f"Initialized with instruments: {self.selected_instruments}")
 
     def load_models(self, model_path: str) -> None:
         """
@@ -61,7 +61,7 @@ class Agent(ABC):
             raise ValueError(f"The provided path '{model_path}' is not a valid directory.")
 
         # Load models for each symbol from the specified directory
-        for symbol in self.selected_symbols:
+        for symbol in self.selected_instruments:
             model_file = os.path.join(
                 model_path, f"{symbol}_voting.joblib"
             )  # Adjust the file naming as needed

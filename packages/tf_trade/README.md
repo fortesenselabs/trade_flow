@@ -1,6 +1,6 @@
-# Intelligent Trading Bot Signal Forwarder
+# TFTrade (An Intelligent Trading Bot Signals Forwarder)
 
-This Python script forwards trading signals from the [intelligent-trading-bot](https://github.com/asavinov/intelligent-trading-bot) Telegram channel to both WhatsApp and MetaTrader 5.
+This script forwards trading signals from the [intelligent-trading-bot](https://github.com/asavinov/intelligent-trading-bot) Telegram channel to both WhatsApp and MetaTrader 5.
 
 ## Features
 

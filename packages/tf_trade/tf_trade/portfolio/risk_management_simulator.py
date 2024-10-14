@@ -1,6 +1,6 @@
 from typing import List
 
-from packages.itbot.itbot.db import Database
+from packages.tf_trade.tf_trade.persistence.db import Database
 
 
 class LevelFailed(Exception):
