@@ -4,7 +4,7 @@ import logging
 import os
 from enum import IntEnum
 from time import sleep
-from typing import ClassVar
+from typing import ClassVar, Dict
 
 from rpyc.utils.classic import DEFAULT_SERVER_PORT
 from trade_flow.common.logging import Logger
@@ -201,7 +201,7 @@ class DockerizedMT5Terminal:
             b":18812" in line for line in logs.split(b"\n")
         )
 
-    def start(self, wait: int | None = None, restart_policy: str = "always") -> None:
+    def start(self, wait: int | None = None, restart_policy: Dict = {}) -> None:
         """
         Start the terminal container.
 
@@ -210,8 +210,8 @@ class DockerizedMT5Terminal:
         wait : int, optional
             Time in seconds to wait until the container is ready. Defaults to the class-defined timeout if not provided.
 
-        restart_policy : str, optional
-            Policy for restarting the container. Defaults to "always".
+        restart_policy : dict, optional
+            Policy for restarting the container. Defaults to {}.
         """
         broken_statuses = (
             ContainerStatus.NOT_LOGGED_IN,
@@ -237,7 +237,7 @@ class DockerizedMT5Terminal:
                 self._container = self._docker.containers.run(
                     image=image,
                     name=f"{self.CONTAINER_NAME}-{self.port}",
-                    restart_policy={"Name": restart_policy},
+                    restart_policy=restart_policy,
                     detach=True,
                     ports={
                         f"{self.PORTS['vnc']}": (self.host, self.PORTS["vnc"]),
@@ -278,7 +278,19 @@ class DockerizedMT5Terminal:
         arch = os.uname().machine
         return "arm64" if arch.startswith("arm") else "amd64"
 
-    def safe_start(self, wait: int | None = None, restart_policy: str = "always") -> None:
+    def safe_start(self, wait: int | None = None, restart_policy: Dict = {}) -> None:
+        """
+        Safely start the terminal container.
+
+        Parameters
+        ----------
+        wait : int, optional
+            Time in seconds to wait until the container is ready. Defaults to the class-defined timeout if not provided.
+
+        restart_policy : dict, optional
+            Policy for restarting the container. Defaults to {}.
+            For an always restart policy you can try => {"Name": "always"}
+        """
         try:
             self.start(wait=wait, restart_policy=restart_policy)
         except self._docker_module.errors.APIError as e:

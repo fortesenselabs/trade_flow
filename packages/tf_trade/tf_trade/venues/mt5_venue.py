@@ -100,7 +100,7 @@ class MT5:
     def _initialize_terminal(self) -> None:
         """Initialize and safely start the Dockerized MT5 Terminal."""
         try:
-            self.mt5_terminal.safe_start()
+            self.mt5_terminal.safe_start(restart_policy={"Name": "always"})
             time.sleep(5)
 
             self.logger.info(f"MetaTrader 5 Terminal started for account {self.mt5_account_number}")
