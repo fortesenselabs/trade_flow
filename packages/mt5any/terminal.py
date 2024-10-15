@@ -201,15 +201,17 @@ class DockerizedMT5Terminal:
             b":18812" in line for line in logs.split(b"\n")
         )
 
-    def start(self, wait: int | None = None) -> None:
+    def start(self, wait: int | None = None, restart_policy: str = "always") -> None:
         """
-        Start the terminal.
+        Start the terminal container.
 
         Parameters
         ----------
         wait : int, optional
-            The seconds to wait until container is ready.
+            Time in seconds to wait until the container is ready. Defaults to the class-defined timeout if not provided.
 
+        restart_policy : str, optional
+            Policy for restarting the container. Defaults to "always".
         """
         broken_statuses = (
             ContainerStatus.NOT_LOGGED_IN,
@@ -235,7 +237,7 @@ class DockerizedMT5Terminal:
                 self._container = self._docker.containers.run(
                     image=image,
                     name=f"{self.CONTAINER_NAME}-{self.port}",
-                    restart_policy={"Name": "always"},
+                    restart_policy={"Name": restart_policy},
                     detach=True,
                     ports={
                         f"{self.PORTS['vnc']}": (self.host, self.PORTS["vnc"]),
@@ -276,9 +278,9 @@ class DockerizedMT5Terminal:
         arch = os.uname().machine
         return "arm64" if arch.startswith("arm") else "amd64"
 
-    def safe_start(self, wait: int | None = None) -> None:
+    def safe_start(self, wait: int | None = None, restart_policy: str = "always") -> None:
         try:
-            self.start(wait=wait)
+            self.start(wait=wait, restart_policy=restart_policy)
         except self._docker_module.errors.APIError as e:
             raise RuntimeError("Container already exists") from e
 
