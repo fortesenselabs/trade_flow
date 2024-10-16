@@ -24,7 +24,7 @@ class RiskManager:
         self.drawdown_factor = drawdown_factor
         self.profit_factor = profit_factor
         self.current_strategy: Optional[Callable] = self.fixed_percentage_strategy
-        self.logger = logger or Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
+        self.logger = logger or Logger(name="it_bot", log_level=logging.DEBUG, filename="Bot.log")
 
         # Track the equity curve
         self.equity_curve: List[float] = [initial_balance]

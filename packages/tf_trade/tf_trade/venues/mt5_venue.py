@@ -64,7 +64,7 @@ class MT5:
         self.mt5_server = server
 
         # Set up logging
-        self.logger = logger or Logger(name="it_bot", log_level=logging.DEBUG, filename="ITBot.log")
+        self.logger = logger or Logger(name="it_bot", log_level=logging.DEBUG, filename="Bot.log")
 
         # Set up MetaTrader 5 terminal and configuration
         self.mt5_config = DockerizedMT5TerminalConfig(
@@ -217,7 +217,7 @@ class MT5:
                 # "tp": tp,
                 "deviation": deviation,
                 "magic": random.randint(234000, 237000),
-                "comment": "ITBot",
+                "comment": "Bot",
                 "type_time": mt5.ORDER_TIME_GTC,
                 "type_filling": filling_mode,
             }
@@ -244,7 +244,7 @@ class MT5:
                 "price": price,
                 "deviation": deviation,
                 # "magic": kwargs.get("magic", 0),  # Default to 0 if not provided
-                "comment": "ITBot",
+                "comment": "Bot",
                 "type_time": mt5.ORDER_TIME_GTC,
                 "type_filling": filling_mode,
             }
