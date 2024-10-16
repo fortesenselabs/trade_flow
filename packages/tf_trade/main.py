@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from packages.tf_trade.tf_trade.agents import BasicMLAgent
+from packages.tf_trade.tf_trade.agents import BasicMLAgent, DeepSignalAgent
 from packages.tf_trade.tf_trade.venues import MT5
 from packages.tf_trade.tf_trade.interfaces import TelegramInterface
 from packages.tf_trade.tf_trade import TFTrade
@@ -55,10 +55,16 @@ def main():
             "Volatility 250 (1s) Index",
         ],
         logger=logger,
+        models_path=f"{os.getcwd()}/models",
     )
 
-    # Load model for the agent (modify path as needed)
-    agent.load_models(f"{os.getcwd()}/models/")
+    # agent = DeepSignalAgent(
+    #     initial_balance=trader.initial_balance,
+    #     selected_instruments=["Volatility 10 Index"],
+    #     whitelist_instruments=["Volatility 10 Index"],
+    #     logger=logger,
+    #     models_path=f"{os.getcwd()}/models/",
+    # )
 
     # Setup and Start TFTrade
     tf_trade = TFTrade(agent, trader, notifications_handler, logger=logger)

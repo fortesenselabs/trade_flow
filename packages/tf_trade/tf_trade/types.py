@@ -10,6 +10,11 @@ class TradeType(Enum):
     NEUTRAL = "NEUTRAL"
 
 
+class ModelType(Enum):
+    SKLEARN = "SKLEARN"
+    TORCH = "TORCH"
+
+
 @dataclass
 class Signal:
     """
