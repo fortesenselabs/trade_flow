@@ -48,7 +48,7 @@ flow = "trade_flow.daemon.server:run"
 flowcli = "trade_flow.cli.main:cli"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.10,<3.13"
 numpy = "1.26.4"
 elegantrl = { git = "https://github.com/AI4Finance-Foundation/ElegantRL.git#egg=elegantrl" }
 tsfresh = "^0.20.3"                                                                          # Features/label generation | if tsfresh feature generator is used. It depends on matrixprofile with binary (in pip) only for Python 3.8
