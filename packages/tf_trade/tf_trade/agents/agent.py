@@ -59,7 +59,7 @@ class Agent(ABC):
             model_name (str): The name of the model to load.
             model_type (ModelType): The type of model to load. Default is ModelType.SKLEARN.
             **kwargs: Additional keyword arguments, including:
-                - model_definitions (Tuple[nn.Module, nn.Module]): Required for loading PyTorch models.
+                - model_definition (nn.Module): Required for loading PyTorch models.
                   This should include the architecture definitions necessary for model instantiation.
 
         Raises:
@@ -81,9 +81,9 @@ class Agent(ABC):
         # Select the model loading function based on model type
         if model_type == ModelType.TORCH:
             load_model = _load_torch_model
-            model_definitions = kwargs.get("model_definitions")
-            if model_definitions is None or not isinstance(model_definitions, tuple):
-                raise ValueError("Model definitions must be provided as a tuple for Torch models.")
+            model_definition = kwargs.get("model_definition")
+            if model_definition is None or not isinstance(model_definition, nn.Module):
+                raise ValueError("Model definition must be provided as a nn.Module for Torch models.")
         elif model_type == ModelType.SKLEARN:
             load_model = _load_sklearn_model
         else:
@@ -100,7 +100,7 @@ class Agent(ABC):
                     self.models[symbol] = load_model(
                         symbol,
                         model_name=model_name,
-                        model_definitions=model_definitions,
+                        model_definition=model_definition,
                         path=models_path,
                     )
 
@@ -196,7 +196,7 @@ class Agent(ABC):
         while True:
             # Wait for new data to be added
             data_dict = await self.data_queue.get()
-            self.logger.debug(data_dict)
+            # self.logger.debug(data_dict)
 
             # Generate signals based on new data
             for symbol, data in data_dict.items():
@@ -231,20 +231,20 @@ class Agent(ABC):
 
 
 def _load_torch_model(
-    symbol: str, model_name: str, model_definitions: Tuple[nn.Module, nn.Module], path: str
-) -> Tuple[nn.Module, nn.Module]:
+    symbol: str, model_name: str, model_definition: nn.Module, path: str
+) -> nn.Module:
     """
     Load a previously saved PyTorch model and its training state from a file.
 
     Args:
         symbol (str): The identifier for which the model is loaded (e.g., an asset or instrument symbol).
         model_name (str): The name or version of the model for the specified symbol.
-        model_definitions (Tuple[nn.Module, nn.Module]): A tuple containing the PyTorch model architecture
+        model_definition (nn.Module): A torch nn.Module containing the PyTorch model architecture
             (nn.Module) and the loss function (nn.Module).
         path (str): The directory path where the model and its state are saved.
 
     Returns:
-        Tuple[nn.Module, nn.Module]: A tuple containing the loaded PyTorch model and the loss function.
+        nn.Module: A torch nn.Module containing the loaded PyTorch model and the loss function.
 
     Raises:
         FileNotFoundError: If no model file is found at the specified path.
@@ -259,12 +259,10 @@ def _load_torch_model(
         raise FileNotFoundError(f"No model file found at {path}.")
 
     try:
-        model, loss_function = model_definitions
-        state_dict = torch.load(model_file)
+        model = model_definition
+        state_dict = torch.load(model_file, weights_only=True)
         model.load_state_dict(state_dict["model_state_dict"])
-        loss_function.load_state_dict(state_dict["loss_function"])
-
-        return model, loss_function
+        return model
     except Exception as e:
         raise RuntimeError(f"Error loading model from {path}: {e}")
 
