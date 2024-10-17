@@ -11,6 +11,7 @@ joblib
 aiodbm
 sqlalchemy
 pytorch-tcn
+numba
 
 # dev
 ta

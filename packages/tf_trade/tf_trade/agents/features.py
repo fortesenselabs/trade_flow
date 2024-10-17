@@ -1,3 +1,4 @@
+import numba
 import numpy as np
 import pandas as pd
 import pandas_ta as ta
@@ -7,6 +8,7 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 
 
+@numba.njit
 def features_engineering(
     df: pd.DataFrame, add_ta: bool = False, compress_features: bool = True
 ) -> dict:
