@@ -3,22 +3,18 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
+from torch.utils.data import TensorDataset, DataLoader
 from pytorch_tcn import TCN
+from sklearn.preprocessing import StandardScaler
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
 from datetime import datetime
 from typing import Any, List, Optional, Tuple
 from trade_flow.common.logging import Logger
-from packages.tf_trade.tf_trade.types import Signal, TradeType
+from packages.tf_trade.tf_trade.types import ModelType, Signal, TradeType
 from packages.tf_trade.tf_trade.portfolio import RiskManager
 from .agent import Agent
-
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    confusion_matrix,
-)
+from .features import add_ta_features
 
 
 class DeepSignalAgent(Agent):
@@ -36,8 +32,8 @@ class DeepSignalAgent(Agent):
         self,
         initial_balance: float,
         strategy_name: str = "fixed_percentage",
-        selected_instruments: List[str] = ["EURUSD", "BTCUSD", "ETHUSD", "XAUUSD"],
-        whitelist_instruments: List[str] = ["BTCUSD", "ETHUSD"],
+        selected_instruments: List[str] = None,
+        whitelist_instruments: List[str] = None,
         logger: Optional[Logger] = None,
         models_path: Optional[str] = None,
     ):
@@ -47,21 +43,13 @@ class DeepSignalAgent(Agent):
         Args:
             initial_balance (float): Initial account balance for trading.
             strategy_name (str): The strategy to apply for risk management.
-                Options include: ['fixed_percentage', 'kelly_criterion', 'martingale',
-                'mean_reversion', 'equity_curve', 'volatility_based'].
-                Defaults to 'fixed_percentage'.
-            selected_instruments (List[str]): Instruments to trade. Defaults to
-                ["EURUSD", "BTCUSD", "ETHUSD", "XAUUSD"].
-            whitelist_instruments (List[str]): Instruments that can be traded during
-                weekends (e.g., crypto pairs).
+            selected_instruments (List[str]): Instruments to trade. Defaults to ["EURUSD", "BTCUSD", "ETHUSD", "XAUUSD"].
+            whitelist_instruments (List[str]): Instruments that can be traded during weekends (e.g., crypto pairs).
             logger (Optional[Logger]): Logger instance for logging activities and errors.
             models_path (Optional[str]): Path to the directory where model files are stored.
-
-        Raises:
-            ValueError: If any instrument in the whitelist is not included in the selected instruments.
         """
-        super().__init__(selected_instruments, logger)
-        self.whitelist_instruments = whitelist_instruments
+        super().__init__(selected_instruments or ["EURUSD", "BTCUSD", "ETHUSD", "XAUUSD"], logger)
+        self.whitelist_instruments = whitelist_instruments or ["BTCUSD", "ETHUSD"]
         self.start_time = datetime.now().strftime("%H:%M:%S")
         self.is_time = False
 
@@ -72,168 +60,254 @@ class DeepSignalAgent(Agent):
             if symbol not in self.selected_instruments
         ]
         if invalid_instruments:
-            error_message = f"Invalid whitelist instruments: {invalid_instruments}. "
-            error_message += "These instruments are not in the selected instruments."
+            error_message = f"Invalid whitelist instruments: {invalid_instruments}. These instruments are not in the selected instruments."
             self.logger.error(error_message)
             raise ValueError(error_message)
 
         # Risk Manager Setup
-        contract_size: float = 1.0
+        contract_size = 1.0
         self.risk_manager = RiskManager(
             initial_balance=initial_balance,
             risk_percentage=0.1,
             contract_size=contract_size,
             logger=logger,
         )
-
         self.position_size = 0.1
         self.risk_manager.select_strategy(strategy_name)
         self.logger.info(
             f"Executing trade with strategy '{strategy_name}' and position size: {self.position_size}"
         )
 
-        # Model parameters
-        input_dim = 123  # Feature size per time step (input dimension)
-        hidden_dim_1 = 7  # Hidden layer size
-        output_dim = 3  # Number of output classes
-        self.device = "cpu"
+        # Model parameters and loading
+        input_dim = 123
+        hidden_dim_1 = 7
+        output_dim = 3
 
-        trained_models = {
+        model_definitions = {
             "BidirectionalLSTM": BidirectionalLSTMModel(
                 input_size=input_dim, hidden_size=hidden_dim_1, output_size=output_dim
             ),
-            "BidirectionalGRU": BidirectionalGRUModel(input_size=input_dim, hidden_size=hidden_dim_1, output_size=output_dim),
-            "TCN": TCNModel(input_size=input_dim, output_size=output_dim)
+            "BidirectionalGRU": BidirectionalGRUModel(
+                input_size=input_dim, hidden_size=hidden_dim_1, output_size=output_dim
+            ),
+            # "TCN": TCNModel(input_size=input_dim, output_size=output_dim),
         }
 
-        # Load models for the agent
-        self.load_models(models_path)
+        for name, model_definition in model_definitions.items():
+            self.load_models(
+                models_path,
+                model_name=name,
+                model_type=ModelType.TORCH,
+                model_definition=model_definition,
+            )
 
+        self.label_map = {0: TradeType.BUY, 1: TradeType.BUY, 2: TradeType.NEUTRAL}
 
     def model_inference(
         self,
-        trained_model: Tuple[nn.Module, nn.Module],
+        trained_model: nn.Module,
         dataloader: DataLoader,
         device: Optional[str] = None,
     ) -> dict:
-        """Run inference on a PyTorch model using a given dataset.
+        """
+        Run inference on a PyTorch model using a given dataset.
 
         Args:
-            trained_model (Tuple[nn.Module, nn.Module]): A tuple containing the trained PyTorch model and the loss function.
-            dataloader (DataLoader): DataLoader object for loading evaluation data.
-            device (Optional[str]): Device to use for evaluation (e.g., 'cpu', 'cuda').
+            trained_model (Tuple[nn.Module, nn.Module]): A tuple containing the trained PyTorch model.
+            dataloader (DataLoader): DataLoader object for loading inference data.
+            device (Optional[str]): Device to use for inference (e.g., 'cpu', 'cuda').
 
         Returns:
-            dict: A dictionary containing evaluation metrics such as accuracy, precision, recall, F1 score, and confusion matrix.
+            dict: A dictionary containing loss and predictions.
         """
-        if device is None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        model, loss_function = trained_model
+        device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = trained_model
         model.to(device)
-        model.eval()  # Set the model to evaluation mode
+        model.eval()
 
-        raw_targets = []
-        raw_predictions = []
-        all_targets = []
-        all_predictions = []
-        total_loss = 0
+        raw_predictions, predicted_class = [], []
 
-        with torch.no_grad():  # Disable gradient calculation during evaluation
-            for inputs, targets in dataloader:
-                inputs, targets = inputs.to(device), targets.to(device)
-
+        with torch.no_grad():
+            for inputs in dataloader:
+                inputs = inputs[0].to(device)
                 outputs = model(inputs)
-                loss = loss_function(outputs, targets)
-                total_loss += loss.item()
 
-                raw_targets.extend(targets.cpu().numpy())
                 raw_predictions.extend(outputs.cpu().numpy())
-
-                # Convert outputs to predicted class (argmax for multi-class classification)
                 _, predicted = torch.max(outputs, 1)
 
-                # Convert one-hot encoded targets to class indices if necessary
-                if len(targets.shape) > 1 and targets.shape[1] > 1:
-                    targets = torch.argmax(targets, dim=1)
+                predicted_class.extend(predicted.cpu().numpy())
 
-                all_targets.extend(targets.cpu().numpy())
-                all_predictions.extend(predicted.cpu().numpy())
+        # Get the probability score for the predicted class
+        predicted_probability = torch.max(torch.Tensor(raw_predictions)).cpu().numpy().tolist()
+        self.logger.debug(f"Predicted Probability: {predicted_probability}")
 
-        metrics = {
-            "loss": total_loss / len(dataloader),
-            "accuracy": accuracy_score(all_targets, all_predictions),
-            "precision": precision_score(all_targets, all_predictions, average="weighted"),
-            "recall": recall_score(all_targets, all_predictions, average="weighted"),
-            "f1_score": f1_score(all_targets, all_predictions, average="weighted"),
-            "confusion_matrix": confusion_matrix(all_targets, all_predictions),
+        return {
+            "prediction": predicted_class[0],
+            "score": predicted_probability,
+            "raw_predictions": raw_predictions[0],
         }
 
-        return metrics
+    def ensemble_inference(
+        self,
+        trained_models: Tuple[nn.Module],
+        dataloader: DataLoader,
+        method: str = "voting",
+        device: Optional[str] = None,
+    ) -> Any:
+        """
+        Combine predictions from multiple models using the specified ensemble method.
 
-    async def _process_signal(
-        self, data: pd.DataFrame, model: Any, is_classification: bool = True
-    ) -> Tuple[bool, bool, float]:
+        Args:
+            trained_models (Tuple[nn.Module]): A tuple of trained model instances to be used in the ensemble.
+            dataloader (DataLoader): DataLoader object for loading the inference data.
+            method (str): The ensemble method to use, either 'voting' or 'averaging'. Defaults to 'voting'.
+                - 'voting': Performs majority voting on the predictions from all models.
+                - 'averaging': Averages the raw output scores from each model and selects the class with the highest average score.
+            device (Optional[str]): The device to perform inference on, such as 'cpu' or 'cuda'. Defaults to None,
+            which uses the device setup from the model inference.
+
+        Returns:
+            Any: The combined prediction after applying the ensemble method.
+            The returned predictions are based on majority voting or average score, depending on the selected method.
+
+        Raises:
+            ValueError: If an unsupported ensemble method is specified.
+
+        Example:
+            To perform ensemble inference with voting:
+
+            >>> ensemble_inference(models, dataloader, method='voting', device='cuda')
+
+            To perform ensemble inference with averaging:
+
+            >>> ensemble_inference(models, dataloader, method='averaging', device='cuda')
+        """
+
+        if method == "voting":
+            # Get predictions from each model
+            model_predictions = [
+                self.model_inference(model, dataloader=dataloader, device=device)
+                for model in trained_models
+            ]
+
+            # Perform majority voting
+            final_predictions = []
+            for i in range(len(model_predictions[0])):
+                votes = [pred[i] for pred in model_predictions]
+                final_prediction = max(set(votes), key=votes.count)  # Majority vote
+                final_predictions.append(final_prediction)
+
+            self.logger.debug(f"Ensemble voting predictions: {final_predictions}")
+            return final_predictions
+
+        elif method == "averaging":
+            # Get raw outputs (scores) from each model
+            model_raw_outputs = [
+                self.model_inference(model, dataloader=dataloader, device=device)["raw_predictions"]
+                for model in trained_models
+            ]
+
+            # Average raw outputs and make final predictions based on the highest score
+            averaged_predictions = []
+            for i in range(len(model_raw_outputs[0])):
+                averaged_output = sum([raw_output[i] for raw_output in model_raw_outputs]) / len(
+                    self.models
+                )
+                final_prediction = torch.argmax(
+                    torch.Tensor(averaged_output)
+                ).item()  # Select class with highest average score
+                averaged_predictions.append(final_prediction)
+
+            self.logger.debug(f"Ensemble averaging predictions: {averaged_predictions}")
+            return averaged_predictions
+
+        else:
+            self.logger.error(f"Unknown ensemble method: {method}")
+            raise ValueError(f"Unsupported ensemble method: {method}")
+
+    async def _get_model_prediction(
+        self, data: pd.DataFrame, model: Any, ensemble_mode: bool = False, **kwargs
+    ) -> Tuple[str, float]:
         """
         Generate trading signals based on classification from input data and the model.
 
         Args:
             data (pd.DataFrame): Input data containing return values for feature engineering.
             model (Any): The trained model used for making predictions.
-            is_classification (bool): Flag indicating whether to perform classification.
-                If True, predictions are classified as buy or sell.
+            ensemble_mode (bool): If True, ensemble mode will be used.
 
         Returns:
-            Tuple[bool, bool, float]: A tuple containing:
-                - buy (bool): Whether to buy.
-                - sell (bool): Whether to sell.
-                - score (float): Confidence score of the prediction, ranging from 0 to 1.
-
-        Notes:
-            - Performs feature engineering by calculating mean and volatility of returns
-              over different rolling windows.
-            - Predictions are adjusted based on the classification flag.
-              If `is_classification` is True, predictions are transformed into -1 (sell) or 1 (buy).
-            - If the model supports probability estimation, the score is calculated from
-              `model.predict_proba`; otherwise, a default score of 1.0 is returned.
+            Tuple[str, float]: A tuple containing:
+                - action (str): Buy/Sell/Neutral action.
+                - score (float): Confidence score of the prediction (0 to 1).
         """
+        # Define the feature columns
+        feature_columns = [
+            "returns t-1",
+            "mean returns 15",
+            "mean returns 60",
+            "volatility returns 15",
+            "volatility returns 60",
+        ]
+
         # Feature engineering
-        data["mean_returns_15"] = data["returns"].rolling(15).mean()
-        data["mean_returns_60"] = data["returns"].rolling(60).mean()
-        data["volatility_returns_15"] = data["returns"].rolling(15).std()
-        data["volatility_returns_60"] = data["returns"].rolling(60).std()
+        # Create columns for returns and other features
+        data["returns"] = (data["close"] - data["close"].shift(1)) / data["close"].shift(1)
+        data["sLow"] = (data["low"] - data["close"].shift(1)) / data["close"].shift(1)
+        data["sHigh"] = (data["high"] - data["close"].shift(1)) / data["close"].shift(1)
 
-        # Prepare input features for the model
-        X = (
-            data[
-                [
-                    "returns",
-                    "mean_returns_15",
-                    "mean_returns_60",
-                    "volatility_returns_15",
-                    "volatility_returns_60",
-                ]
-            ]
-            .iloc[-1:, :]
-            .values
-        )
+        data["returns t-1"] = data["returns"].shift(1)
+        data["mean returns 15"] = data["returns"].rolling(15).mean().shift(1)
+        data["mean returns 60"] = data["returns"].rolling(60).mean().shift(1)
+        data["volatility returns 15"] = data["returns"].rolling(15).std().shift(1)
+        data["volatility returns 60"] = data["returns"].rolling(60).std().shift(1)
 
-        # Generate the signal using an ensemble of all available models for the asset/symbol
-        prediction = model.predict(X)
-        self.logger.debug(f"Prediction: {prediction}")
+        # Add technical analysis features
+        data = add_ta_features(data)
+        feature_columns.extend(data.columns)
+        self.logger.warning(f"{data.iloc[-1].values}")
 
-        if is_classification:
-            prediction = np.where(prediction == 0, -1, 1)  # -1 for sell, 1 for buy
+        # Drop any NaN values caused by shifting or rolling computations
+        # data = data.dropna(axis=0, how='all')
+        data[feature_columns + ["returns"]] = data[feature_columns + ["returns"]].fillna(0) #.mean()
 
-        buy = prediction[0] > 0
-        sell = not buy
+        self.logger.debug(f"processed_data.shape: {data.shape}")
 
-        # Confidence score (assuming model.predict_proba returns probabilities)
-        score = (
-            model.predict_proba(X)[0][1] if hasattr(model, "predict_proba") else 1.0
-        )  # Default score if not available
+        # Select the last row for prediction
+        X = data.iloc[-1:].values
 
-        return buy, sell, score
+        # Standardize the data
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+
+        # Create a DataLoader with the scaled data
+        tensor_x = torch.Tensor(X_scaled)
+        dataloader = DataLoader(TensorDataset(tensor_x), shuffle=False)
+
+        if not ensemble_mode:
+            # Perform single model inference
+            prediction = self.model_inference(model, dataloader, device="cpu")
+        else:
+            # Perform ensemble inference
+            symbol = kwargs.get("symbol")
+            if not symbol:
+                raise ValueError("Symbol must be provided in ensemble mode")
+
+            # Get models corresponding to the symbol
+            symbol_models = {key: value for key, value in self.models.items() if symbol in key}
+            if not symbol_models:
+                raise ValueError(f"No models found for symbol: {symbol}")
+
+            prediction = self.ensemble_inference(
+                tuple(symbol_models.values()), dataloader, device="cpu"
+            )
+
+        self.logger.debug(f"prediction: {prediction}")
+
+        # Extract action and score
+        action = self.label_map[prediction["prediction"]]
+        score = prediction.get("score", None)
+        return action, score
 
     async def generate_signal(self, symbol: str, data: pd.DataFrame) -> Signal:
         """
@@ -248,37 +322,28 @@ class DeepSignalAgent(Agent):
 
         Raises:
             ValueError: If the model is not loaded before generating signals.
-
-        Notes:
-            - Verifies if the current day is a weekend and prevents trading if so.
-            - Signals are categorized into Buy, Sell, or Neutral zones based on the model's predictions.
         """
         if self.models[symbol] is None:
             raise ValueError(f"{symbol} model is not loaded. Please load the model first.")
 
-        current_time = datetime.now().strftime("%H:%M:%S")
-        current_weekday = datetime.now().weekday()
+        if datetime.now().weekday() in (5, 6) and symbol not in self.whitelist_instruments:
+            self.logger.error("Weekend trading is not allowed.")
+            return Signal(signal_type=TradeType.NEUTRAL, price=0.0)
 
-        # Weekend check
-        if current_weekday in (5, 6):  # Saturday and Sunday
-            if symbol in self.whitelist_instruments:
-                self.logger.warning(f"Weekend trading is allowed for {symbol}.")
-            else:
-                self.logger.error("Weekend trading is not allowed.")
-                return Signal(signal_type=TradeType.NEUTRAL, price=0.0)
+        price = data["close"].iloc[-1]
+        action, score = await self._get_model_prediction(data, self.models[symbol])
 
-        buy, sell, score = await self._process_signal(data, self.models[symbol])
-        self.logger.info(
-            f"Generated signal for {symbol}: Buy={buy}, Sell={sell}, Score={score:.2f}"
+        if action == TradeType.BUY:
+            return self._create_signal(
+                symbol, price, score, TradeType.BUY, "↑", "Buy Zone", self.position_size
+            )
+        elif action == TradeType.SELL:
+            return self._create_signal(
+                symbol, price, score, TradeType.SELL, "↓", "Sell Zone", self.position_size
+            )
+        return self._create_signal(
+            symbol, price, score, TradeType.NEUTRAL, "→", "Neutral Zone", self.position_size
         )
-
-        # Return signal based on predictions
-        if buy:
-            return Signal(signal_type=TradeType.BUY, price=0.0)  # Replace 0.0 with actual price
-        elif sell:
-            return Signal(signal_type=TradeType.SELL, price=0.0)  # Replace 0.0 with actual price
-
-        return Signal(signal_type=TradeType.NEUTRAL, price=0.0)
 
 
 """
@@ -324,7 +389,7 @@ class BidirectionalLSTMModel(nn.Module):
         out, _ = self.bilstm(x)
 
         # Taking the output of the last time step
-        out = out[:, -1, :]
+        # out = out[:, -1, :]
 
         # Fully connected layer
         fc = self.fc(out)
@@ -372,7 +437,7 @@ class BidirectionalGRUModel(nn.Module):
         out, _ = self.bigru(x)
 
         # Taking the output of the last time step
-        out = out[:, -1, :]
+        # out = out[:, -1, :]
 
         # Fully connected layer
         fc = self.fc(out)
@@ -424,7 +489,7 @@ class TCNModel(nn.Module):
         out = self.tcn(x)
 
         # Taking the output of the last time step
-        out = out[:, -1, :]
+        # out = out[:, -1, :]
 
         # Fully connected layer
         fc = self.fc(out)

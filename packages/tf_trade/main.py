@@ -39,32 +39,32 @@ def main():
     )
 
     # Initialize ML Agent instance
-    agent = BasicMLAgent(
-        initial_balance=trader.initial_balance,
-        selected_instruments=[
-            "ETCUSD",
-            "IBM",
-            "Volatility 150 (1s) Index",
-            "Volatility 200 (1s) Index",
-            "Volatility 250 (1s) Index",
-        ],
-        whitelist_instruments=[
-            "ETCUSD",
-            "Volatility 150 (1s) Index",
-            "Volatility 200 (1s) Index",
-            "Volatility 250 (1s) Index",
-        ],
-        logger=logger,
-        models_path=f"{os.getcwd()}/models",
-    )
-
-    # agent = DeepSignalAgent(
+    # agent = BasicMLAgent(
     #     initial_balance=trader.initial_balance,
-    #     selected_instruments=["Volatility 10 Index"],
-    #     whitelist_instruments=["Volatility 10 Index"],
+    #     selected_instruments=[
+    #         "ETCUSD",
+    #         "IBM",
+    #         "Volatility 150 (1s) Index",
+    #         "Volatility 200 (1s) Index",
+    #         "Volatility 250 (1s) Index",
+    #     ],
+    #     whitelist_instruments=[
+    #         "ETCUSD",
+    #         "Volatility 150 (1s) Index",
+    #         "Volatility 200 (1s) Index",
+    #         "Volatility 250 (1s) Index",
+    #     ],
     #     logger=logger,
-    #     models_path=f"{os.getcwd()}/models/",
+    #     models_path=f"{os.getcwd()}/models",
     # )
+
+    agent = DeepSignalAgent(
+        initial_balance=trader.initial_balance,
+        selected_instruments=["Volatility 10 Index"],
+        whitelist_instruments=["Volatility 10 Index"],
+        logger=logger,
+        models_path=f"{os.getcwd()}/models/",
+    )
 
     # Setup and Start TFTrade
     tf_trade = TFTrade(agent, trader, notifications_handler, logger=logger)
