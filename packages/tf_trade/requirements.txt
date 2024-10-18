@@ -12,6 +12,8 @@ aiodbm
 sqlalchemy
 pytorch-tcn
 numba
+ta-lib 
+pandas-ta
 
 # dev
 ta
