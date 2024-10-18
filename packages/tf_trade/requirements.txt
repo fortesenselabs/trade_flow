@@ -6,7 +6,6 @@ torch
 scipy
 stable-baselines3[extra]
 rpyc
-git+https://github.com/fortesenselabs/trade_flow.git
 joblib
 aiodbm
 sqlalchemy
@@ -14,6 +13,7 @@ pytorch-tcn
 numba
 ta-lib 
 pandas-ta
+git+https://github.com/fortesenselabs/trade_flow.git
 
 # dev
 ta
