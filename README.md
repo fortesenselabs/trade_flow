@@ -88,4 +88,5 @@ This project is built on top of the following papers, libraries, and frameworks,
 - https://github.com/nautechsystems/nautilus_trader/
 - https://github.com/AI4Finance-Foundation
 - https://github.com/OpenBB-finance
+- https://github.com/amor71/LiuAlgoTrader
 - https://github.com/crflynn/stochastic
