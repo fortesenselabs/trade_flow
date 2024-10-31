@@ -17,7 +17,7 @@ from typing import Callable
 from decimal import Decimal
 
 from trade_flow.core import Component, TimedIdentifiable
-from trade_flow.environments.default.oms.instruments import TradingPair
+from trade_flow.environments.default.engine.instruments import TradingPair
 
 
 class ExchangeOptions:

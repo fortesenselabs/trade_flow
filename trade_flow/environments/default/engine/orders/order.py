@@ -21,8 +21,8 @@ from decimal import Decimal
 
 from trade_flow.core import TimedIdentifiable, Observable
 from trade_flow.core.exceptions import InvalidOrderQuantity
-from trade_flow.environments.default.oms.instruments import Quantity, ExchangePair
-from trade_flow.environments.default.oms.orders import Trade, TradeSide, TradeType
+from trade_flow.environments.default.engine.instruments import Quantity, ExchangePair
+from trade_flow.environments.default.engine.orders import Trade, TradeSide, TradeType
 
 
 class OrderStatus(Enum):

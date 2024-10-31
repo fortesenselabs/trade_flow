@@ -10,8 +10,8 @@ from random import randrange
 
 
 from trade_flow.feed import Stream, NameSpace, DataFeed
-from trade_flow.environments.default.oms.wallet import Wallet
-from trade_flow.environments.default.oms.portfolio import Portfolio
+from trade_flow.environments.default.engine.wallet import Wallet
+from trade_flow.environments.default.engine.portfolio import Portfolio
 from trade_flow.environments.generic import Observer
 from collections import OrderedDict
 

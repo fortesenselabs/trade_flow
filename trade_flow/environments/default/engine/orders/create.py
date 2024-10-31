@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-from trade_flow.environments.default.oms.instruments import ExchangePair
-from trade_flow.environments.default.oms.portfolio import Portfolio
-from trade_flow.environments.default.oms.orders import Order, OrderSpec, TradeSide, TradeType
-from trade_flow.environments.default.oms.orders.criteria import Stop, Limit
+from trade_flow.environments.default.engine.instruments import ExchangePair
+from trade_flow.environments.default.engine.portfolio import Portfolio
+from trade_flow.environments.default.engine.orders import Order, OrderSpec, TradeSide, TradeType
+from trade_flow.environments.default.engine.orders.criteria import Stop, Limit
 
 
 def market_order(

@@ -2,9 +2,9 @@ import logging
 from decimal import Decimal
 
 from trade_flow.core import Clock
-from trade_flow.environments.default.oms.wallet import Wallet
-from trade_flow.environments.default.oms.exchanges import ExchangeOptions
-from trade_flow.environments.default.oms.orders import Order, Trade, TradeType, TradeSide
+from trade_flow.environments.default.engine.wallet import Wallet
+from trade_flow.environments.default.engine.exchanges import ExchangeOptions
+from trade_flow.environments.default.engine.orders import Order, Trade, TradeType, TradeSide
 
 from typing import Union
 

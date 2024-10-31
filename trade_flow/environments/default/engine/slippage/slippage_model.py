@@ -16,7 +16,7 @@
 from abc import abstractmethod
 
 from trade_flow.core import Component
-from trade_flow.environments.default.oms.orders import Trade
+from trade_flow.environments.default.engine.orders import Trade
 
 
 class SlippageModel(Component):

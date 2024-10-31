@@ -14,8 +14,8 @@
 
 from typing import Any
 
-from trade_flow.environments.default.oms.instruments.quantity import Quantity
-from trade_flow.environments.default.oms.instruments.trading_pair import TradingPair
+from trade_flow.environments.default.engine.instruments.quantity import Quantity
+from trade_flow.environments.default.engine.instruments.trading_pair import TradingPair
 
 
 registry = {}

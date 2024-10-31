@@ -13,7 +13,7 @@ from typing import Union
 from trade_flow.feed import DataFeed
 from trade_flow.environments.generic import TradingEnvironment
 from trade_flow.environments.generic.components.renderer import AggregateRenderer
-from trade_flow.environments.default.oms.portfolio import Portfolio
+from trade_flow.environments.default.engine.portfolio import Portfolio
 
 from . import actions
 from . import rewards

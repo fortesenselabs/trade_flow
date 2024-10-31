@@ -14,8 +14,8 @@
 
 import numpy as np
 
-from trade_flow.environments.default.oms.orders import Trade, TradeType, TradeSide
-from trade_flow.environments.default.oms.slippage.slippage_model import SlippageModel
+from trade_flow.environments.default.engine.orders import Trade, TradeType, TradeSide
+from trade_flow.environments.default.engine.slippage.slippage_model import SlippageModel
 
 
 class RandomUniformSlippageModel(SlippageModel):

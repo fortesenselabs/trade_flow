@@ -19,8 +19,8 @@ from abc import abstractmethod, ABCMeta
 from typing import Callable, Union, TypeVar
 from enum import Enum
 
-from trade_flow.environments.default.oms.orders import TradeSide, Order
-from trade_flow.environments.default.oms.exchanges import Exchange
+from trade_flow.environments.default.engine.orders import TradeSide, Order
+from trade_flow.environments.default.engine.exchanges import Exchange
 
 
 class Criteria(object, metaclass=ABCMeta):

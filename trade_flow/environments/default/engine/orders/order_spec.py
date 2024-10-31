@@ -16,7 +16,7 @@
 from typing import Callable
 
 from trade_flow.core import Identifiable
-from trade_flow.environments.default.oms.orders import Order, TradeSide, TradeType
+from trade_flow.environments.default.engine.orders import Order, TradeSide, TradeType
 
 
 class OrderSpec(Identifiable):

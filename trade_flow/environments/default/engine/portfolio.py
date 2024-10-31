@@ -1,25 +1,11 @@
-# Copyright 2019 The TensorTrade Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
-
 import re
 from typing import Callable, Tuple, List, TypeVar
 from collections import OrderedDict
 
 from trade_flow.core import Component, TimedIdentifiable
-from trade_flow.environments.default.oms.exchanges import Exchange
-from trade_flow.environments.default.oms.orders import OrderListener
-from trade_flow.environments.default.oms.instruments import Instrument, Quantity, ExchangePair
+from trade_flow.environments.default.engine.exchanges import Exchange
+from trade_flow.environments.default.engine.orders import OrderListener
+from trade_flow.environments.default.engine.instruments import Instrument, Quantity, ExchangePair
 from .wallet import Wallet
 from .ledger import Ledger
 
@@ -323,7 +309,6 @@ class Portfolio(Component, TimedIdentifiable):
         self.ledger.reset()
         for wallet in self._wallets.values():
             wallet.reset()
-
 
 
 _registry = {}
