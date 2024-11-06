@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime
 import numpy as np
 
+MTSymbolInfo = object
 
 def detect_system() -> str:
     system = platform.system()
@@ -22,17 +23,13 @@ if os_type == "Windows":
 
         MT5_AVAILABLE = True
     except ImportError:
-        MTSymbolInfo = object
         MT5_AVAILABLE = False
 else:
     try:
         from packages.mt5any import MetaTrader5 as _mt5
 
-        MTSymbolInfo = object
-
         MT5_AVAILABLE = True
     except ImportError:
-        MTSymbolInfo = object
         MT5_AVAILABLE = False
 
 

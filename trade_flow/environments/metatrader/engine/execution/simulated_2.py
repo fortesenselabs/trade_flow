@@ -6,12 +6,8 @@ import joblib
 from datetime import datetime, timedelta
 
 from trade_flow.environments.metatrader.terminal import Timeframe, SymbolInfo, retrieve_data
-from trade_flow.environments.metatrader.simulator import (
-    OrderType,
-    Order,
-    SymbolNotFound,
-    OrderNotFound,
-)
+from trade_flow.environments.metatrader.engine.orders import OrderType, Order
+from trade_flow.environments.metatrader.engine.exceptions import SymbolNotFound, OrderNotFound
 
 
 class Simulator:

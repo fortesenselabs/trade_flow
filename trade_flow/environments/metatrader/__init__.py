@@ -1,121 +1,98 @@
-from gymnasium.envs.registration import register
+"""
+Provides a metatrader environment.
+"""
 
-from .terminal import Timeframe, SymbolInfo
-from .simulator import Simulator, OrderType, Order, SymbolNotFound, OrderNotFound
-from .envs import MT5Env
-from .data import FOREX_DATA_PATH, STOCKS_DATA_PATH, CRYPTO_DATA_PATH, MIXED_DATA_PATH
+from typing import Union
+
+from trade_flow.feed import DataFeed
+from trade_flow.environments.generic import TradingEnvironment
+from trade_flow.environments.generic.components.renderer import AggregateRenderer
+from trade_flow.environments.metatrader.engine.portfolio import Portfolio
+
+from . import actions
+from . import rewards
+from . import observers
+from . import stoppers
+from . import informers
+from . import renderers
 
 
-register(
-    id="forex-hedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=FOREX_DATA_PATH, hedge=True),
-        "trading_symbols": ["EURUSD", "GBPCAD", "USDJPY"],
-        "window_size": 10,
-        "symbol_max_orders": 2,
-        "fee": lambda symbol: 0.03 if "JPY" in symbol else 0.0003,
-    },
-)
+def create(
+    portfolio: Portfolio,
+    action_scheme: "Union[actions.TradeFlowActionScheme, str]",
+    reward_scheme: "Union[rewards.MetaTraderRewardScheme, str]",
+    feed: "DataFeed",
+    window_size: int = 1,
+    min_periods: int = None,
+    random_start_pct: float = 0.00,
+    **kwargs,
+) -> TradingEnvironment:
+    """Creates a metatrader `TradingEnvironment` of the project to be used in training
+    RL agents.
 
-register(
-    id="forex-unhedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=FOREX_DATA_PATH, hedge=False),
-        "trading_symbols": ["EURUSD", "GBPCAD", "USDJPY"],
-        "window_size": 10,
-        "fee": lambda symbol: 0.03 if "JPY" in symbol else 0.0003,
-    },
-)
+    Parameters
+    ----------
+    portfolio : `Portfolio`
+        The portfolio to be used by the environment.
+    action_scheme : `actions.TradeFlowActionScheme` or str
+        The action scheme for computing actions at every step of an episode.
+    reward_scheme : `rewards.TradeFlowRewardScheme` or str
+        The reward scheme for computing rewards at every step of an episode.
+    feed : `DataFeed`
+        The feed for generating observations to be used in the look back
+        window.
+    window_size : int
+        The size of the look back window to use for the observation space.
+    min_periods : int, optional
+        The minimum number of steps to warm up the `feed`.
+    random_start_pct : float, optional
+        Whether to randomize the starting point within the environment at each
+        observer reset, starting in the first X percentage of the sample
+    **kwargs : keyword arguments
+        Extra keyword arguments needed to build the environment.
 
-register(
-    id="stocks-hedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=STOCKS_DATA_PATH, hedge=True),
-        "trading_symbols": ["GOOG", "AAPL", "TSLA", "MSFT"],
-        "window_size": 10,
-        "symbol_max_orders": 2,
-        "fee": 0.2,
-    },
-)
+    Returns
+    -------
+    `TradingEnvironment`
+        The default trading environment.
+    """
 
-register(
-    id="stocks-unhedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=STOCKS_DATA_PATH, hedge=False),
-        "trading_symbols": ["GOOG", "AAPL", "TSLA", "MSFT"],
-        "window_size": 10,
-        "fee": 0.2,
-    },
-)
+    action_scheme = actions.get(action_scheme) if isinstance(action_scheme, str) else action_scheme
+    reward_scheme = rewards.get(reward_scheme) if isinstance(reward_scheme, str) else reward_scheme
 
-register(
-    id="crypto-hedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=CRYPTO_DATA_PATH, hedge=True),
-        "trading_symbols": ["BTCUSD", "ETHUSD", "BCHUSD"],
-        "window_size": 10,
-        "symbol_max_orders": 2,
-        "fee": lambda symbol: {
-            "BTCUSD": 50.0,
-            "ETHUSD": 3.0,
-            "BCHUSD": 0.5,
-        }[symbol],
-    },
-)
+    action_scheme.portfolio = portfolio
 
-register(
-    id="crypto-unhedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=CRYPTO_DATA_PATH, hedge=False),
-        "trading_symbols": ["BTCUSD", "ETHUSD", "BCHUSD"],
-        "window_size": 10,
-        "fee": lambda symbol: {
-            "BTCUSD": 50.0,
-            "ETHUSD": 3.0,
-            "BCHUSD": 0.5,
-        }[symbol],
-    },
-)
+    observer = observers.TradeFlowObserver(
+        portfolio=portfolio,
+        feed=feed,
+        renderer_feed=kwargs.get("renderer_feed", None),
+        window_size=window_size,
+        min_periods=min_periods,
+    )
 
-register(
-    id="mixed-hedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=MIXED_DATA_PATH, hedge=True),
-        "trading_symbols": ["EURUSD", "USDCAD", "GOOG", "AAPL", "BTCUSD", "ETHUSD"],
-        "window_size": 10,
-        "symbol_max_orders": 2,
-        "fee": lambda symbol: {
-            "EURUSD": 0.0002,
-            "USDCAD": 0.0005,
-            "GOOG": 0.15,
-            "AAPL": 0.01,
-            "BTCUSD": 50.0,
-            "ETHUSD": 3.0,
-        }[symbol],
-    },
-)
+    stopper = stoppers.MaxLossStopper(max_allowed_loss=kwargs.get("max_allowed_loss", 0.5))
 
-register(
-    id="mixed-unhedge-v0",
-    entry_point="trade_flow.environments.metatrader.envs:MT5Env",
-    kwargs={
-        "original_simulator": Simulator(symbols_filename=MIXED_DATA_PATH, hedge=False),
-        "trading_symbols": ["EURUSD", "USDCAD", "GOOG", "AAPL", "BTCUSD", "ETHUSD"],
-        "window_size": 10,
-        "fee": lambda symbol: {
-            "EURUSD": 0.0002,
-            "USDCAD": 0.0005,
-            "GOOG": 0.15,
-            "AAPL": 0.01,
-            "BTCUSD": 50.0,
-            "ETHUSD": 3.0,
-        }[symbol],
-    },
-)
+    renderer_list = kwargs.get("renderer", renderers.EmptyRenderer())
+
+    if isinstance(renderer_list, list):
+        for i, r in enumerate(renderer_list):
+            if isinstance(r, str):
+                renderer_list[i] = renderers.get(r)
+        renderer = AggregateRenderer(renderer_list)
+    else:
+        if isinstance(renderer_list, str):
+            renderer = renderers.get(renderer_list)
+        else:
+            renderer = renderer_list
+
+    env = TradingEnvironment(
+        action_scheme=action_scheme,
+        reward_scheme=reward_scheme,
+        observer=observer,
+        stopper=kwargs.get("stopper", stopper),
+        informer=kwargs.get("informer", informers.TradeFlowInformer()),
+        renderer=renderer,
+        min_periods=min_periods,
+        random_start_pct=random_start_pct,
+    )
+    return env

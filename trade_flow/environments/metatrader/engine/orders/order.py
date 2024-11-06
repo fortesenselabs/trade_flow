@@ -29,7 +29,7 @@ class OrderType(IntEnum):
 
 class Order:
     """
-    Represents a trading order with its details, including entry and exit points.
+
     """
 
     def __init__(

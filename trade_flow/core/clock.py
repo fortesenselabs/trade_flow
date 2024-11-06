@@ -1,7 +1,7 @@
 from abc import ABCMeta
 from datetime import datetime
 
-from trade_flow.core.uuid import Identifiable
+from trade_flow.core.identifiers import Identifiable
 
 
 class Clock(object):

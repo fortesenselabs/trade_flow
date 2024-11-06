@@ -8,3 +8,4 @@ class OrderNotFound(Exception):
     """Exception raised when a trading order cannot be found."""
 
     pass
+
