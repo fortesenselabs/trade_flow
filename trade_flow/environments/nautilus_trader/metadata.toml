@@ -1,0 +1,6 @@
+[environment]
+name = "nautilus_trader"
+version = "0.1.0"
+description = "Nautilus Trader Train Environment"
+type = "train"
+engine = "nautilus_trader"

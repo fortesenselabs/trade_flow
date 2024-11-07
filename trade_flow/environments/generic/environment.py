@@ -43,6 +43,7 @@ class TradingEnvironment(gymnasium.Env, TimeIndexed):
 
     agent_id: Optional[str] = None
     episode_id: Optional[str] = None
+    engine_id: Optional[str] = None
 
     def __init__(
         self,

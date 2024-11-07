@@ -20,3 +20,4 @@ from trade_flow.core.component import *
 from trade_flow.core.context import *
 from trade_flow.core.exceptions import *
 from trade_flow.core.registry import *
+from trade_flow.core.node import TrainingNode
