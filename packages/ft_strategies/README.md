@@ -1,5 +1,11 @@
 # Freqtrade strategies with RL
 
+### Download Data
+
+```bash
+freqtrade download-data --config user_data/config.test.json --days 90 -t 1m 3m 5m 15m 30m
+```
+
 ## FAQ
 
 ### What is Freqtrade?

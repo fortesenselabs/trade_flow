@@ -36,7 +36,7 @@
     "secret": "",
     "ccxt_config": {},
     "ccxt_async_config": {},
-    "pair_whitelist": ["BTC/USDT:USDT", "ETH/USDT:USDT", "LTC/USDT:USDT"],
+    "pair_whitelist": [".*/USDT:USDT"],
     "pair_blacklist": ["BNB/.*", ".*DOWN/BTC", ".*UP/BTC"]
   },
   "pairlists": [{ "method": "StaticPairList" }],
