@@ -15,7 +15,6 @@ from freqtrade.strategy import (
     Order,
     PairLocks,
     informative,  # @informative decorator
-    # Hyperopt Parameters
     BooleanParameter,
     CategoricalParameter,
     DecimalParameter,
@@ -31,113 +30,122 @@ from freqtrade.strategy import (
     stoploss_from_open,
 )
 
-# --------------------------------
-# Add your lib to import here
+# Additional libraries
 import talib.abstract as ta
 from technical import qtpylib
 
 
-# This class is a sample. Feel free to customize it.
 class TradeFlowAgentStrategy(IStrategy):
     """
-    This is a sample RL Agent strategy.
-    More information in https://www.freqtrade.io/en/latest/strategy-customization/
+    A sample reinforcement learning (RL) agent strategy for Freqtrade. This strategy is
+    built to interface with FreqAI for feature engineering and training.
 
-    You can:
-        :return: a Dataframe with all mandatory indicators for the strategies
-    - Rename the class name (Do not forget to update class_name)
-    - Add any methods you want to build your strategy
-    - Add any lib you need to build your strategy
+    The strategy includes:
+        - Feature engineering functions to generate technical indicators
+        - Custom target setting for RL models
+        - Population of entry and exit conditions based on the model's predictions
 
-    You must keep:
-    - the lib in the section "Do not remove these libs"
-    - the methods: populate_indicators, populate_entry_trend, populate_exit_trend
-    You should keep:
-    - timeframe, minimal_roi, stoploss, trailing_*
+    Documentation on Freqtrade strategy customization can be found here:
+    https://www.freqtrade.io/en/latest/strategy-customization/
     """
 
-    # Strategy interface version - allow new iterations of the strategy interface.
-    # Check the documentation or the Sample strategy to get the latest version.
-    INTERFACE_VERSION = 3
+    INTERFACE_VERSION = 3  # Strategy interface version
 
-    # Can this strategy go short?
-    # can_short: bool = True
-
-    # Minimal ROI designed for the strategy.
-    # This attribute will be overridden if the config file contains "minimal_roi".
-    # minimal_roi = {
-    #     # "120": 0.0,  # exit after 120 minutes at break even
-    #     "60": 0.01,
-    #     "30": 0.02,
-    #     "0": 0.04,
-    # }
+    # Set the optimal timeframe for the strategy.
+    timeframe = "3m"
 
     # Optimal stoploss designed for the strategy.
     # This attribute will be overridden if the config file contains "stoploss".
-    # stoploss = -0.10
+    stoploss = -0.10
 
-    # Trailing stoploss
+    # Enable trailing stoploss functionality.
     trailing_stop = True
-    # trailing_only_offset_is_reached = False
-    # trailing_stop_positive = 0.01
-    # trailing_stop_positive_offset = 0.0  # Disabled / not configured
 
-    # Optimal timeframe for the strategy.
-    timeframe = "5m"
+    # Define the number of candles required before producing valid signals
+    startup_candle_count: int = 60
 
-    # These values can be overridden in the config.
-    # use_exit_signal = True
-    # exit_profit_only = False
-    # ignore_roi_if_entry_signal = False
-
-    # Number of candles the strategy requires before producing valid signals
-    # user should define the maximum startup candle count (the largest number of candles
-    # passed to any single indicator)
-    startup_candle_count: int = 20
-
-    def feature_engineering_expand_all(self, dataframe: DataFrame, period, **kwargs) -> DataFrame:
+    def feature_engineering_expand_all(
+        self, dataframe: DataFrame, period: int, **kwargs
+    ) -> DataFrame:
         """
-        *Only functional with FreqAI enabled strategies*
-        This function will automatically expand the defined features on the config defined
-        `indicator_periods_candles`, `include_timeframes`, `include_shifted_candles`, and
-        `include_corr_pairs`. In other words, a single feature defined in this function
-        will automatically expand to a total of
-        `indicator_periods_candles` * `include_timeframes` * `include_shifted_candles` *
-        `include_corr_pairs` numbers of features added to the model.
+        Expands the defined features for the strategy, including:
+        - Normalized close price series
+        - Returns over various time periods (1-month, 2-month, 3-month, 1-year)
+        - Volatility adjustment for returns
+        - MACD indicators using TA-Lib
+        - RSI (Relative Strength Index) with a 30-day lookback
 
-        All features must be prepended with `%` to be recognized by FreqAI internals.
-
-        :param df: strategy dataframe which will receive the features
-        :param period: period of the indicator - usage example:
-        dataframe["%-ema-period"] = ta.EMA(dataframe, timeperiod=period)
+        :param dataframe: The strategy dataframe to receive the features
+        :param period: The period for the indicators (for example, EMA or RSI period)
+        :return: The updated dataframe with new features
         """
 
+        # Existing features (RSI, MFI, ADX, SMA, EMA)
         dataframe["%-rsi-period"] = ta.RSI(dataframe, timeperiod=period)
         dataframe["%-mfi-period"] = ta.MFI(dataframe, timeperiod=period)
         dataframe["%-adx-period"] = ta.ADX(dataframe, timeperiod=period)
         dataframe["%-sma-period"] = ta.SMA(dataframe, timeperiod=period)
         dataframe["%-ema-period"] = ta.EMA(dataframe, timeperiod=period)
 
+        # Normalized Close Price Series: (normalized by daily volatility adjustment)
+        # Calculate daily returns
+        dataframe["%-daily_returns"] = dataframe["close"].pct_change()
+
+        # Calculate 252-period rolling volatility (standard deviation of daily returns)
+        dataframe["%-volatility_252"] = (
+            dataframe["%-daily_returns"].ewm(span=60, min_periods=1).std()
+        )
+
+        # Normalize returns over the past 1-year period (252 periods) using daily volatility
+        dataframe["%-normalized_annual_returns"] = (
+            dataframe["%-daily_returns"].rolling(window=252).mean() / dataframe["%-volatility_252"]
+        )
+
+        # Calculate returns for multiple periods (1-month, 2-months, 3-months, 1-year)
+        dataframe["%-returns_one_month"] = dataframe["close"].pct_change(
+            periods=21
+        )  # 1 month = 21 trading periods
+        dataframe["%-returns_two_months"] = dataframe["close"].pct_change(
+            periods=42
+        )  # 2 months = 42 trading periods
+        dataframe["%-returns_three_months"] = dataframe["close"].pct_change(
+            periods=63
+        )  # 3 months = 63 trading periods
+        dataframe["%-returns_one_year"] = dataframe["close"].pct_change(
+            periods=252
+        )  # 1 year = 252 trading periods
+
+        # MACD Indicators using TA-Lib
+        # TA-Lib MACD calculates the MACD line, the Signal line, and the Histogram
+        macd, macd_signal, macd_hist = ta.MACD(
+            dataframe["close"], fastperiod=12, slowperiod=26, signalperiod=9
+        )
+
+        # Add the MACD, Signal, and Histogram columns to the dataframe
+        dataframe["%-macd"] = macd
+        dataframe["%-macd_signal"] = macd_signal
+        dataframe["%-macd_hist"] = macd_hist
+
+        # Calculate the 63-period rolling standard deviation of prices for volatility normalization
+        dataframe["%-price_volatility_63"] = dataframe["close"].rolling(window=63).std()
+
+        # Normalize MACD indicator by dividing it by the 63-period rolling price volatility
+        dataframe["%-normalized_macd"] = dataframe["%-macd"] / dataframe["%-price_volatility_63"]
+
+        # RSI (Relative Strength Index) with a 30-period lookback
+        dataframe["%-rsi_30"] = ta.RSI(dataframe, timeperiod=30)
+
         return dataframe
 
     def feature_engineering_expand_basic(self, dataframe: DataFrame, **kwargs) -> DataFrame:
         """
-        *Only functional with FreqAI enabled strategies*
-        This function will automatically expand the defined features on the config defined
-        `include_timeframes`, `include_shifted_candles`, and `include_corr_pairs`.
-        In other words, a single feature defined in this function
-        will automatically expand to a total of
-        `include_timeframes` * `include_shifted_candles` * `include_corr_pairs`
-        numbers of features added to the model.
+        Expands basic features using config-defined settings like `include_timeframes` and
+        `include_shifted_candles`.
 
-        Features defined here will *not* be automatically duplicated on user defined
-        `indicator_periods_candles`
+        Features added: pct-change, raw volume, raw price.
 
-        All features must be prepended with `%` to be recognized by FreqAI internals.
-
-        :param df: strategy dataframe which will receive the features
-        dataframe["%-pct-change"] = dataframe["close"].pct_change()
-        dataframe["%-ema-200"] = ta.EMA(dataframe, timeperiod=200)
+        :param dataframe: The strategy dataframe to receive the features
+        :return: The updated dataframe with basic features
         """
         dataframe["%-pct-change"] = dataframe["close"].pct_change()
         dataframe["%-raw_volume"] = dataframe["volume"]
@@ -146,26 +154,17 @@ class TradeFlowAgentStrategy(IStrategy):
 
     def feature_engineering_standard(self, dataframe: DataFrame, **kwargs) -> DataFrame:
         """
-        *Only functional with FreqAI enabled strategies*
-        This optional function will be called once with the dataframe of the base timeframe.
-        This is the final function to be called, which means that the dataframe entering this
-        function will contain all the features and columns created by all other
-        freqai_feature_engineering_* functions.
+        Adds standard features necessary for RL models and custom features like `day_of_week`
+        and `hour_of_day`.
 
-        This function is a good place to do custom exotic feature extractions (e.g. tsfresh).
-        This function is a good place for any feature that should not be auto-expanded upon
-        (e.g. day of the week).
-
-        All features must be prepended with `%` to be recognized by FreqAI internals.
-
-        :param df: strategy dataframe which will receive the features
-        usage example: dataframe["%-day_of_week"] = (dataframe["date"].dt.dayofweek + 1) / 7
+        :param dataframe: The strategy dataframe to receive the features
+        :return: The updated dataframe with standard features
         """
-        # The following features are necessary for RL models
-        dataframe[f"%-raw_close"] = dataframe["close"]
-        dataframe[f"%-raw_open"] = dataframe["open"]
-        dataframe[f"%-raw_high"] = dataframe["high"]
-        dataframe[f"%-raw_low"] = dataframe["low"]
+        dataframe["%-raw_close"] = dataframe["close"]
+        dataframe["%-raw_open"] = dataframe["open"]
+        dataframe["%-raw_high"] = dataframe["high"]
+        dataframe["%-raw_low"] = dataframe["low"]
+        dataframe["%-raw_volume"] = dataframe["volume"]
 
         dataframe["%-day_of_week"] = (dataframe["date"].dt.dayofweek + 1) / 7
         dataframe["%-hour_of_day"] = (dataframe["date"].dt.hour + 1) / 25
@@ -173,40 +172,41 @@ class TradeFlowAgentStrategy(IStrategy):
 
     def set_freqai_targets(self, dataframe: DataFrame, **kwargs) -> DataFrame:
         """
-        *Only functional with FreqAI enabled strategies*
-        Required function to set the targets for the model.
-        All targets must be prepended with `&` to be recognized by the FreqAI internals.
+        Sets the targets for the FreqAI model. For RL, this is a neutral filler until the agent
+        provides its action.
 
-        :param df: strategy dataframe which will receive the targets
-        usage example: dataframe["&-target"] = dataframe["close"].shift(-1) / dataframe["close"]
+        :param dataframe: The strategy dataframe to receive the targets
+        :return: The updated dataframe with targets
         """
-        # For RL, there are no direct targets to set. This is filler (neutral)
-        # until the agent sends an action.
-        dataframe["&-action"] = 0
+        dataframe["&-action"] = 0  # Default neutral target for RL
         return dataframe
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
+        """
+        Populates the indicators in the dataframe, using FreqAI's start method.
 
-        # the model will return all labels created by user in `set_freqai_targets()`
-        # (& appended targets), an indication of whether or not the prediction should be accepted,
-        # the target mean/std values for each of the labels created by user in
-        # `set_freqai_targets()` for each training period.
-
+        :param dataframe: The strategy dataframe to receive the indicators
+        :param metadata: Metadata associated with the strategy
+        :return: The updated dataframe with indicators
+        """
         dataframe = self.freqai.start(dataframe, metadata, self)
-
         return dataframe
 
     def populate_entry_trend(self, df: DataFrame, metadata: dict) -> DataFrame:
+        """
+        Populates the entry conditions for the strategy based on model predictions.
 
+        :param df: The strategy dataframe to receive the entry trends
+        :param metadata: Metadata associated with the strategy
+        :return: The updated dataframe with entry trends
+        """
         enter_long_conditions = [df["do_predict"] == 1, df["&-action"] == 1]
-
         if enter_long_conditions:
             df.loc[
                 reduce(lambda x, y: x & y, enter_long_conditions), ["enter_long", "enter_tag"]
             ] = (1, "long")
 
         enter_short_conditions = [df["do_predict"] == 1, df["&-action"] == 3]
-
         if enter_short_conditions:
             df.loc[
                 reduce(lambda x, y: x & y, enter_short_conditions), ["enter_short", "enter_tag"]
@@ -215,6 +215,13 @@ class TradeFlowAgentStrategy(IStrategy):
         return df
 
     def populate_exit_trend(self, df: DataFrame, metadata: dict) -> DataFrame:
+        """
+        Populates the exit conditions for the strategy based on model predictions.
+
+        :param df: The strategy dataframe to receive the exit trends
+        :param metadata: Metadata associated with the strategy
+        :return: The updated dataframe with exit trends
+        """
         exit_long_conditions = [df["do_predict"] == 1, df["&-action"] == 2]
         if exit_long_conditions:
             df.loc[reduce(lambda x, y: x & y, exit_long_conditions), "exit_long"] = 1
