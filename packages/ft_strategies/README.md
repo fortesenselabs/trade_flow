@@ -1,16 +1,46 @@
-# Freqtrade strategies with RL
+# Freqtrade Strategies with RL
 
-### Download Data
+In this setup, you will use Freqtrade’s strategy integration with reinforcement learning (RL) models, enabling you to create automated trading strategies based on past data and optimized through iterative learning.
+
+### **Download Data**
 
 ```bash
 freqtrade download-data --config user_data/config.test.json --days 90 -t 1m 3m 5m 15m 30m
 ```
 
-### Using Tensorboard
+- **Purpose**: This command downloads historical trading data across multiple timeframes, which is essential for training and backtesting RL-based strategies.
+- **Parameters**:
+  - `--days 90`: Specifies the range (90 days) of historical data to download.
+  - `-t`: Indicates the timeframes for data collection (e.g., 1-minute, 3-minute, etc.). These can be adjusted based on your strategy's needs.
+
+Having access to various timeframes helps the RL model make more informed predictions by observing market trends across different granularities.
+
+### **Backtest**
+
+```bash
+freqtrade backtesting --freqaimodel TradeFlowAgent --config user_data/config.test.json --strategy TradeFlowAgentStrategy --timerange=20181110-20241101
+```
+
+- **Purpose**: Backtesting evaluates the strategy's performance on historical data to determine its effectiveness before deploying it live.
+- **Parameters**:
+  - `--freqaimodel TradeFlowAgent`: Specifies the RL model (in this case, `TradeFlowAgent`) to be used in the backtest.
+  - `--config user_data/config.test.json`: Points to the configuration file for running the backtest.
+  - `--strategy TradeFlowAgentStrategy`: Indicates the specific strategy configuration that the RL model will follow.
+  - `--timerange=20181110-20241101`: Sets the date range for backtesting (from November 10, 2018, to November 1, 2024).
+
+By running this command, you’ll gain insight into the strategy’s performance metrics, such as profit/loss and trade accuracy, allowing you to make any necessary adjustments before live trading.
+
+### **Using Tensorboard**
 
 ```bash
 tensorboard --logdir user_data/models/unique-id
 ```
+
+- **Purpose**: Tensorboard visualizes the learning progress of your RL model, providing insights into metrics like reward, loss, and accuracy.
+- **Setup**:
+  - `--logdir user_data/models/unique-id`: Sets the directory where Tensorboard retrieves model logs. Replace `unique-id` with your specific model’s ID.
+
+Monitoring the RL model’s performance over time ensures it is learning and adapting to the strategy effectively. This step is essential for diagnosing potential issues with model convergence or overfitting.
 
 ## FAQ
 
