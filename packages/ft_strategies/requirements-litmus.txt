@@ -1,0 +1,18 @@
+# Must have
+pangres
+feature_engine
+catboost
+
+# Optional if used
+imbalanced-learn
+zigzag
+optuna
+BorutaShap
+fracdiff
+tscv
+probatus
+cointanalysis
+
+# Nice to have for analysis
+pandas_datareader
+optuna-dashboard
