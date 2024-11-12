@@ -58,3 +58,4 @@ Please check out the [official backtesting documentation](https://www.freqtrade.
 - https://github.com/freqtrade/freqtrade-strategies/
 - https://github.com/Netanelshoshan/freqAI-LSTM
 - https://github.com/markdregan/FreqAI-Marcos-Lopez-De-Prado
+- https://github.com/PeetCrypto/freqtrade-stuff/tree/f6c38def0b2fe01d8d42e47740cdeab53511527b
