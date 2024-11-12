@@ -5,13 +5,13 @@ In this setup, you will use Freqtrade’s strategy integration with reinforcemen
 ### **Download Data**
 
 ```bash
-freqtrade download-data --config user_data/config.test.json --days 90 -t 1m 3m 5m 15m 30m
+freqtrade download-data --config user_data/config.test.json -t 3m 5m 15m 1h --timerange=20181110-20241101
 ```
 
 - **Purpose**: This command downloads historical trading data across multiple timeframes, which is essential for training and backtesting RL-based strategies.
 - **Parameters**:
-  - `--days 90`: Specifies the range (90 days) of historical data to download.
-  - `-t`: Indicates the timeframes for data collection (e.g., 1-minute, 3-minute, etc.). These can be adjusted based on your strategy's needs.
+  - `-t`: Indicates the timeframes for data collection (e.g., 3-minute, 5-minute, etc.). These can be adjusted based on your strategy's needs.
+  - `--timerange=20181110-20241101`: Sets the date range for data collection (from November 10, 2018, to November 1, 2024).
 
 Having access to various timeframes helps the RL model make more informed predictions by observing market trends across different granularities.
 
