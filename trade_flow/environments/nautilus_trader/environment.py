@@ -13,6 +13,7 @@ from trade_flow.environments.generic import (
     Informer,
     Renderer,
 )
+from trade_flow.environments.nautilus_trader.models import AgentStrategy, AgentStrategyConfig
 
 # TODO: Convert data coming from nautilus to gym's format and vice versa
 
@@ -124,6 +125,12 @@ class NautilusTraderEnv(TradingEnvironment):
         self.engine.add_venue(**kwargs)
         # self.engine.add_actor(**kwargs)
 
+        config = AgentStrategyConfig(
+            instrument_symbols=["ETHUSDT"],
+        )
+        strategy = AgentStrategy(config=config)
+        self.engine.add_strategy(strategy=strategy)
+
         log_guard = self.engine.kernel.get_log_guard()
         if log_guard:
             self._logger = log_guard
@@ -230,6 +237,5 @@ class NautilusTraderEnv(TradingEnvironment):
         return obs, info
 
     def close(self) -> None:
-        """Closes the environment."""
         self.renderer.close()
         self.engine.dispose()
