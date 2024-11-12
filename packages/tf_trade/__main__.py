@@ -1,4 +1,4 @@
-from packages.tf_trade import main
+# from packages.ft_strategies import main
 
-if __name__ == "__main__":
-    main.main()
+# if __name__ == "__main__":
+#     main.main()

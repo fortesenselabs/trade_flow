@@ -281,3 +281,4 @@ catalog/
 *.session*
 *trades.db
 current_open_positions.csv
+config.json

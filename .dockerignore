@@ -386,3 +386,4 @@ tests/
 # micell.
 research/*
 add_stage.sh
+config.json
