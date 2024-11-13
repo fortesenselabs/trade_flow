@@ -36,6 +36,13 @@ class TradeFlowAgent(ReinforcementLearner):
         This is function is a showcase of functionality designed to show as many possible
         environment control features as possible. It is also designed to run quickly
         on small computers. This is a benchmark, it is *not* for live production.
+
+        TODO: fix get_unrealized_profit, get_current_price, get_previous_price, calculate_volatility methods
+
+        Formula: Volatility is often computed using the standard deviation of price changes over a given period. In Freqtrade,
+        it may be done using Python’s pandas library or a custom function that handles price variations.
+
+        TODO: make transaction_cost dynamic
         """
 
         def calculate_reward(self, action: int) -> float:
@@ -52,12 +59,16 @@ class TradeFlowAgent(ReinforcementLearner):
             transaction_cost = 0.0001  # Example: 1 basis point
 
             # Calculate price change (r_t)
-            price_now = self.get_current_price()
+            price_now = self.get_current_price(self.pair, True)
             price_previous = self.get_previous_price()
             r_t = price_now - price_previous  # Price change from previous step
 
-            # Calculate volatility (sigma_t-1) - using exponential moving standard deviation (60-day window)
+            # Calculate volatility (sigma_t-1) - using exponential moving standard deviation (60-period window)
             volatility = self.calculate_volatility(window=60)
+            # Calculate 252-period rolling volatility (standard deviation of daily returns)
+            # dataframe["%-volatility_252"] = (
+            #     dataframe["%-daily_returns"].ewm(span=60, min_periods=1).std()
+            # )
 
             # Basic reward (adjusted for volatility and transaction costs)
             reward = (pnl - transaction_cost * price_previous) / volatility
