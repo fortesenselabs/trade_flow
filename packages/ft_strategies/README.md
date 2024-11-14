@@ -5,7 +5,7 @@ In this setup, you will use Freqtrade’s strategy integration with reinforcemen
 ### Install Package
 
 ```bash
-pip install -e .
+pip install .
 ```
 
 ### Download Data
@@ -123,3 +123,5 @@ Please check out the [official backtesting documentation](https://www.freqtrade.
 - https://github.com/PeetCrypto/freqtrade-stuff/tree/f6c38def0b2fe01d8d42e47740cdeab53511527b
 - https://github.com/DutchCryptoDad/bamboo-ta
 - https://github.com/iterativv/NostalgiaForInfinity
+- https://github.com/fortesenselabs/freqtrade-deploy/blob/master/user_data/
+
