@@ -1,9 +1,8 @@
 import numpy as np
-import pandas as pd
 from freqtrade.freqai.prediction_models.ReinforcementLearner import ReinforcementLearner
 from freqtrade.freqai.RL.Base5ActionRLEnv import Actions, Base5ActionRLEnv, Positions
 from freqtrade.freqai.RL.BaseEnvironment import BaseEnvironment
-from ft_strategies.user_data.indicators import OptimizedSupportResistanceIndicator
+from ft_strategies.indicators import OptimizedSupportResistanceIndicator
 
 
 class TradeFlowRSIWithSRAgent(ReinforcementLearner):
