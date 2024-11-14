@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.freqtrade.io/schema.json",
-  "max_open_trades": 1,
+  "max_open_trades": 2,
   "stake_currency": "USDT",
   "stake_amount": 5,
   "tradable_balance_ratio": 0.99,
@@ -45,8 +45,7 @@
       "LTC/USDT:USDT",
       "ADA/USDT:USDT",
       "XRP/USDT:USDT",
-      "SOL/USDT:USDT",
-      "TON/USDT:USDT"
+      "SOL/USDT:USDT"
     ],
     "pair_blacklist": ["BNB/.*", ".*DOWN/BTC", ".*UP/BTC"]
   },
@@ -68,35 +67,36 @@
       "include_corr_pairlist": ["BTC/USDT:USDT", "ETH/USDT:USDT"],
       "label_period_candles": 60,
       "include_shifted_candles": 2,
-      "DI_threshold": 0.9,
       "weight_factor": 0.9,
-      "principal_component_analysis": false,
-      "use_SVM_to_remove_outliers": true,
-      "indicator_periods_candles": [10, 20],
+      "principal_component_analysis": true,
+      "indicator_periods_candles": [14, 28],
       "plot_feature_importances": 0
     },
     "data_split_parameters": {
       "test_size": 0.33,
       "random_state": 42
     },
-    "model_training_parameters": {},
     "rl_config": {
       "train_cycles": 25,
       "add_state_info": true,
+      "can_short": true,
       "max_trade_duration_candles": 300,
-      "max_training_drawdown_pct": 0.2,
+      "max_training_drawdown_pct": 0.08,
       "model_type": "PPO",
       "policy_type": "MlpPolicy",
       "model_reward_parameters": {
         "rr": 3,
-        "profit_aim": 0.25
-      }
+        "profit_aim": 0.25,
+        "rsi_overbought_threshold": 65,
+        "rsi_oversold_threshold": 35
+      },
+      "transaction_cost": 0.0001
+    },
+    "bot_name": "trade_flow_agent",
+    "initial_state": "running",
+    "force_entry_enable": true,
+    "internals": {
+      "process_throttle_secs": 5
     }
-  },
-  "bot_name": "trade_flow_agent",
-  "initial_state": "running",
-  "force_entry_enable": true,
-  "internals": {
-    "process_throttle_secs": 5
   }
 }

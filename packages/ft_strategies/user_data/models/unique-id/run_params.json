@@ -19,15 +19,15 @@
             ],
             "label_period_candles": 60,
             "include_shifted_candles": 2,
-            "DI_threshold": 0.9,
             "weight_factor": 0.9,
-            "principal_component_analysis": false,
-            "use_SVM_to_remove_outliers": true,
+            "principal_component_analysis": true,
             "indicator_periods_candles": [
-                10,
-                20
+                14,
+                28
             ],
             "plot_feature_importances": 0,
+            "DI_threshold": 0,
+            "use_SVM_to_remove_outliers": false,
             "shuffle_after_split": false,
             "buffer_train_data_candles": 0
         },
@@ -36,18 +36,21 @@
             "random_state": 42,
             "shuffle": false
         },
-        "model_training_parameters": {},
         "rl_config": {
             "train_cycles": 25,
             "add_state_info": true,
+            "can_short": true,
             "max_trade_duration_candles": 300,
-            "max_training_drawdown_pct": 0.2,
+            "max_training_drawdown_pct": 0.08,
             "model_type": "PPO",
             "policy_type": "MlpPolicy",
             "model_reward_parameters": {
                 "rr": 3,
-                "profit_aim": 0.25
+                "profit_aim": 0.25,
+                "rsi_overbought_threshold": 80,
+                "rsi_oversold_threshold": 20
             },
+            "transaction_cost": 0.0001,
             "drop_ohlc_from_features": false,
             "cpu_count": 1,
             "net_arch": [
@@ -57,6 +60,12 @@
             "randomize_starting_position": false,
             "progress_bar": true
         },
+        "bot_name": "trade_flow_agent",
+        "initial_state": "running",
+        "force_entry_enable": true,
+        "internals": {
+            "process_throttle_secs": 5
+        },
         "keras": false,
         "write_metrics_to_disk": false,
         "conv_width": 1,
@@ -65,7 +74,7 @@
     "timeframe": "3m",
     "stake_amount": 5,
     "stake_currency": "USDT",
-    "max_open_trades": 1,
+    "max_open_trades": 2,
     "pairs": [
         "BTC/USDT:USDT",
         "ETH/USDT:USDT",
@@ -73,7 +82,6 @@
         "LTC/USDT:USDT",
         "ADA/USDT:USDT",
         "XRP/USDT:USDT",
-        "SOL/USDT:USDT",
-        "TON/USDT:USDT"
+        "SOL/USDT:USDT"
     ]
 }

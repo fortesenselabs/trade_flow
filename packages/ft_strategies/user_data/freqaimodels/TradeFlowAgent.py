@@ -98,7 +98,7 @@ class TradeFlowAgent(ReinforcementLearner):
                 volatility or 1
             )  # Avoid division by zero
 
-            # Reward for entering trades (using RSI as an example)
+            # Reward for entering trades (using RSI)
             if (
                 action in (Actions.Long_enter.value, Actions.Short_enter.value)
                 and self._position == Positions.Neutral
@@ -161,36 +161,3 @@ class TradeFlowAgent(ReinforcementLearner):
             ]
             return price_series.pct_change().ewm(span=window, min_periods=1).std().iloc[-1]
 
-        def most_recent_return(self):
-            """
-            Calculate the tick to tick return if in a trade.
-            Return is generated from rising prices in Long
-            and falling prices in Short positions.
-            The actions Sell/Buy or Hold during a Long position trigger the sell/buy-fee.
-            """
-            # Long positions
-            if self._position == Positions.Long:
-                current_price = self.prices.iloc[self._current_tick].open
-                previous_price = self.prices.iloc[self._current_tick - 1].open
-
-                if (
-                    self._position_history[self._current_tick - 1] == Positions.Short
-                    or self._position_history[self._current_tick - 1] == Positions.Neutral
-                ):
-                    previous_price = self.add_entry_fee(previous_price)
-
-                return np.log(current_price) - np.log(previous_price)
-
-            # Short positions
-            if self._position == Positions.Short:
-                current_price = self.prices.iloc[self._current_tick].open
-                previous_price = self.prices.iloc[self._current_tick - 1].open
-                if (
-                    self._position_history[self._current_tick - 1] == Positions.Long
-                    or self._position_history[self._current_tick - 1] == Positions.Neutral
-                ):
-                    previous_price = self.add_exit_fee(previous_price)
-
-                return np.log(previous_price) - np.log(current_price)
-
-            return 0
