@@ -2,7 +2,13 @@
 
 In this setup, you will use Freqtrade’s strategy integration with reinforcement learning (RL) models, enabling you to create automated trading strategies based on past data and optimized through iterative learning.
 
-### **Download Data**
+### Install Package
+
+```bash
+pip install -e .
+```
+
+### Download Data
 
 ```bash
 freqtrade download-data --config user_data/config.test.json -t 3m 5m 15m 1h --timerange=20181110-20241101
@@ -15,10 +21,24 @@ freqtrade download-data --config user_data/config.test.json -t 3m 5m 15m 1h --ti
 
 Having access to various timeframes helps the RL model make more informed predictions by observing market trends across different granularities.
 
-### **Backtest**
+### Run Backtests
+
+**Simple:**
 
 ```bash
-freqtrade backtesting --freqaimodel TradeFlowAgent --config user_data/config.test.json --strategy TradeFlowAgentStrategy --timerange=20181110-20241101
+freqtrade backtesting --freqaimodel TradeFlowSimpleAgent --config user_data/config.test.json --strategy TradeFlowAgentStrategy --timerange=20181110-20241101
+```
+
+**Support and Resistance levels:**
+
+```bash
+freqtrade backtesting --freqaimodel TradeFlowSRAgent --config user_data/config.test.json --strategy TradeFlowAgentStrategy --timerange=20181110-20241101
+```
+
+**RSI with Support and Resistance levels:**
+
+```bash
+freqtrade backtesting --freqaimodel TradeFlowRSIWithSRAgent --config user_data/config.test.json --strategy TradeFlowAgentStrategy --timerange=20181110-20241101
 ```
 
 - **Purpose**: Backtesting evaluates the strategy's performance on historical data to determine its effectiveness before deploying it live.
