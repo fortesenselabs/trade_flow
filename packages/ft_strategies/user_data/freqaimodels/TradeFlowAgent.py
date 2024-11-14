@@ -1,6 +1,7 @@
 import numpy as np
 from freqtrade.freqai.prediction_models.ReinforcementLearner import ReinforcementLearner
 from freqtrade.freqai.RL.Base5ActionRLEnv import Actions, Base5ActionRLEnv, Positions
+from freqtrade.freqai.RL.BaseEnvironment import BaseEnvironment
 
 
 class TradeFlowAgent(ReinforcementLearner):
@@ -26,6 +27,8 @@ class TradeFlowAgent(ReinforcementLearner):
     take fine-tuned control over the data handling pipeline.
     """
 
+    MyRLEnv: type[BaseEnvironment]
+
     class MyRLEnv(Base5ActionRLEnv):
         """
         User made custom environment. This class inherits from BaseEnvironment and gym.Env.
@@ -48,36 +51,24 @@ class TradeFlowAgent(ReinforcementLearner):
         def calculate_reward(self, action: int) -> float:
             # Penalize if the action is invalid
             if not self._is_valid(action):
-                self.tensorboard_log("invalid")
+                self.tensorboard_log("invalid", action)
                 return -2
 
+            # Get unrealized profit (PnL) and transaction cost
             pnl = self.get_unrealized_profit()
+            transaction_cost = self.rl_config.get("transaction_cost", 0.0001)  # Dynamic transaction cost
 
-            # Transaction cost and volatility scaling
-            factor = 100
-            pair = self.pair.replace(":", "")
-            transaction_cost = 0.0001  # Example: 1 basis point
-
-            # Calculate price change (r_t)
-            price_now = self.get_current_price(self.pair, True)
-            price_previous = self.get_previous_price()
-            r_t = price_now - price_previous  # Price change from previous step
-
-            # Calculate volatility (sigma_t-1) - using exponential moving standard deviation (60-period window)
+            # Calculate price change (r_t) and volatility
+            price_now = self.current_price()  # Use current price method
+            price_previous = self.get_previous_price()  # Use the implemented get_previous_price method
+            r_t = price_now - price_previous
             volatility = self.calculate_volatility(window=60)
-            # Calculate 252-period rolling volatility (standard deviation of daily returns)
-            # dataframe["%-volatility_252"] = (
-            #     dataframe["%-daily_returns"].ewm(span=60, min_periods=1).std()
-            # )
 
             # Basic reward (adjusted for volatility and transaction costs)
-            reward = (pnl - transaction_cost * price_previous) / volatility
+            reward = (pnl - transaction_cost * price_previous) / (volatility or 1)  # Avoid division by zero
 
             # Reward for entering trades (using RSI as an example)
-            if (
-                action in (Actions.Long_enter.value, Actions.Short_enter.value)
-                and self._position == Positions.Neutral
-            ):
+            if action in (Actions.Long_enter.value, Actions.Short_enter.value) and self._position == Positions.Neutral:
                 rsi_now = self.raw_features["%-rsi-period_10_shift-1"].iloc[self._current_tick]
                 factor = 40 / rsi_now if rsi_now < 40 else 1
                 return 25 * factor
@@ -91,31 +82,44 @@ class TradeFlowAgent(ReinforcementLearner):
             max_trade_duration = self.rl_config.get("max_trade_duration_candles", 300)
             trade_duration = self._current_tick - self._last_trade_tick
             if trade_duration > max_trade_duration:
-                penalty_factor = np.exp(
-                    trade_duration / max_trade_duration
-                )  # Exponentially increasing penalty
-                factor *= penalty_factor
+                penalty_factor = np.exp(trade_duration / max_trade_duration)  # Exponentially increasing penalty
+                reward *= penalty_factor
 
             # Penalty for sitting too long in position
-            if (
-                self._position in (Positions.Short, Positions.Long)
-                and action == Actions.Neutral.value
-            ):
+            if self._position in (Positions.Short, Positions.Long) and action == Actions.Neutral.value:
                 return -1 * np.log(1 + trade_duration)  # Logarithmic penalty
 
             # Exit long position reward
             if action == Actions.Long_exit.value and self._position == Positions.Long:
                 if pnl > self.profit_aim * self.rl_config["model_reward_parameters"]["rr"]:
-                    factor *= self.rl_config["model_reward_parameters"].get("win_reward_factor", 2)
-                return np.log(1 + abs(pnl)) * factor  # Log scaling for large profits
+                    reward *= self.rl_config["model_reward_parameters"].get("win_reward_factor", 2)
+                return np.log(1 + abs(pnl)) * reward  # Log scaling for large profits
 
             # Exit short position reward
             if action == Actions.Short_exit.value and self._position == Positions.Short:
                 if pnl > self.profit_aim * self.rl_config["model_reward_parameters"]["rr"]:
-                    factor *= self.rl_config["model_reward_parameters"].get("win_reward_factor", 2)
-                return np.log(1 + abs(pnl)) * factor
+                    reward *= self.rl_config["model_reward_parameters"].get("win_reward_factor", 2)
+                return np.log(1 + abs(pnl)) * reward
 
             return reward
+        
+        def get_previous_price(self) -> float:
+            """
+            Retrieves the previous price by accessing the 'open' price at the previous tick.
+            """
+            if self._current_tick > 0:
+                return self.prices.iloc[self._current_tick - 1].open
+            else:
+                # Fallback for the first tick where there is no previous price
+                return self.prices.iloc[self._current_tick].open
+
+        def calculate_volatility(self, window: int) -> float:
+            """
+            Calculate volatility using a rolling standard deviation over the specified window.
+            """
+            price_series = self.price_series.close.iloc[self._current_tick - window:self._current_tick]
+            return price_series.pct_change().ewm(span=window, min_periods=1).std().iloc[-1]
+
 
 
 """
