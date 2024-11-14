@@ -54,6 +54,9 @@ class TradeFlowAgentStrategy(IStrategy):
     # Set the optimal timeframe for the strategy.
     timeframe = "3m"
 
+    # Can this strategy go short?
+    can_short: bool = False
+
     # Optimal stoploss designed for the strategy.
     # This attribute will be overridden if the config file contains "stoploss".
     stoploss = -0.10
@@ -63,6 +66,19 @@ class TradeFlowAgentStrategy(IStrategy):
 
     # Define the number of candles required before producing valid signals
     startup_candle_count: int = 60
+
+    def informative_pairs(self):
+        """
+        Define additional, informative pair/interval combinations to be cached from the exchange.
+        These pair/interval combinations are non-tradeable, unless they are part
+        of the whitelist as well.
+        For more information, please consult the documentation
+        :return: List of tuples in the format (pair, interval)
+            Sample: return [("ETH/USDT", "5m"),
+                            ("BTC/USDT", "15m"),
+                            ]
+        """
+        return []
 
     def feature_engineering_expand_all(
         self, dataframe: DataFrame, period: int, **kwargs
@@ -81,11 +97,23 @@ class TradeFlowAgentStrategy(IStrategy):
         """
 
         # Existing features (RSI, MFI, ADX, SMA, EMA)
-        dataframe["%-rsi-period"] = ta.RSI(dataframe, timeperiod=period)
+        dataframe["%-rsi-period"] = ta.RSI(dataframe, timeperiod=30)  # RSI (Relative Strength Index) with a 30-period lookback
         dataframe["%-mfi-period"] = ta.MFI(dataframe, timeperiod=period)
         dataframe["%-adx-period"] = ta.ADX(dataframe, timeperiod=period)
         dataframe["%-sma-period"] = ta.SMA(dataframe, timeperiod=period)
         dataframe["%-ema-period"] = ta.EMA(dataframe, timeperiod=period)
+
+        # MACD
+        macd = ta.MACD(dataframe, fastperiod=12, slowperiod=26, signalperiod=9)
+        dataframe["%-macd"] = macd["macd"]
+        dataframe["%-macdsignal"] = macd["macdsignal"]
+        dataframe["%-macdhist"] = macd["macdhist"]
+
+        # Calculate the 63-period rolling standard deviation of prices for volatility normalization
+        dataframe["%-price_volatility_63"] = dataframe["close"].rolling(window=63).std()
+
+        # Normalize MACD indicator by dividing it by the 63-period rolling price volatility
+        # dataframe["%-normalized_macd"] = macd["macd"] / dataframe["%-price_volatility_63"]
 
         # Normalized Close Price Series: (normalized by daily volatility adjustment)
         # Calculate daily returns
@@ -94,11 +122,6 @@ class TradeFlowAgentStrategy(IStrategy):
         # Calculate 252-period rolling volatility (standard deviation of daily returns)
         dataframe["%-volatility_252"] = (
             dataframe["%-daily_returns"].ewm(span=60, min_periods=1).std()
-        )
-
-        # Normalize returns over the past 1-year period (252 periods) using daily volatility
-        dataframe["%-normalized_annual_returns"] = (
-            dataframe["%-daily_returns"].rolling(window=252).mean() / dataframe["%-volatility_252"]
         )
 
         # Calculate returns for multiple periods (1-month, 2-months, 3-months, 1-year)
@@ -115,25 +138,71 @@ class TradeFlowAgentStrategy(IStrategy):
             periods=252
         )  # 1 year = 252 trading periods
 
-        # MACD Indicators using TA-Lib
-        # TA-Lib MACD calculates the MACD line, the Signal line, and the Histogram
-        macd, macd_signal, macd_hist = ta.MACD(
-            dataframe["close"], fastperiod=12, slowperiod=26, signalperiod=9
+        # Normalize returns over the past 1-year period (252 periods) using daily volatility
+        dataframe["%-normalized_annual_returns"] = (
+            dataframe["%-daily_returns"].rolling(window=252).mean() / dataframe["%-volatility_252"]
         )
 
-        # Add the MACD, Signal, and Histogram columns to the dataframe
-        dataframe["%-macd"] = macd
-        dataframe["%-macd_signal"] = macd_signal
-        dataframe["%-macd_hist"] = macd_hist
+        # Bollinger Bands - Weighted (EMA based instead of SMA)
+        weighted_bollinger = qtpylib.weighted_bollinger_bands(
+            qtpylib.typical_price(dataframe), window=20, stds=2
+        )
+        dataframe["%-wbb_upperband"] = weighted_bollinger["upper"]
+        dataframe["%-wbb_lowerband"] = weighted_bollinger["lower"]
+        dataframe["%-wbb_middleband"] = weighted_bollinger["mid"]
+        dataframe["%-wbb_percent"] = (
+            (dataframe["close"] - dataframe["%-wbb_lowerband"]) /
+            (dataframe["%-wbb_upperband"] - dataframe["%-wbb_lowerband"])
+        )
+        dataframe["%-wbb_width"] = (
+            (weighted_bollinger["upper"] - weighted_bollinger["lower"]) /
+            weighted_bollinger["mid"]
+        )
 
-        # Calculate the 63-period rolling standard deviation of prices for volatility normalization
-        dataframe["%-price_volatility_63"] = dataframe["close"].rolling(window=63).std()
+        # Pattern Recognition - Bullish candlestick patterns
+        # ------------------------------------
+        # Hammer: values [0, 100]
+        dataframe['%-CDLHAMMER'] = ta.CDLHAMMER(dataframe)
+        # Inverted Hammer: values [0, 100]
+        dataframe['%-CDLINVERTEDHAMMER'] = ta.CDLINVERTEDHAMMER(dataframe)
+        # Dragonfly Doji: values [0, 100]
+        dataframe['%-CDLDRAGONFLYDOJI'] = ta.CDLDRAGONFLYDOJI(dataframe)
+        # Piercing Line: values [0, 100]
+        dataframe['%-CDLPIERCING'] = ta.CDLPIERCING(dataframe) # values [0, 100]
+        # Morningstar: values [0, 100]
+        dataframe['%-CDLMORNINGSTAR'] = ta.CDLMORNINGSTAR(dataframe) # values [0, 100]
+        # Three White Soldiers: values [0, 100]
+        dataframe['%-CDL3WHITESOLDIERS'] = ta.CDL3WHITESOLDIERS(dataframe) # values [0, 100]
 
-        # Normalize MACD indicator by dividing it by the 63-period rolling price volatility
-        dataframe["%-normalized_macd"] = dataframe["%-macd"] / dataframe["%-price_volatility_63"]
+        # Pattern Recognition - Bearish candlestick patterns
+        # ------------------------------------
+        # Hanging Man: values [0, 100]
+        dataframe['%-CDLHANGINGMAN'] = ta.CDLHANGINGMAN(dataframe)
+        # Shooting Star: values [0, 100]
+        dataframe['%-CDLSHOOTINGSTAR'] = ta.CDLSHOOTINGSTAR(dataframe)
+        # Gravestone Doji: values [0, 100]
+        dataframe['%-CDLGRAVESTONEDOJI'] = ta.CDLGRAVESTONEDOJI(dataframe)
+        # Dark Cloud Cover: values [0, 100]
+        dataframe['%-CDLDARKCLOUDCOVER'] = ta.CDLDARKCLOUDCOVER(dataframe)
+        # Evening Doji Star: values [0, 100]
+        dataframe['%-CDLEVENINGDOJISTAR'] = ta.CDLEVENINGDOJISTAR(dataframe)
+        # Evening Star: values [0, 100]
+        dataframe['%-CDLEVENINGSTAR'] = ta.CDLEVENINGSTAR(dataframe)
 
-        # RSI (Relative Strength Index) with a 30-period lookback
-        dataframe["%-rsi_30"] = ta.RSI(dataframe, timeperiod=30)
+        # Pattern Recognition - Bullish/Bearish candlestick patterns
+        # ------------------------------------
+        # Three Line Strike: values [0, -100, 100]
+        dataframe['%-CDL3LINESTRIKE'] = ta.CDL3LINESTRIKE(dataframe)
+        # Spinning Top: values [0, -100, 100]
+        dataframe['%-CDLSPINNINGTOP'] = ta.CDLSPINNINGTOP(dataframe) # values [0, -100, 100]
+        # Engulfing: values [0, -100, 100]
+        dataframe['%-CDLENGULFING'] = ta.CDLENGULFING(dataframe) # values [0, -100, 100]
+        # Harami: values [0, -100, 100]
+        dataframe['%-CDLHARAMI'] = ta.CDLHARAMI(dataframe) # values [0, -100, 100]
+        # Three Outside Up/Down: values [0, -100, 100]
+        dataframe['%-CDL3OUTSIDE'] = ta.CDL3OUTSIDE(dataframe) # values [0, -100, 100]
+        # Three Inside Up/Down: values [0, -100, 100]
+        dataframe['%-CDL3INSIDE'] = ta.CDL3INSIDE(dataframe) # values [0, -100, 100]
 
         return dataframe
 
@@ -148,8 +217,8 @@ class TradeFlowAgentStrategy(IStrategy):
         :return: The updated dataframe with basic features
         """
         dataframe["%-pct-change"] = dataframe["close"].pct_change()
-        dataframe["%-raw_volume"] = dataframe["volume"]
-        dataframe["%-raw_price"] = dataframe["close"]
+        # dataframe["%-raw_volume"] = dataframe["volume"]
+        # dataframe["%-raw_price"] = dataframe["close"]
         return dataframe
 
     def feature_engineering_standard(self, dataframe: DataFrame, **kwargs) -> DataFrame:
