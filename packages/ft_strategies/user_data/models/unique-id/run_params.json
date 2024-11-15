@@ -47,8 +47,8 @@
             "model_reward_parameters": {
                 "rr": 3,
                 "profit_aim": 0.25,
-                "rsi_overbought_threshold": 80,
-                "rsi_oversold_threshold": 20
+                "rsi_overbought_threshold": 65,
+                "rsi_oversold_threshold": 35
             },
             "transaction_cost": 0.0001,
             "drop_ohlc_from_features": false,
