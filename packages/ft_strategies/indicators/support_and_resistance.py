@@ -1,3 +1,4 @@
+from typing import Union
 import numba
 import numpy as np
 import pandas as pd
@@ -43,7 +44,7 @@ class SupportResistanceIndicator(Indicator):
         )
         pivot_points["Support_3"] = self.df["low"] - 2 * (self.df["high"] - pivot_points["Pivot"])
 
-        return pivot_points
+        return pivot_points.to_dict()
 
     def detect_local_min_max(self, window_size: int = 5):
         """
@@ -69,26 +70,34 @@ class SupportResistanceIndicator(Indicator):
             if self.df["high"][i] == self.df["high"][i - window_size : i + window_size].max():
                 resistance_levels.append((self.df.index[i], self.df["high"][i]))
 
-        return support_levels, resistance_levels
+        return {
+            "Support": support_levels,
+            "Resistance": resistance_levels,
+        }
 
-    def get_all_indicators(self, window_size: int = 5):
+    def detect(
+        self, window_size: int = 5, method: Union["PIVOT_POINTS", "MIN_MAX"] = "MIN_MAX"
+    ) -> pd.DataFrame:
         """
-        Get both pivot points and local min/max support and resistance levels.
+        Get pivot points OR local min/max support and resistance levels.
 
         Parameters:
             window_size (int): Size of the rolling window to detect local peaks and troughs.
+            method (Union[str, str]): Method to use for detecting support and resistance levels.
 
         Returns:
             dict: A dictionary containing pivot points and local support/resistance levels.
         """
-        pivot_points = self.calculate_pivot_points()
-        support_levels, resistance_levels = self.detect_local_min_max(window_size=window_size)
 
-        return {
-            "pivot_points": pivot_points,
-            "support_levels": support_levels,
-            "resistance_levels": resistance_levels,
-        }
+        results_dict = {}
+
+        if method == "PIVOT_POINTS":
+            results_dict = self.calculate_pivot_points()
+
+        if method == "MIN_MAX":
+            results_dict = self.detect_local_min_max(window_size=window_size)
+
+        return pd.DataFrame(results_dict)
 
 
 """
@@ -184,19 +193,17 @@ class OptimizedSupportResistanceIndicator(SupportResistanceIndicator):
             calculate_pivot_points_array(high, low, close)
         )
 
-        pivot_points_df = pd.DataFrame(
-            {
-                "Pivot": pivot_points,
-                "Resistance_1": resistance_1,
-                "Support_1": support_1,
-                "Resistance_2": resistance_2,
-                "Support_2": support_2,
-                "Resistance_3": resistance_3,
-                "Support_3": support_3,
-            }
-        )
+        pivot_points_dict = {
+            "pivot": pivot_points,
+            "Resistance": resistance_1,
+            "Support": support_1,
+            "Resistance_2": resistance_2,
+            "Support_2": support_2,
+            "Resistance_3": resistance_3,
+            "Support_3": support_3,
+        }
 
-        return pivot_points_df
+        return pivot_points_dict
 
     def detect_local_min_max(self, window_size: int = 5):
         """
@@ -217,23 +224,31 @@ class OptimizedSupportResistanceIndicator(SupportResistanceIndicator):
         support_levels = [(dates[i], lows[i]) for i in support_indices]
         resistance_levels = [(dates[i], highs[i]) for i in resistance_indices]
 
-        return support_levels, resistance_levels
+        return {
+            "Support": support_levels,
+            "Resistance": resistance_levels,
+        }
 
-    def get_all_indicators(self, window_size: int = 5):
+    def detect(
+        self, window_size: int = 5, method: Union["PIVOT_POINTS", "MIN_MAX"] = "MIN_MAX"
+    ) -> pd.DataFrame:
         """
-        Get both pivot points and local min/max support and resistance levels.
+        Get pivot points OR local min/max support and resistance levels.
 
         Parameters:
             window_size (int): Size of the rolling window to detect local peaks and troughs.
+            method ("PIVOT_POINTS" | "MIN_MAX"): Method to use for detecting support and resistance levels.
 
         Returns:
             dict: A dictionary containing pivot points and local support/resistance levels.
         """
-        pivot_points = self.calculate_pivot_points()
-        support_levels, resistance_levels = self.detect_local_min_max(window_size=window_size)
 
-        return {
-            "pivot_points": pivot_points,
-            "support_levels": support_levels,
-            "resistance_levels": resistance_levels,
-        }
+        results_dict = {}
+
+        if method == "PIVOT_POINTS":
+            results_dict = self.calculate_pivot_points()
+
+        if method == "MIN_MAX":
+            results_dict = self.detect_local_min_max(window_size=window_size)
+
+        return pd.DataFrame(results_dict)

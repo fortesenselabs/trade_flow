@@ -2,8 +2,6 @@ import numpy as np
 from freqtrade.freqai.prediction_models.ReinforcementLearner import ReinforcementLearner
 from freqtrade.freqai.RL.Base5ActionRLEnv import Actions, Base5ActionRLEnv, Positions
 from freqtrade.freqai.RL.BaseEnvironment import BaseEnvironment
-from ft_strategies.indicators import OptimizedSupportResistanceIndicator
-
 
 class TradeFlowRSIWithSRAgent(ReinforcementLearner):
     """
@@ -21,21 +19,6 @@ class TradeFlowRSIWithSRAgent(ReinforcementLearner):
         Custom environment class that incorporates support and resistance levels based on RSI and SR indicators.
         Provides a reward structure based on price movements, proximity to support/resistance levels, and trade duration.
         """
-
-        def __init__(self, **kwargs):
-            """
-            Initializes the environment and loads support and resistance levels using `OptimizedSupportResistanceIndicator`.
-
-            Attributes:
-            -----------
-            sr_indicator: OptimizedSupportResistanceIndicator
-                The indicator instance used to calculate support/resistance levels.
-            get_all_sr_levels: dict
-                Dictionary containing all support and resistance levels.
-            """
-            super().__init__(**kwargs)
-            self.sr_indicator = OptimizedSupportResistanceIndicator(self.raw_features)
-            self.get_all_sr_levels = self.sr_indicator.get_all_indicators()
 
         def calculate_reward(self, action: int) -> float:
             """
@@ -252,7 +235,7 @@ class TradeFlowRSIWithSRAgent(ReinforcementLearner):
             bool
                 True if near support, False otherwise.
             """
-            support_levels = [level[1] for level in self.get_all_sr_levels["support_levels"]]
+            support_levels = [level[1] for level in self.raw_features["%-support_levels"]]
             return any(abs(price - level) <= proximity_pct * level for level in support_levels)
 
         def is_near_resistance(self, price: float, proximity_pct: float = 0.02) -> bool:
@@ -271,7 +254,7 @@ class TradeFlowRSIWithSRAgent(ReinforcementLearner):
             bool
                 True if near resistance, False otherwise.
             """
-            resistance_levels = [level[1] for level in self.get_all_sr_levels["resistance_levels"]]
+            resistance_levels = [level[1] for level in self.raw_features["%-resistance_levels"]]
             return any(abs(price - level) <= proximity_pct * level for level in resistance_levels)
 
         def most_recent_return(self) -> float:

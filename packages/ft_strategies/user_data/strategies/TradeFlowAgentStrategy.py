@@ -33,6 +33,7 @@ from freqtrade.strategy import (
 # Additional libraries
 import talib.abstract as ta
 from technical import qtpylib
+from ft_strategies.indicators import OptimizedSupportResistanceIndicator
 
 
 class TradeFlowAgentStrategy(IStrategy):
@@ -204,6 +205,12 @@ class TradeFlowAgentStrategy(IStrategy):
         # Three Inside Up/Down: values [0, -100, 100]
         dataframe['%-CDL3INSIDE'] = ta.CDL3INSIDE(dataframe) # values [0, -100, 100]
 
+        sr_indicator = OptimizedSupportResistanceIndicator(self.raw_features)
+        get_sr_levels = sr_indicator.detect(window_size=1)
+
+        dataframe['%-support_levels'] = get_sr_levels["Support"]
+        dataframe['%-resistance_levels'] = get_sr_levels["Resistance"]
+        
         return dataframe
 
     def feature_engineering_expand_basic(self, dataframe: DataFrame, **kwargs) -> DataFrame:
