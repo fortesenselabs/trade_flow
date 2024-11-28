@@ -60,7 +60,7 @@ jobs:
         id: branch-name
         uses: tj-actions/branch-names@v8.0.1
 
-      - name: Build MetaTrader 5 Terminal Image (latest)
+      - name: Build and Push MetaTrader 5 Terminal image (latest) to Github Packages
         if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
         id: mt5_build_latest
         uses: docker/build-push-action@v3
@@ -68,11 +68,32 @@ jobs:
           file: "infrastructure/MetaTrader5/Dockerfile"
           context: "infrastructure/MetaTrader5/"
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/metatrader5-terminal:latest
+          tags: ${{ github.repository_owner }}/metatrader5-terminal:latest,${{ github.repository_owner }}/metatrader5-terminal:${{ github.sha }},${{ github.repository_owner }}/metatrader5-terminal:${{ github.run_id }}
           cache-from: type=gha
           cache-to: type=gha
       - name: Digest metatrader5-terminal image
         run: echo ${{ steps.mt5_build_latest.outputs.digest }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3.1.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push MetaTrader 5 Terminal image (latest) to DockerHub
+        if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
+        id: mt5_build_docker_latest
+        uses: docker/build-push-action@v3
+        with:
+          file: "infrastructure/MetaTrader5/Dockerfile"
+          context: "infrastructure/MetaTrader5/"
+          platforms: linux/amd64
+          push: true
+          tags: ${{ github.repository_owner }}/metatrader5-terminal:latest,${{ github.repository_owner }}/metatrader5-terminal:${{ github.sha }},${{ github.repository_owner }}/metatrader5-terminal:${{ github.run_id }}
+          cache-from: type=gha
+          cache-to: type=gha
+      - name: Digest metatrader5-terminal image
+        run: echo ${{ steps.mt5_build_docker_latest.outputs.digest }}
 
       # - name: Build Trade Flow Environment image (latest)
       #   if: ${{ steps.branch-name.outputs.current_branch == 'main' }}
