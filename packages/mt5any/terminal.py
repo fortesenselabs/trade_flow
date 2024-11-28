@@ -7,7 +7,7 @@ from time import sleep
 from typing import ClassVar, Dict
 
 from rpyc.utils.classic import DEFAULT_SERVER_PORT
-from trade_flow.common.logging import Logger
+from .logging import Logger
 
 
 class ContainerStatus(IntEnum):
@@ -120,7 +120,7 @@ class DockerizedMT5Terminal:
     """
 
     IMAGE: ClassVar[str] = "metatrader5-terminal:latest"
-    FALLBACK_IMAGE: ClassVar[str] = "ghcr.io/fortesenselabs/metatrader5-terminal:latest"
+    FALLBACK_IMAGE: ClassVar[str] = "ghcr.io/ramin951/metatrader5-terminal:latest"
     CONTAINER_NAME: ClassVar[str] = "itbot-mt5"
     PORTS: ClassVar[dict[str, int]] = {"web": 8000, "vnc": 5900, "rpyc": DEFAULT_SERVER_PORT}
 
