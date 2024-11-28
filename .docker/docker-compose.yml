@@ -2,23 +2,23 @@ version: '3.5'
 
 services:
   postgres:
-    container_name: nautilus-database
+    container_name: tradeflow-database
     image: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
-      POSTGRES_DATABASE: nautilus
+      POSTGRES_DATABASE: tradeflow
       PGDATA: /data/postgres
     volumes:
-      - nautilus-database:/data/postgres
+      - tradeflow-database:/data/postgres
     ports:
       - "5432:5432"
     networks:
-      - nautilus-network
+      - tradeflow-network
     restart: unless-stopped
 
   pgadmin:
-    container_name: nautilus-pgadmin
+    container_name: tradeflow-pgadmin
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@mail.com}
@@ -28,21 +28,21 @@ services:
     ports:
       - "${PGADMIN_PORT:-5051}:80"
     networks:
-      - nautilus-network
+      - tradeflow-network
     restart: unless-stopped
 
   redis:
-    container_name: nautilus-redis
+    container_name: tradeflow-redis
     image: redis
     ports:
       - 6379:6379
     restart: unless-stopped
     networks:
-      - nautilus-network
+      - tradeflow-network
 
 networks:
-  nautilus-network:
+  tradeflow-network:
 
 volumes:
-  nautilus-database:
+  tradeflow-database:
   pgadmin:

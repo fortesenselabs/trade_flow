@@ -1,0 +1,87 @@
+{
+    "freqai": {
+        "enabled": true,
+        "purge_old_models": 2,
+        "train_period_days": 15,
+        "backtest_period_days": 7,
+        "live_retrain_hours": 0,
+        "identifier": "unique-id",
+        "feature_parameters": {
+            "include_timeframes": [
+                "3m",
+                "5m",
+                "15m",
+                "1h"
+            ],
+            "include_corr_pairlist": [
+                "BTC/USDT:USDT",
+                "ETH/USDT:USDT"
+            ],
+            "label_period_candles": 60,
+            "include_shifted_candles": 2,
+            "weight_factor": 0.9,
+            "principal_component_analysis": true,
+            "indicator_periods_candles": [
+                14,
+                28
+            ],
+            "plot_feature_importances": 0,
+            "DI_threshold": 0,
+            "use_SVM_to_remove_outliers": false,
+            "shuffle_after_split": false,
+            "buffer_train_data_candles": 0
+        },
+        "data_split_parameters": {
+            "test_size": 0.33,
+            "random_state": 42,
+            "shuffle": false
+        },
+        "rl_config": {
+            "train_cycles": 25,
+            "add_state_info": true,
+            "can_short": true,
+            "max_trade_duration_candles": 300,
+            "max_training_drawdown_pct": 0.08,
+            "model_type": "PPO",
+            "policy_type": "MlpPolicy",
+            "model_reward_parameters": {
+                "rr": 3,
+                "profit_aim": 0.25,
+                "rsi_overbought_threshold": 65,
+                "rsi_oversold_threshold": 35
+            },
+            "transaction_cost": 0.0001,
+            "drop_ohlc_from_features": false,
+            "cpu_count": 1,
+            "net_arch": [
+                128,
+                128
+            ],
+            "randomize_starting_position": false,
+            "progress_bar": true
+        },
+        "bot_name": "trade_flow_agent",
+        "initial_state": "running",
+        "force_entry_enable": true,
+        "internals": {
+            "process_throttle_secs": 5
+        },
+        "keras": false,
+        "write_metrics_to_disk": false,
+        "conv_width": 1,
+        "wait_for_training_iteration_on_reload": true
+    },
+    "timeframe": "3m",
+    "stake_amount": 5,
+    "stake_currency": "USDT",
+    "max_open_trades": 2,
+    "pairs": [
+        "BTC/USDT:USDT",
+        "ETH/USDT:USDT",
+        "BCH/USDT:USDT",
+        "LTC/USDT:USDT",
+        "ADA/USDT:USDT",
+        "XRP/USDT:USDT",
+        "SOL/USDT:USDT"
+    ]
+}

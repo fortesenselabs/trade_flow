@@ -1,0 +1,24 @@
+telethon
+python-dotenv
+colorlog
+docker
+torch
+scipy
+stable-baselines3[extra]
+rpyc
+joblib
+aiodbm
+sqlalchemy
+pytorch-tcn
+numba
+ta-lib 
+pandas-ta
+git+https://github.com/fortesenselabs/trade_flow.git
+
+# dev
+ta
+seaborn
+
+# 
+ccxt
+python-binance>=1.0

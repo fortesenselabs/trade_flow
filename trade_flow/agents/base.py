@@ -1,7 +1,23 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any, Callable, Dict, Optional
 from trade_flow.agents.tensorboard import TensorboardCallback
 from trade_flow.environments.generic.environment import TradingEnvironment
+
+
+class StrategyType(Enum):
+    """
+    An enumeration representing different trading strategies.
+
+    Attributes:
+        DAY_TRADE: A strategy involving buying and selling securities within the same trading day. Requires high-frequency data, such as 4-hour, 1-hour, or 15-minute intervals.
+        SWING: A strategy involving holding positions for a few days to a few weeks, capitalizing on price swings in the market.
+        AUTO: A strategy that aims to automatically identify and execute trades, often using strategies learned by the agent.
+    """
+
+    DAY_TRADE = 1
+    SWING = 2
+    AUTO = 3
 
 
 class Agent(ABC):

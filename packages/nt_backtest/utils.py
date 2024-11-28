@@ -6,7 +6,7 @@ from nautilus_trader.model.data import Bar, BarType
 from nautilus_trader.model.enums import AggregationSource
 from nautilus_trader.model.identifiers import InstrumentId
 
-from trade_flow.environments.default.oms.portfolio import Portfolio
+from trade_flow.environments.default.engine.portfolio import Portfolio
 from trade_flow.environments.generic.environment import TradingEnvironment
 
 

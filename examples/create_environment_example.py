@@ -5,11 +5,11 @@ from trade_flow.agents.base import Agent
 from trade_flow.environments.generic.environment import TradingEnvironment
 from trade_flow.environments.utils import create_env_from_dataframe
 from trade_flow.feed import Stream, Coinbase_BTCUSD_1h, Coinbase_BTCUSD_d
-from trade_flow.environments.default.oms.exchanges import Exchange
-from trade_flow.environments.default.oms.execution.simulated import execute_order
-from trade_flow.environments.default.oms.instruments import USD, BTC
-from trade_flow.environments.default.oms.wallet import Wallet
-from trade_flow.environments.default.oms.portfolio import Portfolio
+from trade_flow.environments.default.engine.exchanges import Exchange
+from trade_flow.environments.default.engine.execution.simulated import execute_order
+from trade_flow.environments.default.engine.instruments import USD, BTC
+from trade_flow.environments.default.engine.wallet import Wallet
+from trade_flow.environments.default.engine.portfolio import Portfolio
 import trade_flow.environments.default as default
 from trade_flow.agents import SB3Agent
 

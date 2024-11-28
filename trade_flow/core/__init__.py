@@ -15,9 +15,9 @@ global_clock : `Clock`
 """
 
 from trade_flow.core.clock import *
-from trade_flow.core.uuid import *
+from trade_flow.core.identifiers import *
 from trade_flow.core.component import *
 from trade_flow.core.context import *
 from trade_flow.core.exceptions import *
 from trade_flow.core.registry import *
-from trade_flow.core.flow import *
+from trade_flow.core.node import TrainingNode

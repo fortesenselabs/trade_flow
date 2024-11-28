@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Any
 
 from trade_flow.core import registry
-from trade_flow.core.uuid import Identifiable
+from trade_flow.core.identifiers import Identifiable
 from trade_flow.core.context import ContextualizedMixin, InitContextMeta
 
 

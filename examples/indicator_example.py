@@ -10,7 +10,7 @@ df.index = df.index.set_names("timestamp")
 print("Dataset:", df, "\n")
 
 # Create an instance of SupportResistanceIndicator or OptimizedSupportResistanceIndicator
-indicator = SupportResistanceIndicator(df)
+indicator = OptimizedSupportResistanceIndicator(df)
 
 # Calculate Pivot Points
 pivot_points_df = indicator.calculate_pivot_points()
