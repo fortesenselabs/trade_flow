@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Metatrader5
-Comment=Trading platform
-Exec=/root/start_metatrader5.sh
-Icon=terminal
-Terminal=false
-Categories=Finance
