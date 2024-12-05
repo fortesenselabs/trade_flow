@@ -119,8 +119,8 @@ class DockerizedMT5Terminal:
         __exit__(exc_type, exc_val, exc_tb): Stop the container using the context manager.
     """
 
-    IMAGE: ClassVar[str] = "metatrader5-terminal:latest"
-    FALLBACK_IMAGE: ClassVar[str] = "ghcr.io/ramin951/metatrader5-terminal:latest"
+    IMAGE: ClassVar[str] = "docker.io/fortesenselabs/metatrader5-terminal:latest"
+    FALLBACK_IMAGE: ClassVar[str] = "ghcr.io/fortesenselabs/metatrader5-terminal:latest"
     CONTAINER_NAME: ClassVar[str] = "itbot-mt5"
     PORTS: ClassVar[dict[str, int]] = {"web": 8000, "vnc": 5900, "rpyc": DEFAULT_SERVER_PORT}
 
